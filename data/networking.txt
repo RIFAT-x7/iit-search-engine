@@ -1,0 +1,3 @@
+Fictional demonstration data.
+Computer networking connects computers. Networking covers packets, routers, and protocols.
+Students study network delay and build software for a networking laboratory.

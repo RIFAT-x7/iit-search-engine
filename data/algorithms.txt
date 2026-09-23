@@ -1,0 +1,3 @@
+Fictional demonstration data.
+Algorithms support software engineering. Sorting and searching are algorithms.
+Students compare merge sort and insertion sort in an algorithms laboratory.

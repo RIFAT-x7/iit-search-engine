@@ -1,0 +1,3 @@
+Fictional demonstration data.
+Information retrieval finds relevant documents. A search engine uses an inverted index.
+Search queries receive ranked documents. Retrieval scores measure keyword matches.

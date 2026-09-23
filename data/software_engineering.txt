@@ -1,0 +1,3 @@
+Fictional demonstration data.
+Software engineering covers requirements, design, testing, and maintenance.
+Software engineering students develop software projects and review software quality.

@@ -1,0 +1,3 @@
+Fictional demonstration data.
+A sample IIT academic notice announces a project presentation.
+Students bring a Java prototype and explain design choices during the presentation.

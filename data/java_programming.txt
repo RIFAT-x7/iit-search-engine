@@ -1,0 +1,3 @@
+Fictional demonstration data.
+Java programming uses classes and objects. Java students practice loops and arrays.
+A Java laboratory project reads text files and builds software.
