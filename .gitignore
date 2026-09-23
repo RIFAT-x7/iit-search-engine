@@ -1,0 +1,19 @@
+# IntelliJ IDEA
+.idea/
+*.iml
+
+# Java compiled output
+*.class
+out/
+target/
+build/
+
+# Gradle files if ever generated
+.gradle/
+
+# Logs
+*.log
+
+# OS files
+.DS_Store
+Thumbs.db
