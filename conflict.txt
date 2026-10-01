@@ -1,1 +1,1 @@
-Search ranking method: TF-IDF
+Search ranking method: Vector Space Model
