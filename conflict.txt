@@ -1,1 +1,1 @@
-Search ranking method: BM25
+Search ranking method: BM25 and Vector Space Model
