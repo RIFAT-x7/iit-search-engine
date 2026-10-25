@@ -1,1 +1,2 @@
 Feature version 1
+Feature version 2
