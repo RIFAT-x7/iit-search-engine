@@ -6,6 +6,10 @@ import java.nio.charset.StandardCharsets;
 
 public class SearchServer {
     public static void main(String[] args) throws IOException {
+        SearchEngine engine = new SearchEngine();
+        engine.buildIndex("data");
+        System.out.println("Indexed " + engine.getDocumentCount() + " documents.");
+
         HttpServer server = HttpServer.create(new InetSocketAddress("127.0.0.1", 8080), 0);
         server.createContext("/", exchange -> {
             try {
