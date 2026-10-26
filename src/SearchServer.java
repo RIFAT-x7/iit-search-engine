@@ -1,8 +1,14 @@
+import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpServer;
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.net.InetSocketAddress;
+import java.nio.ByteBuffer;
+import java.nio.charset.CharacterCodingException;
 import java.nio.charset.StandardCharsets;
+import java.util.List;
+import java.util.Locale;
 
 public class SearchServer {
     public static void main(String[] args) throws IOException {
@@ -13,18 +19,35 @@ public class SearchServer {
         HttpServer server = HttpServer.create(new InetSocketAddress("127.0.0.1", 8080), 0);
         server.createContext("/", exchange -> {
             try {
-                // Check the exact path so /health/ and /healthcheck are not accepted.
-                if (!"/health".equals(exchange.getRequestURI().getRawPath())) {
+                String path = exchange.getRequestURI().getRawPath();
+                // Context matching uses prefixes, so check both endpoint paths exactly.
+                if (!"/health".equals(path) && !"/search".equals(path)) {
                     exchange.sendResponseHeaders(404, -1);
                 } else if (!"GET".equals(exchange.getRequestMethod())) {
                     exchange.getResponseHeaders().set("Allow", "GET");
                     exchange.sendResponseHeaders(405, -1);
+                } else if ("/health".equals(path)) {
+                    sendText(exchange, 200, "OK");
                 } else {
-                    byte[] response = "OK".getBytes(StandardCharsets.UTF_8);
-                    exchange.getResponseHeaders().set("Content-Type", "text/plain; charset=utf-8");
-                    exchange.sendResponseHeaders(200, response.length);
-                    try (OutputStream output = exchange.getResponseBody()) {
-                        output.write(response);
+                    String query;
+                    try {
+                        query = parseQuery(exchange.getRequestURI().getRawQuery());
+                    } catch (IllegalArgumentException invalidQuery) {
+                        sendText(exchange, 400, "Bad request: " + invalidQuery.getMessage() + "\n");
+                        return;
+                    }
+
+                    List<SearchResult> results = engine.search(query);
+                    if (results.isEmpty()) {
+                        sendText(exchange, 200, "No results found.\n");
+                    } else {
+                        StringBuilder response = new StringBuilder();
+                        for (int i = 0; i < results.size(); i++) {
+                            SearchResult result = results.get(i);
+                            response.append(String.format(Locale.ROOT, "%d. %s  Score: %.2f%n",
+                                    i + 1, result.getDocument().getFilename(), result.getScore()));
+                        }
+                        sendText(exchange, 200, response.toString());
                     }
                 }
             } finally {
@@ -33,5 +56,68 @@ public class SearchServer {
         });
         server.start();
         System.out.println("Listening on http://127.0.0.1:8080");
+    }
+
+    private static String parseQuery(String rawQuery) {
+        if (rawQuery == null) {
+            throw new IllegalArgumentException("Missing q parameter.");
+        }
+        String query = null;
+        // Split before decoding so an encoded '&' remains part of a value.
+        for (String parameter : rawQuery.split("&", -1)) {
+            int separator = parameter.indexOf('=');
+            if (separator < 0) {
+                throw new IllegalArgumentException("Parameters must use name=value.");
+            }
+            String name = decodeParameter(parameter.substring(0, separator));
+            String value = decodeParameter(parameter.substring(separator + 1));
+            if ("q".equals(name)) {
+                if (query != null) {
+                    throw new IllegalArgumentException("Duplicate q parameter.");
+                }
+                query = value;
+            }
+        }
+        if (query == null || query.isBlank()) {
+            throw new IllegalArgumentException("A nonblank q parameter is required.");
+        }
+        return query;
+    }
+
+    private static String decodeParameter(String encoded) {
+        byte[] input = encoded.getBytes(StandardCharsets.UTF_8);
+        ByteArrayOutputStream decoded = new ByteArrayOutputStream();
+        for (int i = 0; i < input.length; i++) {
+            if (input[i] == '%') {
+                if (i + 2 >= input.length) {
+                    throw new IllegalArgumentException("Incomplete URL escape.");
+                }
+                int high = Character.digit((char) input[i + 1], 16);
+                int low = Character.digit((char) input[i + 2], 16);
+                if (high < 0 || low < 0) {
+                    throw new IllegalArgumentException("Invalid URL escape.");
+                }
+                decoded.write(high * 16 + low);
+                i += 2;
+            } else {
+                decoded.write(input[i] == '+' ? ' ' : input[i]);
+            }
+        }
+        try {
+            // Reject invalid UTF-8 instead of silently substituting replacement characters.
+            return StandardCharsets.UTF_8.newDecoder()
+                    .decode(ByteBuffer.wrap(decoded.toByteArray())).toString();
+        } catch (CharacterCodingException invalidEncoding) {
+            throw new IllegalArgumentException("Query parameters must use valid UTF-8.");
+        }
+    }
+
+    private static void sendText(HttpExchange exchange, int status, String text) throws IOException {
+        byte[] response = text.getBytes(StandardCharsets.UTF_8);
+        exchange.getResponseHeaders().set("Content-Type", "text/plain; charset=utf-8");
+        exchange.sendResponseHeaders(status, response.length);
+        try (OutputStream output = exchange.getResponseBody()) {
+            output.write(response);
+        }
     }
 }
