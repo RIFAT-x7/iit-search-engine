@@ -13,6 +13,8 @@ already work.
 
 1. [Phase 1: Foundations](01-phase1-foundations.md) — Git, Java setup, the CLI
    search pipeline, ranking, and baseline regression tests.
+2. [Phase 2.1: HTTP and client-server foundation](02-01-http-health-endpoint.md) —
+   The health endpoint, HTTP concepts, verification history, and current limits.
 
 ## How to use the notes
 
