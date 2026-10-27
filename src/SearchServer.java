@@ -7,24 +7,30 @@ import java.net.InetSocketAddress;
 import java.nio.ByteBuffer;
 import java.nio.charset.CharacterCodingException;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.List;
 
 public class SearchServer {
     public static void main(String[] args) throws IOException {
+        // Run from the repository root so data and web/index.html resolve correctly.
         SearchEngine engine = new SearchEngine();
         engine.buildIndex("data");
         System.out.println("Indexed " + engine.getDocumentCount() + " documents.");
+        String indexHtml = Files.readString(Path.of("web", "index.html"), StandardCharsets.UTF_8);
 
         HttpServer server = HttpServer.create(new InetSocketAddress("127.0.0.1", 8080), 0);
         server.createContext("/", exchange -> {
             try {
                 String path = exchange.getRequestURI().getRawPath();
-                // Context matching uses prefixes, so check both endpoint paths exactly.
-                if (!"/health".equals(path) && !"/search".equals(path)) {
+                // Context matching uses prefixes, so check each endpoint path exactly.
+                if (!"/".equals(path) && !"/health".equals(path) && !"/search".equals(path)) {
                     exchange.sendResponseHeaders(404, -1);
                 } else if (!"GET".equals(exchange.getRequestMethod())) {
                     exchange.getResponseHeaders().set("Allow", "GET");
                     exchange.sendResponseHeaders(405, -1);
+                } else if ("/".equals(path)) {
+                    sendResponse(exchange, 200, indexHtml, "text/html; charset=utf-8");
                 } else if ("/health".equals(path)) {
                     sendText(exchange, 200, "OK");
                 } else {
