@@ -13,29 +13,38 @@ classical Information Retrieval (IR). Its academic objective is to implement
 and understand preprocessing, indexing, matching, ranking, and result retrieval
 over public or supervisor-authorized IIT documents.
 
-The current Version 0.1 CLI searches six fictional demonstration text files.
-Phase 2.1 adds an independent HTTP health server on the
-`feat/http-health-endpoint` branch. Development is ongoing.
+The current prototype searches six fictional demonstration text files through
+either a CLI or a Java HTTP JSON search API. The HTTP implementation on
+`feat/http-search-api` includes startup indexing, query validation, and ranked
+JSON responses. The JSON implementation commit is
+`e7e2d836333a3efdda27fa68b4aa81aa75c6995c`. A browser frontend is planned.
 
-## Required client-server architecture
+## Current architecture
 
-The supervisor requires a Java HTTP server and a browser client built with
-HTML, CSS, and JavaScript. The intended architecture is:
+The Java HTTP server calls the custom IR core and reuses an in-memory inverted
+index built from the sample collection. The intended browser client will use
+HTML, CSS, and JavaScript; that client is not implemented yet.
 
 ```mermaid
 flowchart TD
     Client["Browser client: HTML / CSS / JavaScript (planned)"]
-    Server["Java HTTP server (health endpoint implemented)"]
+    Server["Java HTTP server: SearchServer"]
+    CLI["CLI: Main"]
     Core["Custom Java Information Retrieval core (implemented)"]
-    Data["Document collection / in-memory search index"]
-    Client <-->|"HTTP integration (planned)"| Server
-    Server -->|"Search API integration (planned)"| Core
-    Core <--> Data
+    Index["In-memory inverted index"]
+    Data["Sample UTF-8 .txt collection"]
+    Client -.->|"HTTP requests / JSON responses (planned client)"| Server
+    Server -->|"SearchEngine.search(query)"| Core
+    CLI --> Core
+    Data -->|"Loading and preprocessing"| Core
+    Core <--> Index
 ```
 
-The CLI already calls the IR core directly. The HTTP server currently serves
-only `/health`; it does not call `SearchEngine`. The browser interface, HTTP
-search API, and cross-computer demonstration are upcoming milestones.
+`Main` and `SearchServer` are separate entry points using the same core classes.
+Each process creates its own engine and index. The CLI supports manual rebuilds;
+the HTTP server builds once before listening and reuses that index for searches.
+It serves exact `/health` and `/search` paths on `127.0.0.1:8080`. Browser
+integration and a cross-computer demonstration remain future work.
 
 ## Current implementation
 
@@ -53,23 +62,112 @@ search API, and cross-computer demonstration are upcoming milestones.
   rebuild preserves the previously built index.
 - A JDK HTTP server at `127.0.0.1:8080`: exact `GET /health` returns HTTP 200,
   `Content-Type: text/plain; charset=utf-8`, and the two-byte body `OK`.
-  Unsupported methods on that path return 405 with `Allow: GET`; other paths
-  return 404.
+- Exact `GET /search?q=...` calls the existing engine and returns JSON containing
+  the decoded query, ordered results, filenames, and numeric scores.
+- Query parsing requires one nonblank `q`, splits parameters before decoding,
+  handles percent escapes and `+` as space, and rejects duplicate `q`, malformed
+  escapes, invalid UTF-8, and parameters without `name=value` syntax.
+- Application-handled query validation errors return HTTP 400 with a JSON
+  `error` field. JSON strings escape quotes, backslashes, and low controls.
+- Unsupported methods on either known path return 405 with `Allow: GET`;
+  unknown paths return 404. Path validation precedes method validation.
 - Seven dependency-free automated baseline regression tests for the IR core.
 
-Verified sample-corpus statistics are **6 documents, 75 unique terms, and 120
-processed tokens**. Searching `java` returned `java_programming.txt` (displayed
-score 5.54), followed by `academic_notice.txt` (1.85).
+Previously verified sample-corpus statistics are **6 documents, 75 unique terms,
+and 120 processed tokens**. Searching `java` ranks `java_programming.txt` before
+`academic_notice.txt`. The CLI displays scores as 5.54 and 1.85; the JSON API
+returns numeric values without that two-decimal display formatting.
 
 Boolean operators are not parsed: `and` and `or` are currently stop words.
 Quoted text is treated as ordinary keywords rather than a phrase query.
 
-## Roadmap
+## JSON Search API
 
-1. HTTP search API connected to the existing `SearchEngine`, request validation,
-   and JSON result responses.
-2. Browser client, client-server integration, and a verified cross-computer
-   network demonstration.
+### Successful search
+
+Request: `GET /search?q=java`
+
+Status: **200**. Content-Type: `application/json; charset=utf-8`.
+The following previously verified response is shown with indentation for
+readability; the server emits compact JSON:
+
+```json
+{
+  "query": "java",
+  "results": [
+    {
+      "filename": "java_programming.txt",
+      "score": 5.541893581161611
+    },
+    {
+      "filename": "academic_notice.txt",
+      "score": 1.8472978603872037
+    }
+  ]
+}
+```
+
+`query` echoes the accepted decoded text. Results retain the engine's ranking
+order, and `score` is a JSON number. There is no separate rank field.
+
+### No results
+
+Request: `GET /search?q=zzzznomatchingterm`
+
+Status: **200**, with the same JSON Content-Type. A valid query with no matching
+documents returns an empty array:
+
+```json
+{"query":"zzzznomatchingterm","results":[]}
+```
+
+### Invalid query
+
+Request: `GET /search` (missing query component)
+
+Status: **400**, with the same JSON Content-Type:
+
+```json
+{"error":"Bad request: Missing q parameter."}
+```
+
+The prefix is exactly `Bad request: `. Blank values, duplicate `q` parameters,
+and invalid encodings also produce handled validation errors with a specific
+reason. Other well-formed parameters are decoded and ignored; `q` is
+case-sensitive. The API reads URL parameters and does not parse JSON request
+bodies. A malformed request URI can be rejected by the HTTP stack before the
+application's JSON error handler runs.
+
+### Health and routing behavior
+
+| Request | Status and response |
+| --- | --- |
+| `GET /health` | 200; `text/plain; charset=utf-8`; exact body `OK`, without newline |
+| Valid `GET /search?q=...` | 200; JSON `query` and `results` |
+| Invalid query on GET search | 400; JSON `error` for application-handled validation |
+| Unsupported method on `/health` or `/search` | 405; `Allow: GET`; empty body |
+| Unknown or suffixed path, such as `/search/` | 404; empty body |
+
+404 and 405 responses are not JSON bodies. Unknown paths receive 404 even
+with an unsupported method. `/health` does not run a search or perform a new
+index diagnostic for each request.
+
+## Project roadmap
+
+Completed milestones:
+
+| Milestone | Completed implementation |
+| --- | --- |
+| Phase 1 | CLI, custom IR pipeline, and seven baseline regression tests |
+| Phase 2.1 | HTTP health endpoint and routing checks |
+| Phase 2.2A | SearchEngine initialization and indexing at server startup |
+| Phase 2.2B | Validated plain-text HTTP search endpoint |
+| Task 2.3 | JSON search results and validation errors, replacing plain-text search responses |
+
+Future work:
+
+1. Browser client using HTML/CSS/JavaScript and integration with the JSON API.
+2. Network configuration and a verified cross-computer demonstration.
 3. Positional indexing, explicit Boolean AND/OR queries, and phrase retrieval.
 4. Partial/substring matching, basic fuzzy retrieval, Top-K results, and snippets.
 5. Index persistence, further search improvements, and performance evaluation
@@ -103,16 +201,25 @@ src/
   SearchEngine.java      Loading, indexing, retrieval, and ranking
   SearchResult.java      Document and score
   Main.java              Original CLI entry point
-  SearchServer.java      Independent HTTP health-server entry point
+  SearchServer.java      HTTP health and JSON search entry point
 tests/
   BaselineTests.java     Seven automated regression tests
 data/                    Six fictional demonstration text documents
 documents/               Original proposal form and presentation
 learnings/               Learning journal and viva preparation
+  README.md             Learning index and reading sequence
+  01-phase1-foundations.md
+  02-01-http-health-endpoint.md
+  02-02-http-search-api.md
+  02-03-json-search-api.md
 out/                     Ignored generated classes and local verification output
 iit-search-engine-prototype-v0.1.zip   Archived prototype
 README.md
 ```
+
+The Phase 2.2 and JSON manuals (`02-02` and `02-03`) have been prepared locally
+and are pending inclusion in a separate documentation commit. They do not form
+part of implementation commit `e7e2d83`.
 
 ## Build, run, and test
 
@@ -153,7 +260,7 @@ The runner reports seven individual results and totals. Expected baseline:
 `AssertionError`s, so `-ea` is unnecessary. Temporary fixtures are separate from
 `data` and cleaned up by the harness.
 
-### HTTP health server
+### HTTP server
 
 When port 8080 is available, start the server in its own console:
 
@@ -161,48 +268,95 @@ When port 8080 is available, start the server in its own console:
 & "$projectJdk\bin\java.exe" -cp out\app SearchServer
 ```
 
-Expected startup message: `Listening on http://127.0.0.1:8080`.
-From a second PowerShell console, use Windows `curl.exe`:
+The server first prints `Indexed 6 documents.` for the bundled collection, then
+`Listening on http://127.0.0.1:8080` after successful startup. An index-loading
+failure prevents startup. From a second PowerShell console, use Windows
+`curl.exe`:
 
 ```powershell
-curl.exe --noproxy '*' -i http://127.0.0.1:8080/health
+curl.exe --noproxy '*' -i 'http://127.0.0.1:8080/health'
+curl.exe --noproxy '*' -i 'http://127.0.0.1:8080/search?q=java'
+curl.exe --noproxy '*' -i 'http://127.0.0.1:8080/search?q=java%20programming'
+curl.exe --noproxy '*' -i 'http://127.0.0.1:8080/search?q=zzzznomatchingterm'
+curl.exe --noproxy '*' -i 'http://127.0.0.1:8080/search'
+curl.exe --noproxy '*' -i -X POST 'http://127.0.0.1:8080/search?q=java'
+curl.exe --noproxy '*' -i 'http://127.0.0.1:8080/unknown'
 ```
 
-Expected response: HTTP 200, `Content-Type: text/plain; charset=utf-8`, and body
-`OK` without a newline. Use Ctrl+C in the server's own console to stop the
-instance you launched. If startup reports `Address already in use`, do not
-terminate an unidentified process to free the port.
+These demonstrate health, ranked search, an encoded multi-word query, no
+matches, missing-query validation, method rejection, and unknown-path handling.
+Expected statuses are 200, 200, 200, 200, 400, 405, and 404 respectively.
 
-### Verification record
+Use Ctrl+C in the server's own console to stop the instance you launched.
+If it remains running, verify that process's PID, executable, and command line
+before stopping only the confirmed owned process. If startup reports
+`Address already in use`, do not terminate an unidentified process to free
+the port.
 
-The JDK 25.0.3 compilation command, CLI smoke test, and seven regression tests
-passed during the October 26, 2026 workflow. The HTTP results above were
-successfully verified earlier in Task 2.1, including 404 for unknown/suffixed
-paths and 405 with `Allow: GET` for POST `/health`.
+## Testing and verification record
 
-A later HTTP rerun could not start because port 8080 was occupied. No fresh HTTP
-run is claimed for these documentation changes. The curl command is a manual
-checking instruction; the recorded automated HTTP checks used a .NET HTTP client.
-The source has not changed since the successful HTTP verification. Neither a
-browser client nor cross-computer connectivity has been verified.
+The committed [baseline harness](tests/BaselineTests.java) contains seven IR
+tests: text preprocessing, inverted-index correctness, keyword retrieval,
+ranking, empty/unknown queries, rebuild correctness, and failed-rebuild
+preservation. It does not start an HTTP server or test JSON serialization.
 
-## Development progress and learning journal
+Prior Phase 1 verification recorded JDK 25.0.3 compilation, a successful CLI
+smoke test, and seven passing tests. Task 2.3 verification again recorded
+successful compilation and **7 passed, 0 failed**. These are previously executed
+results, not fresh runtime checks for this documentation update.
 
-- **Phase 1 complete:** architectural audit, JDK compilation, CLI smoke testing,
-  and seven baseline regression tests.
-- **Phase 2.1 complete:** minimal HTTP health endpoint implemented, reviewed,
-  tested, and published on the feature branch.
-- **Task 2.2 has not started:** search API and browser integration remain planned.
+Separate Codex-run HTTP integration checks used an external PowerShell/.NET
+HTTP client script. That script is not a committed HTTP test suite. Its
+reported Task 2.3 results included:
 
-See the [learning journal](learnings/README.md),
-[Phase 1 foundations](learnings/01-phase1-foundations.md), and
-[HTTP/client-server foundation](learnings/02-01-http-health-endpoint.md).
+- Ranked `java` JSON output with the expected filenames, order, and numeric
+  scores; scores compared with the implemented formula within `1e-12`.
+- Empty arrays for unknown and stop-word-only queries.
+- JSON 400 responses for eight query-validation inputs, including missing,
+  empty, whitespace-only, duplicate, and invalid UTF-8 cases.
+- Round-trip preservation of a combined query containing quotes, backslashes,
+  all 32 U+0000-U+001F controls, Bengali, an emoji, and encoded separators;
+  no literal low controls in the JSON body.
+- Exact health body and media type, 404 for unknown/suffixed paths, and 405
+  with `Allow: GET` for POST, PUT, and HEAD on both known endpoints.
+- Cleanup of only the server processes launched for verification.
+
+No aggregate HTTP test count is claimed. Detailed results and verification
+limits are documented in the [JSON API manual](learnings/02-03-json-search-api.md).
+The older occupied-port retry in the health manual was a separate failed launch;
+it does not replace the later successful search API verification.
+
+The curl commands above are instructions for reproducing checks. No fresh Java
+runtime verification was performed for this documentation-only change. Browser
+behavior, cross-computer connectivity, and performance have not been verified.
+
+## Learning documentation
+
+The [learning journal](learnings/README.md) links the four manuals in recommended
+reading order: IR foundations, HTTP health, HTTP search integration, and JSON
+responses. They include implementation explanations, worked examples,
+verification evidence and limits, viva preparation, and self-practice prompts.
+Earlier manuals retain their historical milestone context.
 
 ## Current limitations
 
 The bundled sample data is **fictional demonstration content, not official IIT
-documentation**. The current index is in memory, supports English ASCII tokens,
-and loads text files only. Document IDs depend on sorted filenames. The HTTP
-server binds only to loopback and exposes no search functionality. This is an
-academic system under active development; broader retrieval quality,
-performance, and network behavior remain to be evaluated.
+documentation**. The current demonstrations use the six bundled `.txt` files;
+loading is limited to immediate text files in the selected folder. The index
+is in memory, and document IDs depend on sorted filenames.
+
+- UTF-8 transport and file reading do not provide general Unicode word search;
+  tokenization retains ASCII letters and digits.
+- The server is loopback-only on fixed port 8080, with no browser interface,
+  static page hosting, TLS, or authentication implemented.
+- No PDF import, OCR, fuzzy/substring matching, snippets, positional index,
+  phrase search, or Boolean query parser is implemented.
+- There is no index persistence, HTTP rebuild endpoint, automatic file refresh,
+  pagination, or Top-K limit. The HTTP index is built once at startup.
+- The API parses URL parameters rather than JSON request bodies. Its manual
+  serializer does not explicitly guard non-finite scores or validate malformed
+  Java UTF-16 strings; see the [JSON manual](learnings/02-03-json-search-api.md).
+
+Broader retrieval quality, scalability, and network behavior remain to be
+evaluated. The roadmap lists future capabilities rather than completed
+achievements.
