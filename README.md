@@ -13,27 +13,31 @@ classical Information Retrieval (IR). Its academic objective is to implement
 and understand preprocessing, indexing, matching, ranking, and result retrieval
 over public or supervisor-authorized IIT documents.
 
-The current prototype searches six fictional demonstration text files through
-either a CLI or a Java HTTP JSON search API. The HTTP implementation on
-`feat/http-search-api` includes startup indexing, query validation, and ranked
-JSON responses. The JSON implementation commit is
-`e7e2d836333a3efdda27fa68b4aa81aa75c6995c`. A browser frontend is planned.
+The current application searches six fictional demonstration text files through
+a responsive browser page, a Java HTTP JSON API, or a separate CLI. The browser
+client uses plain HTML, JavaScript, and CSS to show ranked results without
+navigating away. Java performs indexing, query validation, retrieval, and ranking.
+The frontend implementation checkpoint on `feat/browser-client` is
+`8b0a38906495fa850244a8e66e36bd5ea2c4e4eb`.
 
 ## Current architecture
 
 The Java HTTP server calls the custom IR core and reuses an in-memory inverted
-index built from the sample collection. The intended browser client will use
-HTML, CSS, and JavaScript; that client is not implemented yet.
+index built from the sample collection. It also serves three fixed web assets.
+The browser sends URL-encoded GET queries and renders the returned JSON array.
 
 ```mermaid
 flowchart TD
-    Client["Browser client: HTML / CSS / JavaScript (planned)"]
+    Client["Browser client: HTML / CSS / JavaScript"]
     Server["Java HTTP server: SearchServer"]
+    Assets["Fixed local HTML, JavaScript, CSS files"]
     CLI["CLI: Main"]
     Core["Custom Java Information Retrieval core (implemented)"]
     Index["In-memory inverted index"]
     Data["Sample UTF-8 .txt collection"]
-    Client -.->|"HTTP requests / JSON responses (planned client)"| Server
+    Assets -->|"Read once at startup"| Server
+    Client -->|"GET page, assets, and /search?q=..."| Server
+    Server -->|"HTML / JS / CSS and JSON results"| Client
     Server -->|"SearchEngine.search(query)"| Core
     CLI --> Core
     Data -->|"Loading and preprocessing"| Core
@@ -43,8 +47,10 @@ flowchart TD
 `Main` and `SearchServer` are separate entry points using the same core classes.
 Each process creates its own engine and index. The CLI supports manual rebuilds;
 the HTTP server builds once before listening and reuses that index for searches.
-It serves exact `/health` and `/search` paths on `127.0.0.1:8080`. Browser
-integration and a cross-computer demonstration remain future work.
+It serves the page, fixed assets, health, and search on `127.0.0.1:8080`.
+The web files are loaded once at startup, so edits require restarting the server.
+The browser presents results; Java retains all search algorithms. Cross-computer
+access remains future work.
 
 ## Current implementation
 
@@ -69,9 +75,16 @@ integration and a cross-computer demonstration remain future work.
   escapes, invalid UTF-8, and parameters without `name=value` syntax.
 - Application-handled query validation errors return HTTP 400 with a JSON
   `error` field. JSON strings escape quotes, backslashes, and low controls.
-- Unsupported methods on either known path return 405 with `Allow: GET`;
+- Unsupported methods on any known path return 405 with `Allow: GET`;
   unknown paths return 404. Path validation precedes method validation.
 - Seven dependency-free automated baseline regression tests for the IR core.
+- An accessible native GET search form with a labeled required input. Without
+  JavaScript, it can still navigate to the API's raw JSON response.
+- Plain JavaScript submit handling with URLSearchParams, fetch, safe textContent
+  rendering, loading feedback, and empty/error messages. Repeated completed
+  searches replace earlier results; scores are rounded to two decimals for display.
+- Local responsive CSS with system fonts, blue/neutral colors, visible keyboard
+  focus, disabled-button styling, wrapping results, and stacked narrow-screen controls.
 
 Previously verified sample-corpus statistics are **6 documents, 75 unique terms,
 and 120 processed tokens**. Searching `java` ranks `java_programming.txt` before
@@ -142,15 +155,22 @@ application's JSON error handler runs.
 
 | Request | Status and response |
 | --- | --- |
+| `GET /` | 200; `text/html; charset=utf-8`; browser search page |
+| `GET /app.js` | 200; `text/javascript; charset=utf-8`; fixed client script |
+| `GET /styles.css` | 200; `text/css; charset=utf-8`; fixed stylesheet |
 | `GET /health` | 200; `text/plain; charset=utf-8`; exact body `OK`, without newline |
 | Valid `GET /search?q=...` | 200; JSON `query` and `results` |
 | Invalid query on GET search | 400; JSON `error` for application-handled validation |
-| Unsupported method on `/health` or `/search` | 405; `Allow: GET`; empty body |
+| Unsupported method on any of the five known paths | 405; `Allow: GET`; empty body |
 | Unknown or suffixed path, such as `/search/` | 404; empty body |
 
 404 and 405 responses are not JSON bodies. Unknown paths receive 404 even
 with an unsupported method. `/health` does not run a search or perform a new
 index diagnostic for each request.
+
+Only the exact listed paths are exposed. Asset routes read trusted fixed files
+at startup; there is no generic file server or route for downloading result
+documents. Filenames in the results are plain text, not links or previews.
 
 ## Project roadmap
 
@@ -163,10 +183,13 @@ Completed milestones:
 | Phase 2.2A | SearchEngine initialization and indexing at server startup |
 | Phase 2.2B | Validated plain-text HTTP search endpoint |
 | Task 2.3 | JSON search results and validation errors, replacing plain-text search responses |
+| Phase 2.4A | Native HTML GET form and exact root page route (`44d869b`) |
+| Phase 2.4B | JavaScript search and in-page result rendering (`665509f`) |
+| Phase 2.4C | Responsive CSS and fixed stylesheet route (`8b0a389`) |
 
 Future work:
 
-1. Browser client using HTML/CSS/JavaScript and integration with the JSON API.
+1. Broader browser, zoom/reflow, and accessibility testing and further usability improvements.
 2. Network configuration and a verified cross-computer demonstration.
 3. Positional indexing, explicit Boolean AND/OR queries, and phrase retrieval.
 4. Partial/substring matching, basic fuzzy retrieval, Top-K results, and snippets.
@@ -182,7 +205,8 @@ postings, snippets, persistence, and performance benchmarks are not implemented.
 
 - Java; verified with Eclipse Temurin **JDK 25.0.3**.
 - Built-in Java `HttpServer` from `jdk.httpserver`.
-- HTML, CSS, and JavaScript for the planned browser client.
+- Plain browser HTML, CSS, and JavaScript; no frontend framework, bundler, npm,
+  external font download, or CDN is required.
 - IntelliJ IDEA, Git, and GitHub.
 
 Core IR algorithms and data structures are implemented manually to make their
@@ -201,10 +225,14 @@ src/
   SearchEngine.java      Loading, indexing, retrieval, and ranking
   SearchResult.java      Document and score
   Main.java              Original CLI entry point
-  SearchServer.java      HTTP health and JSON search entry point
+  SearchServer.java      Browser assets, HTTP health, and JSON search entry point
 tests/
   BaselineTests.java     Seven automated regression tests
 data/                    Six fictional demonstration text documents
+web/
+  index.html            Semantic search form and result containers
+  app.js                GET API requests and safe DOM result rendering
+  styles.css            Responsive layout and interaction styling
 documents/               Original proposal form and presentation
 learnings/               Learning journal and viva preparation
   README.md             Learning index and reading sequence
@@ -212,14 +240,17 @@ learnings/               Learning journal and viva preparation
   02-01-http-health-endpoint.md
   02-02-http-search-api.md
   02-03-json-search-api.md
+  02-04-html-browser-client.md
+  02-05-javascript-search-client.md
+  02-06-responsive-css.md
 out/                     Ignored generated classes and local verification output
 iit-search-engine-prototype-v0.1.zip   Archived prototype
 README.md
 ```
 
-The Phase 2.2 and JSON manuals (`02-02` and `02-03`) have been prepared locally
-and are pending inclusion in a separate documentation commit. They do not form
-part of implementation commit `e7e2d83`.
+The Phase 2.2 and JSON manuals were included in documentation commit `e77dfd7`.
+The frontend manuals describe the subsequent HTML, JavaScript, and CSS milestones.
+Earlier manuals keep their historical checkpoints and verification context.
 
 ## Build, run, and test
 
@@ -268,10 +299,24 @@ When port 8080 is available, start the server in its own console:
 & "$projectJdk\bin\java.exe" -cp out\app SearchServer
 ```
 
-The server first prints `Indexed 6 documents.` for the bundled collection, then
-`Listening on http://127.0.0.1:8080` after successful startup. An index-loading
-failure prevents startup. From a second PowerShell console, use Windows
-`curl.exe`:
+Keep the repository root as the working directory: `data` and all three
+`web` files use relative paths. The server first prints `Indexed 6 documents.`
+for the bundled collection, then `Listening on http://127.0.0.1:8080` after
+successful startup. An index or web-file loading failure prevents startup.
+
+Open **http://127.0.0.1:8080/** in Microsoft Edge or another suitable browser.
+Enter `java` and submit. With JavaScript enabled, ranked filenames and scores
+appear beneath the form without navigation. An unknown term gives an empty
+result message; whitespace receives the server's nonblank-query error. Empty
+input is blocked by native required validation in the tested browser.
+
+Do not open `web/index.html` directly with a file URL. The page needs the Java
+HTTP origin for its root-relative assets and search requests. Without working
+JavaScript, the native form can still navigate to raw JSON. Changing a web file
+requires a server restart because the fixed files are cached at startup.
+
+From a second PowerShell console, use Windows `curl.exe` to inspect individual
+responses independently of the page:
 
 ```powershell
 curl.exe --noproxy '*' -i 'http://127.0.0.1:8080/health'
@@ -326,15 +371,35 @@ limits are documented in the [JSON API manual](learnings/02-03-json-search-api.m
 The older occupied-port retry in the health manual was a separate failed launch;
 it does not replace the later successful search API verification.
 
-The curl commands above are instructions for reproducing checks. No fresh Java
-runtime verification was performed for this documentation-only change. Browser
-behavior, cross-computer connectivity, and performance have not been verified.
+Frontend verification records distinguish Codex-run checks from user-confirmed
+Microsoft Edge interaction:
+
+| Milestone | Previously reported automated/static checks | User-confirmed Edge checks |
+| --- | --- | --- |
+| 2.4A: HTML (`44d869b`) | JDK 25.0.3 compilation; seven IR tests; root HTML and existing HTTP behavior | Page loaded; java navigated to ranked JSON; empty input blocked; whitespace produced backend validation |
+| 2.4B: JavaScript (`665509f`) | Compilation; seven IR tests; script/API HTTP checks; JS syntax; mocked DOM/fetch checks | Four checks: java results without navigation; no-match message; whitespace error; repeated searches replaced results |
+| 2.4C: CSS (`8b0a389`) | Compilation; seven IR tests; CSS/script/API HTTP checks; structural CSS, contrast, and static narrow-layout checks | Five checks: desktop appearance; in-page search; validation; 375px/320px responsive layout; keyboard Tab and focus visibility |
+
+Node checks used a minimal DOM stub and mocked fetch, not a real browser.
+CSS checks were structural and arithmetic, not a complete CSS validator or
+automated screenshot suite. The Edge results were explicitly confirmed by
+the user. These integration scripts were not committed as new test files;
+there is no automated end-to-end browser test suite in this repository.
+
+The curl commands above are instructions for reproducing checks. This
+documentation task checks source consistency, excerpts, links, and Git state;
+it does not rerun compilation, runtime tests, HTTP servers, or Edge interaction.
+Cross-computer connectivity, performance, comprehensive accessibility, and
+browser/viewport combinations beyond the reported cases remain unverified.
 
 ## Learning documentation
 
-The [learning journal](learnings/README.md) links the four manuals in recommended
-reading order: IR foundations, HTTP health, HTTP search integration, and JSON
-responses. They include implementation explanations, worked examples,
+The [learning journal](learnings/README.md) links seven manuals in recommended
+reading order: IR foundations, HTTP health, HTTP search integration, JSON,
+[HTML architecture](learnings/02-04-html-browser-client.md),
+[JavaScript integration](learnings/02-05-javascript-search-client.md), and
+[responsive CSS](learnings/02-06-responsive-css.md).
+They include implementation explanations, worked examples,
 verification evidence and limits, viva preparation, and self-practice prompts.
 Earlier manuals retain their historical milestone context.
 
@@ -347,8 +412,8 @@ is in memory, and document IDs depend on sorted filenames.
 
 - UTF-8 transport and file reading do not provide general Unicode word search;
   tokenization retains ASCII letters and digits.
-- The server is loopback-only on fixed port 8080, with no browser interface,
-  static page hosting, TLS, or authentication implemented.
+- The server is loopback-only on fixed port 8080. It serves three known web
+  assets and the API, with no TLS, authentication, or general file hosting.
 - No PDF import, OCR, fuzzy/substring matching, snippets, positional index,
   phrase search, or Boolean query parser is implemented.
 - There is no index persistence, HTTP rebuild endpoint, automatic file refresh,
@@ -356,6 +421,12 @@ is in memory, and document IDs depend on sorted filenames.
 - The API parses URL parameters rather than JSON request bodies. Its manual
   serializer does not explicitly guard non-finite scores or validate malformed
   Java UTF-16 strings; see the [JSON manual](learnings/02-03-json-search-api.md).
+- The client trusts the current JSON success schema, has no application timeout
+  or request cancellation, and allows one in-flight search through its handler.
+  A pending query is not replaced merely by editing the input. Its generic
+  failure message also covers JSON parsing or rendering errors.
+- Filenames and scores are text only: no snippets, previews, clickable result
+  documents, or download links are provided.
 
 Broader retrieval quality, scalability, and network behavior remain to be
 evaluated. The roadmap lists future capabilities rather than completed

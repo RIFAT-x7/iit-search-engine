@@ -19,18 +19,32 @@ already work.
    Startup indexing, query parsing and strict decoding, IR integration, and
    historical ranked plain-text responses before JSON.
 4. [Task 2.3: JSON search API](02-03-json-search-api.md) —
-   The current JSON response contract, serialization and escaping, HTTP helpers,
+   The JSON response contract, serialization and escaping, HTTP helpers,
    worked traces, and verification boundaries.
+5. [Phase 2.4A: HTML browser client and architecture](02-04-html-browser-client.md) —
+   Semantic HTML, native GET fallback, accessibility attributes, fixed asset
+   routing, and the current browser-to-Java request flow.
+6. [Phase 2.4B: JavaScript search integration](02-05-javascript-search-client.md) —
+   The actual submit handler, DOM APIs, async fetch, JSON error handling, safe
+   ordered rendering, repeated submissions, and mocked versus manual testing.
+7. [Phase 2.4C: Responsive CSS](02-06-responsive-css.md) —
+   Source-based selectors, cascade, box model, typography, flexbox, responsive
+   layout, contrast, keyboard feedback, and verification limits.
 
-The Phase 2.2 and Task 2.3 manuals are prepared locally and pending inclusion
-in a separate documentation commit from the JSON implementation.
+The Phase 2.2 and Task 2.3 manuals were included in documentation commit
+`e77dfd7`. Their past checkpoints remain part of the learning record. The three
+frontend manuals explain the later implementation commits `44d869b`,
+`665509f`, and `8b0a389`.
 
 ## How to use the notes
 
 Read the manuals in the numbered order. Phase 1 explains the IR core used by
 the later HTTP milestones. Phase 2.1 introduces the server and health endpoint;
 Phase 2.2 explains how search was connected through validated URL parameters;
-Task 2.3 then explains the move from plain text to JSON responses.
+Task 2.3 then explains the move from plain text to JSON responses. Read the
+frontend manuals next: HTML defines the document and native submission,
+JavaScript consumes that JSON API within the page, and CSS controls presentation
+and responsive layout. Indexing, TF-IDF-style scoring, and ranking stay in Java.
 
 The manuals include implementation explanations, worked examples, verification
 records and limitations, viva questions, and self-practice exercises. Read each
@@ -41,5 +55,10 @@ the root README describes the current implementation.
 Distinguish previously recorded results from commands offered for a later
 check. Run the relevant checks before changing behavior. Complete reflection
 prompts personally; they contain no invented personal experiences or answers.
+
+Verification records identify Codex-reported automated/static checks separately
+from the user's manual Microsoft Edge confirmations. They do not imply an
+automated browser test suite or newly committed frontend test files. A source
+walkthrough, a mock, and a real browser interaction provide different evidence.
 
 Return to the [project README](../README.md).
