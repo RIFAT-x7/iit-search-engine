@@ -4,6 +4,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>IIT Search Engine</title>
+    <link rel="stylesheet" href="/styles.css">
     <script src="/app.js" defer></script>
 </head>
 <body>
@@ -11,8 +12,10 @@
         <h1>IIT Search Engine</h1>
         <form id="search-form" action="/search" method="get" accept-charset="UTF-8">
             <label for="query">Search keywords</label>
-            <input type="search" id="query" name="q" required>
-            <button type="submit">Search</button>
+            <div class="search-controls">
+                <input type="search" id="query" name="q" required>
+                <button type="submit">Search</button>
+            </div>
         </form>
         <section aria-labelledby="results-heading">
             <h2 id="results-heading">Search results</h2>

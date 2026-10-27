@@ -19,13 +19,14 @@ public class SearchServer {
         System.out.println("Indexed " + engine.getDocumentCount() + " documents.");
         String indexHtml = Files.readString(Path.of("web", "index.html"), StandardCharsets.UTF_8);
         String appJs = Files.readString(Path.of("web", "app.js"), StandardCharsets.UTF_8);
+        String stylesCss = Files.readString(Path.of("web", "styles.css"), StandardCharsets.UTF_8);
 
         HttpServer server = HttpServer.create(new InetSocketAddress("127.0.0.1", 8080), 0);
         server.createContext("/", exchange -> {
             try {
                 String path = exchange.getRequestURI().getRawPath();
                 // Context matching uses prefixes, so check each endpoint path exactly.
-                if (!"/".equals(path) && !"/app.js".equals(path)
+                if (!"/".equals(path) && !"/app.js".equals(path) && !"/styles.css".equals(path)
                         && !"/health".equals(path) && !"/search".equals(path)) {
                     exchange.sendResponseHeaders(404, -1);
                 } else if (!"GET".equals(exchange.getRequestMethod())) {
@@ -35,6 +36,8 @@ public class SearchServer {
                     sendResponse(exchange, 200, indexHtml, "text/html; charset=utf-8");
                 } else if ("/app.js".equals(path)) {
                     sendResponse(exchange, 200, appJs, "text/javascript; charset=utf-8");
+                } else if ("/styles.css".equals(path)) {
+                    sendResponse(exchange, 200, stylesCss, "text/css; charset=utf-8");
                 } else if ("/health".equals(path)) {
                     sendText(exchange, 200, "OK");
                 } else {
