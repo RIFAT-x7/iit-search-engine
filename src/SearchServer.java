@@ -8,7 +8,6 @@ import java.nio.ByteBuffer;
 import java.nio.charset.CharacterCodingException;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
-import java.util.Locale;
 
 public class SearchServer {
     public static void main(String[] args) throws IOException {
@@ -33,22 +32,13 @@ public class SearchServer {
                     try {
                         query = parseQuery(exchange.getRequestURI().getRawQuery());
                     } catch (IllegalArgumentException invalidQuery) {
-                        sendText(exchange, 400, "Bad request: " + invalidQuery.getMessage() + "\n");
+                        sendJson(exchange, 400, "{\"error\":"
+                                + jsonString("Bad request: " + invalidQuery.getMessage()) + "}");
                         return;
                     }
 
                     List<SearchResult> results = engine.search(query);
-                    if (results.isEmpty()) {
-                        sendText(exchange, 200, "No results found.\n");
-                    } else {
-                        StringBuilder response = new StringBuilder();
-                        for (int i = 0; i < results.size(); i++) {
-                            SearchResult result = results.get(i);
-                            response.append(String.format(Locale.ROOT, "%d. %s  Score: %.2f%n",
-                                    i + 1, result.getDocument().getFilename(), result.getScore()));
-                        }
-                        sendText(exchange, 200, response.toString());
-                    }
+                    sendJson(exchange, 200, searchJson(query, results));
                 }
             } finally {
                 exchange.close();
@@ -112,9 +102,59 @@ public class SearchServer {
         }
     }
 
+    private static String searchJson(String query, List<SearchResult> results) {
+        StringBuilder response = new StringBuilder("{\"query\":");
+        response.append(jsonString(query)).append(",\"results\":[");
+        for (int i = 0; i < results.size(); i++) {
+            if (i > 0) {
+                response.append(',');
+            }
+            SearchResult result = results.get(i);
+            response.append("{\"filename\":")
+                    .append(jsonString(result.getDocument().getFilename()))
+                    .append(",\"score\":").append(result.getScore()).append('}');
+        }
+        return response.append("]}").toString();
+    }
+
+    private static String jsonString(String value) {
+        StringBuilder escaped = new StringBuilder("\"");
+        for (int i = 0; i < value.length(); i++) {
+            char character = value.charAt(i);
+            switch (character) {
+                case '"' -> escaped.append("\\\"");
+                case '\\' -> escaped.append("\\\\");
+                case '\b' -> escaped.append("\\b");
+                case '\f' -> escaped.append("\\f");
+                case '\n' -> escaped.append("\\n");
+                case '\r' -> escaped.append("\\r");
+                case '\t' -> escaped.append("\\t");
+                default -> {
+                    if (character < 0x20) {
+                        escaped.append("\\u00")
+                                .append(Character.forDigit(character >> 4, 16))
+                                .append(Character.forDigit(character & 0xf, 16));
+                    } else {
+                        escaped.append(character);
+                    }
+                }
+            }
+        }
+        return escaped.append('"').toString();
+    }
+
+    private static void sendJson(HttpExchange exchange, int status, String json) throws IOException {
+        sendResponse(exchange, status, json, "application/json; charset=utf-8");
+    }
+
     private static void sendText(HttpExchange exchange, int status, String text) throws IOException {
+        sendResponse(exchange, status, text, "text/plain; charset=utf-8");
+    }
+
+    private static void sendResponse(HttpExchange exchange, int status, String text,
+                                     String contentType) throws IOException {
         byte[] response = text.getBytes(StandardCharsets.UTF_8);
-        exchange.getResponseHeaders().set("Content-Type", "text/plain; charset=utf-8");
+        exchange.getResponseHeaders().set("Content-Type", contentType);
         exchange.sendResponseHeaders(status, response.length);
         try (OutputStream output = exchange.getResponseBody()) {
             output.write(response);
