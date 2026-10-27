@@ -4,15 +4,21 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>IIT Search Engine</title>
+    <script src="/app.js" defer></script>
 </head>
 <body>
     <main>
         <h1>IIT Search Engine</h1>
-        <form action="/search" method="get" accept-charset="UTF-8">
+        <form id="search-form" action="/search" method="get" accept-charset="UTF-8">
             <label for="query">Search keywords</label>
             <input type="search" id="query" name="q" required>
             <button type="submit">Search</button>
         </form>
+        <section aria-labelledby="results-heading">
+            <h2 id="results-heading">Search results</h2>
+            <p id="search-status" role="status"></p>
+            <ol id="result-list" aria-busy="false"></ol>
+        </section>
     </main>
 </body>
 </html>
