@@ -228,6 +228,7 @@ src/
   SearchServer.java      Browser assets, HTTP health, and JSON search entry point
 tests/
   BaselineTests.java     Seven automated regression tests
+  HttpSmokeTests.ps1     Repeatable HTTP integration smoke tests
 data/                    Six fictional demonstration text documents
 web/
   index.html            Semantic search form and result containers
@@ -338,6 +339,29 @@ before stopping only the confirmed owned process. If startup reports
 `Address already in use`, do not terminate an unidentified process to free
 the port.
 
+### HTTP integration smoke tests (Phase 2.5A)
+
+Compile using the JDK configuration above, then start `SearchServer` from the
+repository root in a separate console. With the unchanged six fictional sample
+documents, run this command from another PowerShell console at the repository root:
+
+```powershell
+powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\tests\HttpSmokeTests.ps1
+```
+
+The script uses built-in PowerShell/.NET functionality and targets only
+`http://127.0.0.1:8080`. Its 16 named checks cover health, the HTML page and asset
+content types, JSON ranking and numeric scores, encoded multi-word queries,
+empty results, query errors, malformed escapes, method rejection, and unknown
+paths. It prints PASS/FAIL lines and totals, exiting with 0 on success or 1 if
+any check fails. Connection failures identify the need for a running server;
+requests have five-second timeouts. It never starts, stops, or replaces a server.
+
+Malformed literal percent escapes are sent over raw .NET TCP to avoid URI
+rewriting. They require HTTP 400 from the JDK HTTP stack, not a JSON error;
+invalid UTF-8 and other application-handled errors require JSON 400 responses.
+These are HTTP integration checks, not browser interaction or accessibility tests.
+
 ## Testing and verification record
 
 The committed [baseline harness](tests/BaselineTests.java) contains seven IR
@@ -386,9 +410,12 @@ automated screenshot suite. The Edge results were explicitly confirmed by
 the user. These integration scripts were not committed as new test files;
 there is no automated end-to-end browser test suite in this repository.
 
-The curl commands above are instructions for reproducing checks. This
-documentation task checks source consistency, excerpts, links, and Git state;
-it does not rerun compilation, runtime tests, HTTP servers, or Edge interaction.
+The curl commands above are instructions for reproducing checks. The earlier
+documentation update checked source consistency, excerpts, links, and Git state;
+it did not rerun compilation, runtime tests, HTTP servers, or Edge interaction.
+Phase 2.5A verification compiled with JDK 25.0.3, passed all seven Java baseline
+tests, and passed all 16 checks in `tests/HttpSmokeTests.ps1` under Windows
+PowerShell 5.1 against a temporary localhost server, which was stopped afterward.
 Cross-computer connectivity, performance, comprehensive accessibility, and
 browser/viewport combinations beyond the reported cases remain unverified.
 
