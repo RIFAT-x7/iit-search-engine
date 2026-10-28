@@ -8,37 +8,30 @@ Institute of Information Technology, University of Dhaka
 
 ## Overview
 
-IIT Search Engine is a Java-based, domain-specific document search engine using
-classical Information Retrieval (IR). Its academic objective is to implement
-and understand preprocessing, indexing, matching, ranking, and result retrieval
-over public or supervisor-authorized IIT documents.
+IIT Search Engine is an SPL-1 project for finding documents in an IIT-focused
+collection without opening each file manually. It uses classical Information
+Retrieval (IR), with custom Java code for preprocessing, indexing, matching,
+and ranking. The aim is to understand these algorithms and eventually apply
+them to public or supervisor-authorized IIT documents.
 
 The current application searches six fictional demonstration text files through
 a responsive browser page, a Java HTTP JSON API, or a separate CLI. The browser
 client uses plain HTML, JavaScript, and CSS to show ranked results without
 navigating away. Java performs indexing, query validation, retrieval, and ranking.
-The frontend implementation checkpoint on `feat/browser-client` is
-`8b0a38906495fa850244a8e66e36bd5ea2c4e4eb`.
 
-## Phase 2 complete: stable midterm demonstration baseline
+## Midterm demonstration
 
-The current `main` branch is the stable midterm demonstration baseline. Phase 2
-is complete: the custom Java IR core and CLI, Java HTTP server and JSON API,
-and responsive HTML/CSS/JavaScript browser search client are implemented over
-the fictional sample corpus. The repository includes seven Java regression
-tests, sixteen repeatable HTTP integration smoke tests, and seven learning manuals.
+Phases 1 and 2 are complete, and `main` is the stable midterm demonstration
+baseline. It includes seven Java regression tests, sixteen HTTP smoke tests,
+and seven learning manuals. Final acceptance passed compilation with JDK 25.0.3
+and both test suites; the [verification record](#testing-and-verification-record)
+separates automated checks from earlier manual browser checks.
 
-Previous final acceptance verified JDK 25.0.3 compilation, **7 Java tests passed,
-0 failed**, and **16 HTTP tests passed, 0 failed** under Windows PowerShell 5.1.
-Phase 2.5B then integrated `feat/browser-client` into `main` with
-`git merge --ff-only feat/browser-client` and a normal push, preserving all 11
-feature commits at `2cc096be10997422d6a6ea1397fa24dc779529ed`.
-Compilation and tests were not rerun during integration or this documentation task.
-
-The baseline remains localhost-only at `127.0.0.1:8080`. IIT-wide network access,
-authentication/authorization, document viewing/downloading, PDF extraction, OCR,
-and advanced retrieval methods are not implemented. Bengali indexing and Bengali
-OCR remain supervisor-pending decisions in the [planning document](PLANNED_FEATURES.md).
+The demonstration runs only on `127.0.0.1:8080` with fictional sample documents.
+IIT network deployment, login and authorization, document viewing/downloading,
+PDF extraction, OCR, and advanced retrieval are future work. Bengali indexing
+and Bengali OCR remain undecided. These are among the
+[questions for the November 1 supervisor discussion](PLANNED_FEATURES.md#questions-for-the-supervisor-november-1-2026).
 
 ## Current architecture
 
@@ -52,7 +45,7 @@ flowchart TD
     Server["Java HTTP server: SearchServer"]
     Assets["Fixed local HTML, JavaScript, CSS files"]
     CLI["CLI: Main"]
-    Core["Custom Java Information Retrieval core (implemented)"]
+    Core["Custom Java Information Retrieval core"]
     Index["In-memory inverted index"]
     Data["Sample UTF-8 .txt collection"]
     Assets -->|"Read once at startup"| Server
@@ -69,8 +62,7 @@ Each process creates its own engine and index. The CLI supports manual rebuilds;
 the HTTP server builds once before listening and reuses that index for searches.
 It serves the page, fixed assets, health, and search on `127.0.0.1:8080`.
 The web files are loaded once at startup, so edits require restarting the server.
-The browser presents results; Java retains all search algorithms. Cross-computer
-access remains future work.
+The browser presents results; Java retains all search algorithms.
 
 ## Current implementation
 
@@ -84,6 +76,7 @@ access remains future work.
   `idf = ln((N + 1) / (df + 1)) + 1`, multiplied by raw term frequency and summed
   over distinct query terms. There is no document-length normalization.
 - Descending score ordering with filename order for ties; all matches returned.
+  The engine uses a manual stable insertion sort for this small collection.
 - A CLI menu for full index rebuild, search, statistics, and exit. A failed
   rebuild preserves the previously built index.
 - A JDK HTTP server at `127.0.0.1:8080`: exact `GET /health` returns HTTP 200,
@@ -210,22 +203,20 @@ Completed milestones:
 | Phase 2.5A | Sixteen repeatable PowerShell HTTP integration smoke tests (`376a699`) |
 | Phase 2.5B | Fast-forward integration into `main` at `2cc096b`, preserving all 11 feature commits |
 
-Phase 2 is complete. The [planning document](PLANNED_FEATURES.md) records the
-revised roadmap and supervisor-pending deployment, access, OCR, and Bengali decisions.
+The integration used `git merge --ff-only feat/browser-client` followed by a
+normal push. No merge commit or history rewriting was needed. The
+[planning document](PLANNED_FEATURES.md) gives the next phases and open questions.
 
 Future work:
 
-1. Broader browser, zoom/reflow, and accessibility testing and further usability improvements.
-2. Network configuration and a verified cross-computer demonstration.
-3. Positional indexing, explicit Boolean AND/OR queries, and phrase retrieval.
-4. Partial/substring matching, basic fuzzy retrieval, Top-K results, and snippets.
-5. Index persistence, further search improvements, and performance evaluation
-   against a sequential-scan baseline.
-6. Authorized IIT PDF import and text extraction, with OCR scope to be agreed
-   with the supervisor.
+- Positional indexing, Boolean and phrase queries, partial/fuzzy retrieval, and Top-K results.
+- Authorized document ingestion, PDF text extraction, metadata, and snippets.
+- Controlled document access and deployment on the approved IIT internal network.
+- Index persistence and its rebuild workflow, with evaluation against a sequential scan.
+- Broader browser, zoom/reflow, accessibility, and usability testing.
 
-These are planned capabilities. PDF extraction, fuzzy matching, positional
-postings, snippets, persistence, and performance benchmarks are not implemented.
+These capabilities are not implemented. OCR scope, Bengali support, document
+permissions, and account requirements need supervisor discussion.
 
 ## Technology and academic scope
 
@@ -260,7 +251,7 @@ web/
   index.html            Semantic search form and result containers
   app.js                GET API requests and safe DOM result rendering
   styles.css            Responsive layout and interaction styling
-documents/               Original proposal form and presentation
+documents/               Original proposal form and proposal presentation
 learnings/               Learning journal and viva preparation
   README.md             Learning index and reading sequence
   01-phase1-foundations.md
@@ -272,12 +263,13 @@ learnings/               Learning journal and viva preparation
   02-06-responsive-css.md
 out/                     Ignored generated classes and local verification output
 iit-search-engine-prototype-v0.1.zip   Archived prototype
+PLANNED_FEATURES.md       Future work and supervisor questions
 README.md
 ```
 
-The Phase 2.2 and JSON manuals were included in documentation commit `e77dfd7`.
-The frontend manuals describe the subsequent HTML, JavaScript, and CSS milestones.
-Earlier manuals keep their historical checkpoints and verification context.
+The proposal, slides, and prototype archive preserve earlier project stages.
+Their proposed algorithms and schedules are not a record of current features.
+The seven learning manuals keep their historical checkpoints and test evidence.
 
 ## Build, run, and test
 
@@ -287,7 +279,7 @@ launcher on `PATH`. Change the JDK path if your installation differs. This
 project's verified toolchain is JDK 25; no dependency installation is needed.
 
 ```powershell
-Set-Location 'D:\iit_drive\IIT\spl1\iit-search-engine'
+# Run from your repository root.
 $projectJdk = 'C:\Program Files\Eclipse Adoptium\jdk-25.0.3.9-hotspot'
 & "$projectJdk\bin\javac.exe" -version
 & "$projectJdk\bin\java.exe" -version
@@ -416,8 +408,8 @@ reported Task 2.3 results included:
   with `Allow: GET` for POST, PUT, and HEAD on both known endpoints.
 - Cleanup of only the server processes launched for verification.
 
-No aggregate HTTP test count is claimed. Detailed results and verification
-limits are documented in the [JSON API manual](learnings/02-03-json-search-api.md).
+No aggregate count was recorded for that earlier HTTP run. Detailed results and
+verification limits are in the [JSON API manual](learnings/02-03-json-search-api.md).
 The older occupied-port retry in the health manual was a separate failed launch;
 it does not replace the later successful search API verification.
 
@@ -436,17 +428,17 @@ automated screenshot suite. The Edge results were explicitly confirmed by
 the user. These integration scripts were not committed as new test files;
 there is no automated end-to-end browser test suite in this repository.
 
-The curl commands above are instructions for reproducing checks. The earlier
-documentation update checked source consistency, excerpts, links, and Git state;
-it did not rerun compilation, runtime tests, HTTP servers, or Edge interaction.
 Phase 2.5A verification compiled with JDK 25.0.3, passed all seven Java baseline
 tests, and passed all 16 checks in `tests/HttpSmokeTests.ps1` under Windows
 PowerShell 5.1 against a temporary localhost server, which was stopped afterward.
 Phase 2 final acceptance repeated compilation and both suites at `376a699`:
 **7 Java tests passed, 0 failed; 16 HTTP tests passed, 0 failed**. The HTML,
 JavaScript, and CSS routes passed; the temporary server's identity was verified
-before cleanup. Phase 2.5B was pending at that acceptance checkpoint and has
-since completed through the fast-forward integration recorded above.
+before cleanup. Integration later preserved those tested application files;
+tests were not rerun during the integration or the completion documentation update.
+The pre-midterm repository audit reran JDK 25.0.3 compilation and both suites:
+7 Java tests and 16 HTTP tests passed, with no failures. The three served web
+assets also matched their local files. No browser interaction test was run.
 Cross-computer connectivity, performance, comprehensive accessibility, and
 browser/viewport combinations beyond the reported cases remain unverified.
 

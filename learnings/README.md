@@ -4,10 +4,9 @@
 
 **Project:** IIT Search Engine, SPL-1
 
-This folder explains the ideas behind each completed development milestone. It
-supports code review, revision, and viva preparation. The implementation and
-verification results are evidence; the notes do not claim that planned features
-already work.
+These manuals explain the code and ideas behind the completed milestones, with
+worked examples, test records, and viva questions. They were prepared with AI
+assistance and should be read alongside the source code.
 
 ## Available notes
 
@@ -31,18 +30,11 @@ already work.
    Source-based selectors, cascade, box model, typography, flexbox, responsive
    layout, contrast, keyboard feedback, and verification limits.
 
-The Phase 2.2 and Task 2.3 manuals were included in documentation commit
-`e77dfd7`. Their past checkpoints remain part of the learning record. The three
-frontend manuals explain the later implementation commits `44d869b`,
-`665509f`, and `8b0a389`.
-
-Phases 1 through 2.4 are completed. Phase 2.5A adds 16 repeatable HTTP integration
-checks in [HttpSmokeTests.ps1](../tests/HttpSmokeTests.ps1), alongside the seven
-Java regression tests. The seven manuals retain their historical milestone
-context; current execution instructions and final acceptance results are in the
-[project README](../README.md). Phase 2.5B is complete: fast-forward integration
-into `main` at `2cc096b` preserved all 11 feature commits. Phase 2 is complete,
-and the current `main` application is the stable midterm demonstration baseline.
+Phases 1 and 2 are complete and integrated into `main`. The seven Java regression
+tests and 16 [HTTP smoke tests](../tests/HttpSmokeTests.ps1) support the current
+midterm baseline. See the [project README](../README.md) for commands and results.
+Each manual keeps the historical checkpoint it explains, so an older description
+of a planned feature may refer to work completed in a later milestone.
 
 ## How to use the notes
 

@@ -4,6 +4,10 @@
 
 **Record date:** October 26, 2026
 
+This manual describes the Phase 2.1 health-only server. Search and browser
+features were added later; see the [project README](../README.md) for the
+current application.
+
 ## 1. Objective and architecture
 
 Task 2.1 adds a minimal HTTP server with a health endpoint. The supervisor has

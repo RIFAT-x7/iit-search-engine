@@ -11,6 +11,10 @@
 **Implementation checkpoint:** `feat/http-search-api`, commit
 `e7e2d836333a3efdda27fa68b4aa81aa75c6995c`
 
+Descriptions of missing frontend features refer to this JSON milestone. The
+browser client and repeatable HTTP tests were added later; see the
+[project README](../README.md) for the current application.
+
 ## 1. Objective and milestone context
 
 ### 1.1 What Phase 2.2 already implemented

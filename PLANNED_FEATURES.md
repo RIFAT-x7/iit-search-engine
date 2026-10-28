@@ -1,18 +1,14 @@
 # Planned Features and Supervisor Decisions
 
-This document records the current implementation, proposed final architecture,
-revised incremental roadmap, and decisions awaiting supervisor approval.
-It supplements the [project README](README.md), which describes current behavior
-and verification history. Proposed features below are not implemented or approved
-merely because they appear here. This documentation task authorizes no new
-functionality, network binding changes, or security implementation.
+This is the plan for the work after the midterm baseline, along with questions
+for the supervisor. The [README](README.md) explains how the current application
+works and how to run it. The plans below may change after discussion; listing a
+feature here does not mean it has been approved or implemented.
 
-## 1. Current implementation
+## Current implementation
 
-Phases 1 and 2 are completed, including the HTML, JavaScript, and CSS milestones,
-Phase 2.5A HTTP smoke tests, and Phase 2.5B fast-forward integration into `main`.
-The current `main` application is the stable midterm demonstration baseline.
-The current prototype provides:
+Phases 1 and 2 are complete. The application on `main` is the stable midterm
+demonstration baseline, with:
 
 - A custom Java Information Retrieval core with an in-memory inverted index,
   raw term-frequency postings, and TF-IDF-style ranking over distinct query terms.
@@ -27,7 +23,7 @@ The current prototype provides:
 - Six fictional demonstration text documents in `data/`, not real IIT records.
 - Seven dependency-free IR regression tests in `tests/BaselineTests.java`, plus
   16 repeatable HTTP integration smoke tests in `tests/HttpSmokeTests.ps1`
-  (completed Phase 2.5A). Verification records are described in the README;
+  from Phase 2.5A. Verification records are in the README;
   there is no automated browser end-to-end suite.
 - A localhost-only server configuration at `127.0.0.1:8080`. Cross-computer
   access and IIT network deployment are not implemented.
@@ -43,120 +39,109 @@ retrieval, Top-K limits, snippets, and index persistence remain future work.
 Current tokenization retains ASCII letters and digits; UTF-8 file reading and
 JSON transport do not establish Bengali search support.
 
-## 2. Proposed final IIT deployment architecture
+## Proposed IIT deployment
 
-The proposed service would operate within the approved IIT internal network,
-not on the public internet. Deployment details require supervisor approval.
+The proposed final service would be available only within the approved IIT
+internal network. The supervisor still needs to confirm the deployment arrangement.
 
-- The main IIT server computer stores original documents, the index, and all
+- The main IIT server computer would store original documents, the index, and all
   backend processing, including ingestion, indexing, retrieval, and ranking.
-- Clients use browsers to submit searches, view permitted results, and access
+- Clients would use browsers to submit searches, view permitted results, and access
   specifically permitted files through controlled server endpoints.
 - Clients must not receive the complete index or access to the internal server
   filesystem. Responses expose only the information permitted for that user.
 - Network membership alone must never imply authorization. Being connected to
   IIT's network does not grant permission to search or open every document.
 
-This is a deployment proposal, not the current localhost configuration or a
-claim that real IIT documents are ready to be exposed.
+The current server still runs only on localhost with fictional documents.
 
-## 3. Security and document access decisions
+## Identity and document access
 
-Login or credential-based identity verification may be required, subject to
-supervisor approval. Authentication verifies who a requester is; server-side
-authorization determines which searches, result information, and documents that
-requester may access. These are separate concerns.
+The final service may need login accounts or another way to verify credentials.
+That choice is still open. Authentication verifies who a user is. Server-side
+authorization decides which searches, result information, and documents that
+user may access. A login alone would not grant access to every document.
 
 Document viewing and possible downloading require appropriate authorization.
-The server must enforce approved permissions for each request, including direct
-requests to document endpoints; hiding a browser link is insufficient. Whether
-downloading is allowed at all remains a supervisor decision.
+The server would need to check permissions for every request, including direct
+requests to a document endpoint. Hiding a browser link would not protect a file.
+Whether downloading is allowed at all is a question for the supervisor.
 
-Future document endpoints must accept validated document identifiers and resolve
-them to approved server-side records. They must not accept arbitrary
-client-supplied file paths. Current document IDs depend on sorted filenames, so
-the identifier design must be reviewed before introducing persistent file links.
+Document endpoints must use validated document identifiers that the server
+maps to approved records, rather than arbitrary paths supplied by a client.
+Current IDs depend on sorted filenames, so they need review before being used
+for persistent file links.
 
-Appropriate network controls and access restrictions must be implemented and
-verified before exposing real IIT documents. Permission rules must also address
-whether filenames, metadata, snippets, and search matches may disclose restricted
-information. Required controls are a prerequisite for the relevant exposure,
-even if the corresponding roadmap phase appears later.
+Network controls and access restrictions must be in place and checked before
+real IIT documents are exposed. Permissions also need to cover filenames,
+metadata, snippets, and search matches, since these can reveal restricted
+information. No login, authorization system, or document access endpoint is
+implemented yet.
 
-**No security implementation is authorized by this documentation task.** The
-identity mechanism, permission model, network configuration, and implementation
-scope require a separately reviewed and approved milestone.
-
-## 4. Documents, PDF extraction, and OCR
+## PDF extraction, OCR, and Bengali support
 
 - **Text-based PDF extraction is planned:** extract an existing text layer from
   authorized PDFs, then preprocess and index that text. This is not OCR.
 - **OCR is a separate possible capability:** scanned PDFs and images may contain
   only pictures of text and may require optical character recognition to produce
-  searchable text. OCR scope, tools, quality checks, and inclusion in SPL-1 remain
-  subject to supervisor approval.
+  searchable text. Whether OCR belongs in SPL-1, which tools to use, and how to
+  check its accuracy are questions for the supervisor.
 - **Bengali text indexing is undecided:** it would require an agreed approach to
   tokenization and retrieval beyond the current ASCII word processing.
 - **Bengali OCR is also undecided:** recognizing Bengali from images is a
   separate decision from indexing Bengali text already available digitally.
 
-Bengali support must not be treated as mandatory until supervisor confirmation.
-Approval to ingest documents does not automatically approve OCR or either form
-of Bengali support. Only public or explicitly authorized documents may be used
-for future ingestion work.
+Bengali support is not a confirmed requirement. Approval to ingest documents
+would not automatically include OCR or Bengali support. Future ingestion must
+use public or explicitly authorized documents.
 
-## 5. Revised incremental roadmap
+## Roadmap
 
-This roadmap refines the README's future-work list into reviewable milestones.
-The README's list is a capability summary; the sequence below is the proposed
-revised implementation order. It does not mark any future milestone completed
-or authorize branch integration or implementation.
+The next phases build on the completed midterm baseline. Their scope can be
+adjusted after the supervisor discussion.
 
 | Phase | Status | Scope |
 | --- | --- | --- |
 | 1-2.4 | Completed | Custom IR core, CLI, baseline tests, HTTP health/search, JSON API, and HTML/CSS/JavaScript browser client. |
 | 2.5A | Completed | Sixteen repeatable HTTP integration smoke tests covering existing routes, JSON results, validation errors, and routing behavior. |
-| 2.5B | Completed | `git merge --ff-only feat/browser-client` integrated all 11 feature commits into `main` at `2cc096be10997422d6a6ea1397fa24dc779529ed`; the normal push succeeded. |
+| 2.5B | Completed | Fast-forward integration of `feat/browser-client` into `main`, preserving all 11 feature commits. |
 | 3 | Planned | Advanced IR algorithms: positional indexing, explicit Boolean queries, phrase retrieval, partial/fuzzy retrieval, and Top-K results. |
 | 4 | Planned; document scope pending approval | Authorized document ingestion and text-based PDF extraction; OCR only if separately approved. |
 | 5 | Planned; access policy pending approval | Result metadata, snippets, and controlled file viewing/downloading, subject to approved permissions. |
 | 6 | Planned; deployment and identity decisions pending approval | IIT internal network deployment and approved authentication/authorization. |
 | 7 | Planned | Persistence, rebuild support, evaluation, final testing, and documentation. The existing CLI already supports manual rebuilds; persistence and the remaining rebuild design are future work. |
 
-**Phase order does not permit delaying necessary access controls.** If nonpublic
-files or shared network access are introduced before Phase 6, the required
-identity, authorization, and network controls must be approved, implemented, and
-verified before that exposure. Phase 6 is not permission to defer these controls.
+Access controls cannot wait until Phase 6 if nonpublic files or shared network
+access are introduced earlier. The necessary identity checks, authorization,
+and network restrictions must be agreed, implemented, and verified before that
+exposure.
 
-Broader browser, zoom/reflow, accessibility, and usability checks in the README
-remain planned verification work across applicable milestones. Each milestone
-requires a concrete scope, review, and suitable checks. This document does not
-authorize a merge, commit, or push.
+Broader browser, zoom/reflow, accessibility, and usability checks remain part of
+the planned testing work.
 
-## 6. Questions requiring supervisor approval
+## Questions for the supervisor: November 1, 2026
 
-1. **Network access:** Which IIT network segments and client computers may reach
-   the service? Who approves the server location, network controls, and access
-   restrictions? Is any access beyond the approved internal network permitted?
-2. **Accounts and identity:** Must all users log in? Which credentials or account
-   provider may be used, who provisions accounts, and how is access revoked?
-   If any anonymous access is approved, exactly which public material may it see?
-3. **Document permissions:** Which documents may be ingested, who authorizes
-   their use, and which users or groups may search each collection? Must result
-   existence, filenames, metadata, and snippets also be restricted?
-4. **Viewing and downloading:** Is browser viewing allowed, is downloading
-   allowed, and do they need different permissions? Which file types and direct
-   document access rules are acceptable?
-5. **PDF scope:** Which text-based PDFs are in scope, which extraction tools are
-   acceptable, and how should extraction failures and text quality be reviewed?
-6. **OCR scope:** Are scanned PDFs/images required for SPL-1? If so, which
-   languages, tools, quality targets, and manual review process are approved?
-7. **Bengali support:** Is Bengali text indexing required? Is Bengali OCR
-   separately required? Neither is mandatory until explicitly confirmed.
-8. **Milestone acceptance:** What retrieval behavior, Top-K policy, evaluation
-   collection, relevance measures, performance targets, and final demonstration
-   are expected? What checks are required before branch integration and before
-   real-document or shared-network use?
+1. **Midterm scope:** Is the current Phase 2 application sufficient for the
+   midterm presentation? Are any changes needed before the demonstration?
+2. **Advanced IR before midterm:** Are positional indexing, Boolean queries,
+   phrase search, or other advanced algorithms expected before the midterm?
+3. **Deployment:** Should the final application run centrally on an IIT server
+   and be accessible only through the IIT network? Which computers or network
+   segments may connect, and who will approve the network controls?
+4. **Accounts:** Are individual accounts or credential verification required?
+   Which account system may be used, and who manages access and revocation?
+   If anonymous access is allowed, what public material may it expose?
+5. **Document permissions:** Which documents may be collected, who authorizes
+   their use, and which users may search them? Should filenames, metadata,
+   snippets, and the existence of a match also be restricted?
+6. **Viewing and downloading:** Should users view documents in the browser,
+   download them, or both? Do these actions need different permissions?
+7. **PDF and OCR:** Is text-based PDF extraction required? Is OCR needed for
+   scanned PDFs or images? Which tools, languages, and accuracy checks are suitable?
+8. **Bengali:** Is Bengali text indexing required? Is Bengali OCR also required,
+   or should the project remain focused on English documents?
+9. **Final deliverables:** What minimum algorithms, dataset size, Top-K policy,
+   relevance measures, performance comparison, and other deliverables are expected?
 
-Record the supervisor's answers and approved milestone scope before implementing
-the affected features. Until then, these questions remain open decisions.
+These questions are still unanswered. I'll discuss them with my supervisor
+before deciding which features to work on next.
