@@ -9,8 +9,10 @@ functionality, network binding changes, or security implementation.
 
 ## 1. Current implementation
 
-Phases 1 through 2.4 are completed, including the HTML, JavaScript, and CSS
-milestones in Phase 2.4. The current prototype provides:
+Phases 1 and 2 are completed, including the HTML, JavaScript, and CSS milestones,
+Phase 2.5A HTTP smoke tests, and Phase 2.5B fast-forward integration into `main`.
+The current `main` application is the stable midterm demonstration baseline.
+The current prototype provides:
 
 - A custom Java Information Retrieval core with an in-memory inverted index,
   raw term-frequency postings, and TF-IDF-style ranking over distinct query terms.
@@ -114,7 +116,7 @@ or authorize branch integration or implementation.
 | --- | --- | --- |
 | 1-2.4 | Completed | Custom IR core, CLI, baseline tests, HTTP health/search, JSON API, and HTML/CSS/JavaScript browser client. |
 | 2.5A | Completed | Sixteen repeatable HTTP integration smoke tests covering existing routes, JSON results, validation errors, and routing behavior. |
-| 2.5B | Not yet complete; pending review and explicit Git approval | Reviewed branch integration into `main` after the required checks and review. |
+| 2.5B | Completed | `git merge --ff-only feat/browser-client` integrated all 11 feature commits into `main` at `2cc096be10997422d6a6ea1397fa24dc779529ed`; the normal push succeeded. |
 | 3 | Planned | Advanced IR algorithms: positional indexing, explicit Boolean queries, phrase retrieval, partial/fuzzy retrieval, and Top-K results. |
 | 4 | Planned; document scope pending approval | Authorized document ingestion and text-based PDF extraction; OCR only if separately approved. |
 | 5 | Planned; access policy pending approval | Result metadata, snippets, and controlled file viewing/downloading, subject to approved permissions. |

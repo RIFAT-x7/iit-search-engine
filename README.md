@@ -20,6 +20,26 @@ navigating away. Java performs indexing, query validation, retrieval, and rankin
 The frontend implementation checkpoint on `feat/browser-client` is
 `8b0a38906495fa850244a8e66e36bd5ea2c4e4eb`.
 
+## Phase 2 complete: stable midterm demonstration baseline
+
+The current `main` branch is the stable midterm demonstration baseline. Phase 2
+is complete: the custom Java IR core and CLI, Java HTTP server and JSON API,
+and responsive HTML/CSS/JavaScript browser search client are implemented over
+the fictional sample corpus. The repository includes seven Java regression
+tests, sixteen repeatable HTTP integration smoke tests, and seven learning manuals.
+
+Previous final acceptance verified JDK 25.0.3 compilation, **7 Java tests passed,
+0 failed**, and **16 HTTP tests passed, 0 failed** under Windows PowerShell 5.1.
+Phase 2.5B then integrated `feat/browser-client` into `main` with
+`git merge --ff-only feat/browser-client` and a normal push, preserving all 11
+feature commits at `2cc096be10997422d6a6ea1397fa24dc779529ed`.
+Compilation and tests were not rerun during integration or this documentation task.
+
+The baseline remains localhost-only at `127.0.0.1:8080`. IIT-wide network access,
+authentication/authorization, document viewing/downloading, PDF extraction, OCR,
+and advanced retrieval methods are not implemented. Bengali indexing and Bengali
+OCR remain supervisor-pending decisions in the [planning document](PLANNED_FEATURES.md).
+
 ## Current architecture
 
 The Java HTTP server calls the custom IR core and reuses an in-memory inverted
@@ -188,9 +208,9 @@ Completed milestones:
 | Phase 2.4B | JavaScript search and in-page result rendering (`665509f`) |
 | Phase 2.4C | Responsive CSS and fixed stylesheet route (`8b0a389`) |
 | Phase 2.5A | Sixteen repeatable PowerShell HTTP integration smoke tests (`376a699`) |
+| Phase 2.5B | Fast-forward integration into `main` at `2cc096b`, preserving all 11 feature commits |
 
-Phase 2.5B integration into `main` is not yet complete and requires review and
-explicit Git approval. The [planning document](PLANNED_FEATURES.md) records the
+Phase 2 is complete. The [planning document](PLANNED_FEATURES.md) records the
 revised roadmap and supervisor-pending deployment, access, OCR, and Bengali decisions.
 
 Future work:
@@ -425,7 +445,8 @@ PowerShell 5.1 against a temporary localhost server, which was stopped afterward
 Phase 2 final acceptance repeated compilation and both suites at `376a699`:
 **7 Java tests passed, 0 failed; 16 HTTP tests passed, 0 failed**. The HTML,
 JavaScript, and CSS routes passed; the temporary server's identity was verified
-before cleanup. Phase 2.5B integration remains pending.
+before cleanup. Phase 2.5B was pending at that acceptance checkpoint and has
+since completed through the fast-forward integration recorded above.
 Cross-computer connectivity, performance, comprehensive accessibility, and
 browser/viewport combinations beyond the reported cases remain unverified.
 

@@ -40,7 +40,9 @@ Phases 1 through 2.4 are completed. Phase 2.5A adds 16 repeatable HTTP integrati
 checks in [HttpSmokeTests.ps1](../tests/HttpSmokeTests.ps1), alongside the seven
 Java regression tests. The seven manuals retain their historical milestone
 context; current execution instructions and final acceptance results are in the
-[project README](../README.md). Phase 2.5B integration into `main` is not yet complete.
+[project README](../README.md). Phase 2.5B is complete: fast-forward integration
+into `main` at `2cc096b` preserved all 11 feature commits. Phase 2 is complete,
+and the current `main` application is the stable midterm demonstration baseline.
 
 ## How to use the notes
 
