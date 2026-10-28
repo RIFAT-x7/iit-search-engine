@@ -78,6 +78,7 @@ access remains future work.
 - Unsupported methods on any known path return 405 with `Allow: GET`;
   unknown paths return 404. Path validation precedes method validation.
 - Seven dependency-free automated baseline regression tests for the IR core.
+- Sixteen repeatable HTTP integration smoke tests in `tests/HttpSmokeTests.ps1`.
 - An accessible native GET search form with a labeled required input. Without
   JavaScript, it can still navigate to the API's raw JSON response.
 - Plain JavaScript submit handling with URLSearchParams, fetch, safe textContent
@@ -186,6 +187,11 @@ Completed milestones:
 | Phase 2.4A | Native HTML GET form and exact root page route (`44d869b`) |
 | Phase 2.4B | JavaScript search and in-page result rendering (`665509f`) |
 | Phase 2.4C | Responsive CSS and fixed stylesheet route (`8b0a389`) |
+| Phase 2.5A | Sixteen repeatable PowerShell HTTP integration smoke tests (`376a699`) |
+
+Phase 2.5B integration into `main` is not yet complete and requires review and
+explicit Git approval. The [planning document](PLANNED_FEATURES.md) records the
+revised roadmap and supervisor-pending deployment, access, OCR, and Bengali decisions.
 
 Future work:
 
@@ -371,8 +377,8 @@ preservation. It does not start an HTTP server or test JSON serialization.
 
 Prior Phase 1 verification recorded JDK 25.0.3 compilation, a successful CLI
 smoke test, and seven passing tests. Task 2.3 verification again recorded
-successful compilation and **7 passed, 0 failed**. These are previously executed
-results, not fresh runtime checks for this documentation update.
+successful compilation and **7 passed, 0 failed**. These are historical results;
+the final acceptance rerun is recorded below.
 
 Separate Codex-run HTTP integration checks used an external PowerShell/.NET
 HTTP client script. That script is not a committed HTTP test suite. Its
@@ -416,6 +422,10 @@ it did not rerun compilation, runtime tests, HTTP servers, or Edge interaction.
 Phase 2.5A verification compiled with JDK 25.0.3, passed all seven Java baseline
 tests, and passed all 16 checks in `tests/HttpSmokeTests.ps1` under Windows
 PowerShell 5.1 against a temporary localhost server, which was stopped afterward.
+Phase 2 final acceptance repeated compilation and both suites at `376a699`:
+**7 Java tests passed, 0 failed; 16 HTTP tests passed, 0 failed**. The HTML,
+JavaScript, and CSS routes passed; the temporary server's identity was verified
+before cleanup. Phase 2.5B integration remains pending.
 Cross-computer connectivity, performance, comprehensive accessibility, and
 browser/viewport combinations beyond the reported cases remain unverified.
 

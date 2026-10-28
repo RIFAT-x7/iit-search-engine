@@ -23,10 +23,10 @@ milestones in Phase 2.4. The current prototype provides:
   loading/error feedback, and responsive styling. Java performs retrieval and
   ranking on the server.
 - Six fictional demonstration text documents in `data/`, not real IIT records.
-- Seven dependency-free IR regression tests in `tests/BaselineTests.java`.
-  Previously recorded HTTP and browser checks are described in the README;
-  there is no committed repeatable HTTP integration suite or automated browser
-  end-to-end suite.
+- Seven dependency-free IR regression tests in `tests/BaselineTests.java`, plus
+  16 repeatable HTTP integration smoke tests in `tests/HttpSmokeTests.ps1`
+  (completed Phase 2.5A). Verification records are described in the README;
+  there is no automated browser end-to-end suite.
 - A localhost-only server configuration at `127.0.0.1:8080`. Cross-computer
   access and IIT network deployment are not implemented.
 - Seven learning manuals, listed in the [learning journal](learnings/README.md),
@@ -113,8 +113,8 @@ or authorize branch integration or implementation.
 | Phase | Status | Scope |
 | --- | --- | --- |
 | 1-2.4 | Completed | Custom IR core, CLI, baseline tests, HTTP health/search, JSON API, and HTML/CSS/JavaScript browser client. |
-| 2.5A | Planned | Repeatable HTTP integration smoke tests covering existing routes, JSON results, validation errors, and routing behavior. |
-| 2.5B | Pending review and explicit Git approval | Reviewed branch integration into `main` after the required checks and review. |
+| 2.5A | Completed | Sixteen repeatable HTTP integration smoke tests covering existing routes, JSON results, validation errors, and routing behavior. |
+| 2.5B | Not yet complete; pending review and explicit Git approval | Reviewed branch integration into `main` after the required checks and review. |
 | 3 | Planned | Advanced IR algorithms: positional indexing, explicit Boolean queries, phrase retrieval, partial/fuzzy retrieval, and Top-K results. |
 | 4 | Planned; document scope pending approval | Authorized document ingestion and text-based PDF extraction; OCR only if separately approved. |
 | 5 | Planned; access policy pending approval | Result metadata, snippets, and controlled file viewing/downloading, subject to approved permissions. |

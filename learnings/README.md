@@ -36,6 +36,12 @@ The Phase 2.2 and Task 2.3 manuals were included in documentation commit
 frontend manuals explain the later implementation commits `44d869b`,
 `665509f`, and `8b0a389`.
 
+Phases 1 through 2.4 are completed. Phase 2.5A adds 16 repeatable HTTP integration
+checks in [HttpSmokeTests.ps1](../tests/HttpSmokeTests.ps1), alongside the seven
+Java regression tests. The seven manuals retain their historical milestone
+context; current execution instructions and final acceptance results are in the
+[project README](../README.md). Phase 2.5B integration into `main` is not yet complete.
+
 ## How to use the notes
 
 Read the manuals in the numbered order. Phase 1 explains the IR core used by
