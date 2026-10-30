@@ -1,0 +1,5 @@
+Fictional demonstration data; not an official IIT document.
+During a fictional networking laboratory, students inspect packets and compare
+routing tables. The project uses Java for a simple search tool that reports
+simulated network delays. The report describes the effect of queue length on
+response time.

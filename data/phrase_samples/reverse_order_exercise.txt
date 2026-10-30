@@ -1,0 +1,4 @@
+Fictional demonstration data; not an official IIT document.
+In a fictional laboratory exercise, a worksheet asks students to search Java
+examples for a method that formats a message. The exercise concerns reading
+source code carefully and recording the name of the matching method.

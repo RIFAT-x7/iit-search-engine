@@ -76,6 +76,66 @@ public class SearchEngine {
         return results;
     }
 
+    /** Matches consecutive normalized tokens, including stop words, in filename order.
+     * The input is phrase text; quotation marks have no query-language meaning.
+     */
+    public List<Document> searchPhrase(String phrase) {
+        List<String> terms = processor.tokenize(phrase);
+        List<Document> matches = new ArrayList<>();
+        if (terms.isEmpty()) {
+            return matches;
+        }
+
+        List<Map<Integer, List<Integer>>> phrasePostings = new ArrayList<>();
+        for (String term : terms) {
+            Map<Integer, List<Integer>> positions = index.getPositionalPostings(term);
+            if (positions.isEmpty()) {
+                return matches;
+            }
+            phrasePostings.add(positions);
+        }
+
+        // Documents were loaded in filename order. Check each ID independently;
+        // even several phrase occurrences produce only one matching document.
+        for (Document document : documents) {
+            int documentId = document.getId();
+            List<Integer> starts = phrasePostings.get(0).getOrDefault(documentId, List.of());
+            for (int offset = 1; offset < terms.size() && !starts.isEmpty(); offset++) {
+                List<Integer> positions = phrasePostings.get(offset)
+                        .getOrDefault(documentId, List.of());
+                starts = retainPhraseStarts(starts, positions, offset);
+            }
+            if (!starts.isEmpty()) {
+                matches.add(document);
+            }
+        }
+        return matches;
+    }
+
+    // Merge two sorted lists, retaining each original start p only if this term
+    // occurs at p + offset. Keeping the same start across all terms prevents
+    // unrelated adjacent pairs from being mistaken for one complete phrase.
+    private List<Integer> retainPhraseStarts(List<Integer> starts, List<Integer> positions,
+                                             int offset) {
+        List<Integer> retained = new ArrayList<>();
+        int startIndex = 0;
+        int positionIndex = 0;
+        while (startIndex < starts.size() && positionIndex < positions.size()) {
+            int expectedPosition = starts.get(startIndex) + offset;
+            int actualPosition = positions.get(positionIndex);
+            if (actualPosition < expectedPosition) {
+                positionIndex++;
+            } else if (actualPosition > expectedPosition) {
+                startIndex++;
+            } else {
+                retained.add(starts.get(startIndex));
+                startIndex++;
+                positionIndex++;
+            }
+        }
+        return retained;
+    }
+
     public int getDocumentCount() { return documents.size(); }
     /** Read-only positional snapshot, keyed by document ID, for a normalized term. */
     public Map<Integer, List<Integer>> getPositionalPostings(String term) {

@@ -1,0 +1,5 @@
+Fictional demonstration data; not an official IIT document.
+In this fictional algorithms coursework scenario, students compare a binary search
+with a linear scan. They justify the running time using a small sorted array and
+record the number of comparisons. The discussion focuses on clear reasoning
+rather than a particular programming language.

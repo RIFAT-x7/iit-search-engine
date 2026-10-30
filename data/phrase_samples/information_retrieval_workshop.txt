@@ -1,0 +1,5 @@
+Fictional demonstration data; not an official IIT document.
+A fictional information retrieval workshop explores how an inverted index
+supports exact phrase matching. Participants test Java search on a small collection
+and discuss the difference between order and frequency. The exercise includes
+stop words in the query.

@@ -1,0 +1,5 @@
+Fictional demonstration data; not an official IIT document.
+In a fictional Java programming laboratory, a tutor demonstrates Java and Java
+search with short text files. A sample console transcript contains the phrase
+error error before a corrected message. Pairs then compare the output of Java
+search with their handwritten expectations.

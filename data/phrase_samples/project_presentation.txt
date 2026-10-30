@@ -1,0 +1,5 @@
+Fictional demonstration data; not an official IIT document.
+A fictional project presentation brings together prototypes from a student
+software engineering group. Teams meet in the seminar room to rehearse a short
+demonstration and discuss how they checked their results. Feedback is collected
+as practice material rather than an official assessment record.

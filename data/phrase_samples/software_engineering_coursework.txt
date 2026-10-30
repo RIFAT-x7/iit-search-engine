@@ -1,0 +1,5 @@
+Fictional demonstration data; not an official IIT document.
+For a fictional software engineering assignment, a team records requirements
+and reviews a simple library catalogue. Its example log shows an error followed
+by another error after a failed retry. The report explains how useful messages
+help a reader understand what happened.

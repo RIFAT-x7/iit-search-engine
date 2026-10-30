@@ -1,0 +1,5 @@
+Fictional demonstration data; not an official IIT document.
+A fictional department seminar discusses programming in Java and the value of
+small tests. Speakers compare readable loops with compact expressions and invite
+students to explain one design decision. The session uses invented examples
+instead of departmental records.
