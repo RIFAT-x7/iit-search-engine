@@ -29,6 +29,9 @@ assistance and should be read alongside the source code.
 7. [Phase 2.4C: Responsive CSS](02-06-responsive-css.md) —
    Source-based selectors, cascade, box model, typography, flexbox, responsive
    layout, contrast, keyboard feedback, and verification limits.
+8. [Phase 3.1A: Positional inverted index](03-01-positional-index.md) —
+   Complete token positions, stop words, frequency compatibility, immutable
+   snapshots, rebuilds, thirteen focused tests, and future phrase retrieval.
 
 Phases 1 and 2 are complete and integrated into `main`. The seven Java regression
 tests and 16 [HTTP smoke tests](../tests/HttpSmokeTests.ps1) support the current
@@ -45,6 +48,7 @@ Task 2.3 then explains the move from plain text to JSON responses. Read the
 frontend manuals next: HTML defines the document and native submission,
 JavaScript consumes that JSON API within the page, and CSS controls presentation
 and responsive layout. Indexing, TF-IDF-style scoring, and ranking stay in Java.
+Continue with Phase 3.1A for positional indexing beneath the existing keyword search.
 
 The manuals include implementation explanations, worked examples, verification
 records and limitations, viva questions, and self-practice exercises. Read each
