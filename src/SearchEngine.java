@@ -32,7 +32,7 @@ public class SearchEngine {
             String text = Files.readString(file.toPath(), StandardCharsets.UTF_8);
             Document document = new Document(newDocuments.size() + 1, file.getName());
             newDocuments.add(document);
-            newIndex.addDocument(document, processor.process(text));
+            newIndex.addDocumentWithPositions(document, processor.tokenize(text));
         }
         documents = newDocuments;
         index = newIndex;
@@ -77,6 +77,11 @@ public class SearchEngine {
     }
 
     public int getDocumentCount() { return documents.size(); }
+    /** Read-only positional snapshot, keyed by document ID, for a normalized term. */
+    public Map<Integer, List<Integer>> getPositionalPostings(String term) {
+        return index.getPositionalPostings(term);
+    }
+
     public int getUniqueTermCount() { return index.getUniqueTermCount(); }
     public int getTotalTokens() { return index.getTotalTokens(); }
 }

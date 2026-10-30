@@ -9,6 +9,17 @@ public class TextProcessor {
 
     public List<String> process(String text) {
         List<String> tokens = new ArrayList<>();
+        for (String token : tokenize(text)) {
+            if (!isStopWord(token)) {
+                tokens.add(token);
+            }
+        }
+        return tokens;
+    }
+
+    // Complete normalized sequence, including stop words, for positional indexing.
+    public List<String> tokenize(String text) {
+        List<String> tokens = new ArrayList<>();
         String lowercase = text.toLowerCase(Locale.ROOT);
         StringBuilder word = new StringBuilder();
 
@@ -19,17 +30,14 @@ public class TextProcessor {
                     || (character >= '0' && character <= '9')) {
                 word.append(character);
             } else if (word.length() > 0) {
-                String token = word.toString();
-                if (!isStopWord(token)) {
-                    tokens.add(token);
-                }
+                tokens.add(word.toString());
                 word.setLength(0);
             }
         }
         return tokens;
     }
 
-    private boolean isStopWord(String token) {
+    static boolean isStopWord(String token) {
         for (String stopWord : STOP_WORDS) {
             if (token.equals(stopWord)) {
                 return true;
