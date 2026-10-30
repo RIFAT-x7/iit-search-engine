@@ -38,6 +38,9 @@ assistance and should be read alongside the source code.
 10. [Phase 3.2B: Browser-based exact phrase search](03-03-browser-phrase-search.md) —
     Browser/API modes, legacy JSON compatibility, cancellation and request IDs,
     fixed demo startup, automated checks, and user-verified Edge behavior.
+11. [Phase 3.3A: Core Boolean retrieval](03-04-boolean-search.md) —
+    Frequency-posting sets, explicit AND/OR parsing, precedence, strict operands,
+    twenty-two tests, preserved retrieval behavior, and verification evidence.
 
 Phases 1 and 2 are complete and integrated into `main`. The seven Java regression
 tests and 16 [HTTP smoke tests](../tests/HttpSmokeTests.ps1) support the current
