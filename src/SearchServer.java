@@ -13,9 +13,20 @@ import java.util.List;
 
 public class SearchServer {
     public static void main(String[] args) throws IOException {
+        String collection;
+        if (args.length == 0) {
+            collection = "data";
+        } else if (args.length == 1 && "--phrase-demo".equals(args[0])) {
+            collection = "data/phrase_samples";
+        } else {
+            System.err.println("Unsupported arguments. Usage: SearchServer [--phrase-demo]");
+            System.exit(1);
+            return;
+        }
         // Run from the repository root so data and the fixed web files resolve correctly.
         SearchEngine engine = new SearchEngine();
-        engine.buildIndex("data");
+        engine.buildIndex(collection);
+        System.out.println("Collection: " + collection);
         System.out.println("Indexed " + engine.getDocumentCount() + " documents.");
         String indexHtml = Files.readString(Path.of("web", "index.html"), StandardCharsets.UTF_8);
         String appJs = Files.readString(Path.of("web", "app.js"), StandardCharsets.UTF_8);
@@ -41,17 +52,22 @@ public class SearchServer {
                 } else if ("/health".equals(path)) {
                     sendText(exchange, 200, "OK");
                 } else {
-                    String query;
+                    SearchRequest request;
                     try {
-                        query = parseQuery(exchange.getRequestURI().getRawQuery());
+                        request = parseQuery(exchange.getRequestURI().getRawQuery());
                     } catch (IllegalArgumentException invalidQuery) {
                         sendJson(exchange, 400, "{\"error\":"
                                 + jsonString("Bad request: " + invalidQuery.getMessage()) + "}");
                         return;
                     }
 
-                    List<SearchResult> results = engine.search(query);
-                    sendJson(exchange, 200, searchJson(query, results));
+                    if ("phrase".equals(request.mode())) {
+                        sendJson(exchange, 200, phraseJson(request.query(),
+                                engine.searchPhrase(request.query())));
+                    } else {
+                        sendJson(exchange, 200, searchJson(request.query(),
+                                engine.search(request.query())));
+                    }
                 }
             } finally {
                 exchange.close();
@@ -61,11 +77,14 @@ public class SearchServer {
         System.out.println("Listening on http://127.0.0.1:8080");
     }
 
-    private static String parseQuery(String rawQuery) {
+    private record SearchRequest(String query, String mode) { }
+
+    private static SearchRequest parseQuery(String rawQuery) {
         if (rawQuery == null) {
             throw new IllegalArgumentException("Missing q parameter.");
         }
         String query = null;
+        String mode = null;
         // Split before decoding so an encoded '&' remains part of a value.
         for (String parameter : rawQuery.split("&", -1)) {
             int separator = parameter.indexOf('=');
@@ -79,12 +98,22 @@ public class SearchServer {
                     throw new IllegalArgumentException("Duplicate q parameter.");
                 }
                 query = value;
+            } else if ("mode".equals(name)) {
+                if (mode != null) {
+                    throw new IllegalArgumentException("Duplicate mode parameter.");
+                }
+                mode = value;
             }
         }
         if (query == null || query.isBlank()) {
             throw new IllegalArgumentException("A nonblank q parameter is required.");
         }
-        return query;
+        if (mode == null) {
+            mode = "keyword";
+        } else if (!"keyword".equals(mode) && !"phrase".equals(mode)) {
+            throw new IllegalArgumentException("mode must be keyword or phrase.");
+        }
+        return new SearchRequest(query, mode);
     }
 
     private static String decodeParameter(String encoded) {
@@ -126,6 +155,19 @@ public class SearchServer {
             response.append("{\"filename\":")
                     .append(jsonString(result.getDocument().getFilename()))
                     .append(",\"score\":").append(result.getScore()).append('}');
+        }
+        return response.append("]}").toString();
+    }
+
+    private static String phraseJson(String query, List<Document> documents) {
+        StringBuilder response = new StringBuilder("{\"query\":");
+        response.append(jsonString(query)).append(",\"mode\":\"phrase\",\"results\":[");
+        for (int i = 0; i < documents.size(); i++) {
+            if (i > 0) {
+                response.append(',');
+            }
+            response.append("{\"filename\":")
+                    .append(jsonString(documents.get(i).getFilename())).append('}');
         }
         return response.append("]}").toString();
     }

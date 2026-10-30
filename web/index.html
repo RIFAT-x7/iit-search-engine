@@ -11,9 +11,15 @@
     <main>
         <h1>IIT Search Engine</h1>
         <form id="search-form" action="/search" method="get" accept-charset="UTF-8">
-            <label for="query">Search keywords</label>
+            <fieldset class="search-modes">
+                <legend>Search mode</legend>
+                <label><input type="radio" name="mode" value="keyword" checked> Keyword Search</label>
+                <label><input type="radio" name="mode" value="phrase"> Exact Phrase Search</label>
+            </fieldset>
+            <label for="query">Search text</label>
+            <p id="search-help">Exact Phrase Search matches consecutive words, including stop words.</p>
             <div class="search-controls">
-                <input type="search" id="query" name="q" required>
+                <input type="search" id="query" name="q" aria-describedby="search-help" required>
                 <button type="submit">Search</button>
             </div>
         </form>
