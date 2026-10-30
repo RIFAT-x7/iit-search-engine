@@ -5,6 +5,7 @@ import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
+import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Locale;
@@ -110,6 +111,102 @@ public class SearchEngine {
             }
         }
         return matches;
+    }
+
+    /**
+     * Evaluates term (AND term)* groups joined by OR, without ranking.
+     * Operators are standalone, whitespace-separated AND/OR (case-insensitive).
+     * Each operand must normalize to exactly one ASCII-alphanumeric token using
+     * the keyword rules. Surrounding punctuation is allowed, but stop words are
+     * rejected rather than silently removed. AND/OR are reserved operators.
+     * Parentheses, NOT, quoted operands and wildcards are not supported.
+     *
+     * @throws IllegalArgumentException for null, blank or malformed expressions
+     */
+    public List<Document> searchBoolean(String expression) {
+        if (expression == null || expression.isBlank()) {
+            throw new IllegalArgumentException("Boolean expression must not be null or blank.");
+        }
+        String[] parts = expression.strip().split("\\s+");
+        Set<Integer> matches = new HashSet<>();
+        Set<Integer> group = booleanOperandDocuments(parts[0]);
+
+        // Finish each AND group before including it in the OR union. Never
+        // short-circuit parsing: even an unknown term must not hide invalid input.
+        for (int i = 1; i < parts.length; i += 2) {
+            String operator = parts[i];
+            if (!operator.equalsIgnoreCase("AND") && !operator.equalsIgnoreCase("OR")) {
+                throw new IllegalArgumentException("Expected AND or OR, found: " + operator);
+            }
+            if (i + 1 == parts.length) {
+                throw new IllegalArgumentException("Missing operand after " + operator + ".");
+            }
+            Set<Integer> next = booleanOperandDocuments(parts[i + 1]);
+            if (operator.equalsIgnoreCase("AND")) {
+                group = intersectDocuments(group, next);
+            } else {
+                includeDocuments(matches, group);
+                group = next;
+            }
+        }
+        includeDocuments(matches, group);
+
+        // Document metadata is already in filename order; set iteration order
+        // cannot affect results. No source text is read and no scores are used.
+        List<Document> results = new ArrayList<>();
+        for (Document document : documents) {
+            if (matches.contains(document.getId())) {
+                results.add(document);
+            }
+        }
+        return results;
+    }
+
+    private Set<Integer> booleanOperandDocuments(String operand) {
+        if (operand.equalsIgnoreCase("AND") || operand.equalsIgnoreCase("OR")) {
+            throw new IllegalArgumentException("Expected an operand, found operator: " + operand);
+        }
+        if (operand.equalsIgnoreCase("NOT")) {
+            throw new IllegalArgumentException("NOT is not supported in Boolean expressions.");
+        }
+        // Reject query syntax explicitly instead of treating it as punctuation.
+        for (int i = 0; i < operand.length(); i++) {
+            if ("()[]{}\"'*?&|".indexOf(operand.charAt(i)) >= 0) {
+                throw new IllegalArgumentException("Unsupported Boolean syntax in operand: " + operand);
+            }
+        }
+        List<String> terms = processor.tokenize(operand);
+        if (terms.size() != 1) {
+            throw new IllegalArgumentException("Operand must normalize to one term; separate terms"
+                    + " with AND or OR: " + operand);
+        }
+        String term = terms.get(0);
+        // Same stop-word rule as process(); no stop word may disappear from a
+        // Boolean expression, since that would silently change its meaning.
+        if (TextProcessor.isStopWord(term)) {
+            throw new IllegalArgumentException("Stop-word operand is not searchable: " + operand);
+        }
+        Set<Integer> ids = new HashSet<>();
+        for (Integer documentId : index.getPostings(term).keySet()) {
+            ids.add(documentId);
+        }
+        return ids;
+    }
+
+    private Set<Integer> intersectDocuments(Set<Integer> left, Set<Integer> right) {
+        Set<Integer> intersection = new HashSet<>();
+        for (Integer documentId : left) {
+            if (right.contains(documentId)) {
+                intersection.add(documentId);
+            }
+        }
+        return intersection;
+    }
+
+    private void includeDocuments(Set<Integer> target, Set<Integer> source) {
+        for (Integer documentId : source) {
+            target.add(documentId);
+        }
     }
 
     // Merge two sorted lists, retaining each original start p only if this term
