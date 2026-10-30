@@ -32,6 +32,9 @@ assistance and should be read alongside the source code.
 8. [Phase 3.1A: Positional inverted index](03-01-positional-index.md) —
    Complete token positions, stop words, frequency compatibility, immutable
    snapshots, rebuilds, thirteen focused tests, and future phrase retrieval.
+9. [Phase 3.2A: Exact phrase retrieval](03-02-exact-phrase-search.md) —
+   Common phrase starts, positional offsets, two-pointer matching, eighteen
+   tests, the separate fictional corpus, and preserved keyword ranking.
 
 Phases 1 and 2 are complete and integrated into `main`. The seven Java regression
 tests and 16 [HTTP smoke tests](../tests/HttpSmokeTests.ps1) support the current
@@ -49,6 +52,7 @@ frontend manuals next: HTML defines the document and native submission,
 JavaScript consumes that JSON API within the page, and CSS controls presentation
 and responsive layout. Indexing, TF-IDF-style scoring, and ranking stay in Java.
 Continue with Phase 3.1A for positional indexing beneath the existing keyword search.
+Phase 3.2A then uses those positions for exact phrase matching in the Java core.
 
 The manuals include implementation explanations, worked examples, verification
 records and limitations, viva questions, and self-practice exercises. Read each
