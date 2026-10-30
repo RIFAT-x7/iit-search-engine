@@ -35,6 +35,9 @@ assistance and should be read alongside the source code.
 9. [Phase 3.2A: Exact phrase retrieval](03-02-exact-phrase-search.md) —
    Common phrase starts, positional offsets, two-pointer matching, eighteen
    tests, the separate fictional corpus, and preserved keyword ranking.
+10. [Phase 3.2B: Browser-based exact phrase search](03-03-browser-phrase-search.md) —
+    Browser/API modes, legacy JSON compatibility, cancellation and request IDs,
+    fixed demo startup, automated checks, and user-verified Edge behavior.
 
 Phases 1 and 2 are complete and integrated into `main`. The seven Java regression
 tests and 16 [HTTP smoke tests](../tests/HttpSmokeTests.ps1) support the current
