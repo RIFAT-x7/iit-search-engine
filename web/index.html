@@ -15,9 +15,12 @@
                 <legend>Search mode</legend>
                 <label><input type="radio" name="mode" value="keyword" checked> Keyword Search</label>
                 <label><input type="radio" name="mode" value="phrase"> Exact Phrase Search</label>
+                <label><input type="radio" name="mode" value="boolean"> Boolean Search</label>
             </fieldset>
             <label for="query">Search text</label>
-            <p id="search-help">Exact Phrase Search matches consecutive words, including stop words.</p>
+            <p id="search-help">Exact Phrase Search matches consecutive words, including stop words.
+                Boolean Search uses AND/OR, with AND before OR. Use single searchable words;
+                stop-word operands, parentheses and NOT are not supported.</p>
             <div class="search-controls">
                 <input type="search" id="query" name="q" aria-describedby="search-help" required>
                 <button type="submit">Search</button>

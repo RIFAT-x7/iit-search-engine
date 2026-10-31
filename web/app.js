@@ -55,13 +55,14 @@ form.addEventListener("submit", async (event) => {
 
         for (const result of data.results) {
             const item = document.createElement("li");
-            item.textContent = mode === "phrase"
-                ? result.filename
-                : result.filename + " - Score: " + result.score.toFixed(2);
+            item.textContent = mode === "keyword"
+                ? result.filename + " - Score: " + result.score.toFixed(2)
+                : result.filename;
             resultList.appendChild(item);
         }
         statusMessage.textContent = data.results.length
-            + (mode === "phrase" ? " phrase match(es) found." : " result(s) found.");
+            + (mode === "keyword" ? " result(s) found."
+                : mode === "phrase" ? " phrase match(es) found." : " Boolean match(es) found.");
     } catch (error) {
         if (requestId === latestRequestId) {
             statusMessage.textContent = "Unable to load search results. Check your connection and try again.";

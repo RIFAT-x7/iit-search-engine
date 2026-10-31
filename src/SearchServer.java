@@ -52,22 +52,24 @@ public class SearchServer {
                 } else if ("/health".equals(path)) {
                     sendText(exchange, 200, "OK");
                 } else {
-                    SearchRequest request;
                     try {
-                        request = parseQuery(exchange.getRequestURI().getRawQuery());
+                        SearchRequest request = parseQuery(exchange.getRequestURI().getRawQuery());
+                        if ("phrase".equals(request.mode())) {
+                            sendJson(exchange, 200, documentJson(request.query(), request.mode(),
+                                    engine.searchPhrase(request.query())));
+                        } else if ("boolean".equals(request.mode())) {
+                            sendJson(exchange, 200, documentJson(request.query(), request.mode(),
+                                    engine.searchBoolean(request.query())));
+                        } else {
+                            sendJson(exchange, 200, searchJson(request.query(),
+                                    engine.search(request.query())));
+                        }
                     } catch (IllegalArgumentException invalidQuery) {
                         sendJson(exchange, 400, "{\"error\":"
                                 + jsonString("Bad request: " + invalidQuery.getMessage()) + "}");
                         return;
                     }
 
-                    if ("phrase".equals(request.mode())) {
-                        sendJson(exchange, 200, phraseJson(request.query(),
-                                engine.searchPhrase(request.query())));
-                    } else {
-                        sendJson(exchange, 200, searchJson(request.query(),
-                                engine.search(request.query())));
-                    }
                 }
             } finally {
                 exchange.close();
@@ -110,8 +112,8 @@ public class SearchServer {
         }
         if (mode == null) {
             mode = "keyword";
-        } else if (!"keyword".equals(mode) && !"phrase".equals(mode)) {
-            throw new IllegalArgumentException("mode must be keyword or phrase.");
+        } else if (!"keyword".equals(mode) && !"phrase".equals(mode) && !"boolean".equals(mode)) {
+            throw new IllegalArgumentException("mode must be keyword or phrase or boolean.");
         }
         return new SearchRequest(query, mode);
     }
@@ -159,9 +161,11 @@ public class SearchServer {
         return response.append("]}").toString();
     }
 
-    private static String phraseJson(String query, List<Document> documents) {
+    // Phrase and Boolean retrieval both return filenames without ranking scores.
+    private static String documentJson(String query, String mode, List<Document> documents) {
         StringBuilder response = new StringBuilder("{\"query\":");
-        response.append(jsonString(query)).append(",\"mode\":\"phrase\",\"results\":[");
+        response.append(jsonString(query)).append(",\"mode\":")
+                .append(jsonString(mode)).append(",\"results\":[");
         for (int i = 0; i < documents.size(); i++) {
             if (i > 0) {
                 response.append(',');
