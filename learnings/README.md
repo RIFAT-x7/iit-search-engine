@@ -47,6 +47,9 @@ assistance and should be read alongside the source code.
 13. [Phase 3.4A: Optimized Top-K retrieval](03-06-optimized-top-k.md) —
     Exact keyword ranking prefixes, sparse scoring, a bounded binary heap,
     worked traces, complexity, twenty-six tests, benchmarks and viva preparation.
+14. [Phase 3.4B: Top-K HTTP and browser integration](03-07-top-k-http-browser.md) —
+    Strict optional limits, direct core dispatch, accessible browser selection,
+    asynchronous race protection, compatibility and regression evidence.
 
 Phases 1 and 2 are complete and integrated into `main`. The seven Java regression
 tests and 16 [HTTP smoke tests](../tests/HttpSmokeTests.ps1) support the current
