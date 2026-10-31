@@ -14,24 +14,30 @@ Retrieval (IR), with custom Java code for preprocessing, indexing, matching,
 and ranking. The aim is to understand these algorithms and eventually apply
 them to public or supervisor-authorized IIT documents.
 
-The current application searches six fictional demonstration text files through
-a responsive browser page, a Java HTTP JSON API, or a separate CLI. The browser
-client uses plain HTML, JavaScript, and CSS to show ranked results without
-navigating away. Java performs indexing, query validation, retrieval, and ranking.
+The current browser and HTTP JSON API support ranked keyword search, exact
+phrase retrieval, and explicit Boolean AND/OR retrieval. The server indexes
+either six original fictional demonstration files or a separate nine-document
+fictional collection. A separate CLI retains its original keyword-search menu.
+The browser uses plain HTML, JavaScript, and CSS; Java performs all indexing,
+query validation, retrieval, and keyword ranking.
 
 ## Midterm demonstration
 
-Phases 1 and 2 are complete, and `main` is the stable midterm demonstration
-baseline. It includes seven Java regression tests, sixteen HTTP smoke tests,
-and seven learning manuals. Final acceptance passed compilation with JDK 25.0.3
-and both test suites; the [verification record](#testing-and-verification-record)
-separates automated checks from earlier manual browser checks.
+Phases 1 and 2 established the midterm baseline. Main now also includes completed
+Phases 3.1-3.3: positional indexing, core/browser phrase retrieval, and core/browser
+Boolean retrieval. The verified integration checkpoint is
+`2a228fc88eee32c35925d10208f6e3e835ef2599`. Twelve published learning manuals
+explain these milestones. The latest integration run passed **175/175 automated
+checks as reported by Codex**, with Temurin JDK 25.0.3 compilation; the
+[verification record](#testing-and-verification-record) separates those prior
+executions from user-reported Edge checks and this documentation-only update.
 
 The demonstration runs only on `127.0.0.1:8080` with fictional sample documents.
 IIT network deployment, login and authorization, document viewing/downloading,
-PDF extraction, OCR, and advanced retrieval are future work. Bengali indexing
-and Bengali OCR remain undecided. These are among the
-[questions for the November 1 supervisor discussion](PLANNED_FEATURES.md#questions-for-the-supervisor-november-1-2026).
+PDF extraction, OCR, Top-K, and fuzzy/partial retrieval are future work. Bengali
+indexing and Bengali OCR remain undecided. No supervisor answers are documented
+in the repository; see the retained
+[November 1 supervisor questions](PLANNED_FEATURES.md#questions-for-the-supervisor-november-1-2026).
 
 ## Current architecture
 
@@ -46,13 +52,13 @@ flowchart TD
     Assets["Fixed local HTML, JavaScript, CSS files"]
     CLI["CLI: Main"]
     Core["Custom Java Information Retrieval core"]
-    Index["In-memory inverted index"]
-    Data["Sample UTF-8 .txt collection"]
+    Index["In-memory frequency and positional postings"]
+    Data["One fixed fictional UTF-8 .txt collection: 6 or 9 files"]
     Assets -->|"Read once at startup"| Server
-    Client -->|"GET page, assets, and /search?q=..."| Server
+    Client -->|"GET page, assets, and /search?q=...&mode=..."| Server
     Server -->|"HTML / JS / CSS and JSON results"| Client
-    Server -->|"SearchEngine.search(query)"| Core
-    CLI --> Core
+    Server -->|"search / searchPhrase / searchBoolean"| Core
+    CLI -->|"Keyword search and manual rebuild"| Core
     Data -->|"Loading and preprocessing"| Core
     Core <--> Index
 ```
@@ -67,9 +73,13 @@ The browser presents results; Java retains all search algorithms.
 ## Current implementation
 
 - UTF-8 loading of immediate `.txt` files, sorted by filename.
-- Case normalization, ASCII letter/digit tokenization, punctuation separation,
-  and filtering of 12 configured stop words.
-- An inverted index mapping each term to document IDs and raw occurrence counts.
+- Shared lowercase ASCII letter/digit tokenization with punctuation as separators.
+  Keyword processing filters 12 configured stop words; complete tokenization
+  retains them for positions and phrase retrieval.
+- Frequency postings map searchable terms to document IDs and raw occurrence
+  counts. Positional postings additionally store all zero-based token positions,
+  including stop words, gaps and repeated occurrences. Read-only positional
+  snapshots preserve index encapsulation.
 - Exact normalized keyword lookup and multi-word retrieval with ranked OR
   semantics; repeated query terms are counted once.
 - TF-IDF-style ranking using
@@ -77,26 +87,40 @@ The browser presents results; Java retains all search algorithms.
   over distinct query terms. There is no document-length normalization.
 - Descending score ordering with filename order for ties; all matches returned.
   The engine uses a manual stable insertion sort for this small collection.
+- Exact normalized phrase retrieval using positional alignment in the same
+  document, retaining stop words and repeated terms.
+- Explicit Boolean AND/OR retrieval using frequency-posting document-ID sets.
+  Operators ignore case and AND takes precedence over OR. Stop-word operands,
+  missing operators/operands, parentheses, NOT, quoted operands and wildcards
+  are rejected with descriptive errors.
+- Phrase and Boolean results contain each matching document once in filename
+  order, without ranking scores. Retrieval uses the index without rescanning files.
 - A CLI menu for full index rebuild, search, statistics, and exit. A failed
   rebuild preserves the previously built index.
 - A JDK HTTP server at `127.0.0.1:8080`: exact `GET /health` returns HTTP 200,
   `Content-Type: text/plain; charset=utf-8`, and the two-byte body `OK`.
-- Exact `GET /search?q=...` calls the existing engine and returns JSON containing
-  the decoded query, ordered results, filenames, and numeric scores.
+- Exact `GET /search?q=...&mode=...` selects keyword, phrase or Boolean retrieval.
+  Missing mode or mode=keyword preserves the original query/results JSON with
+  numeric scores. Phrase/Boolean JSON includes mode and filename-only results.
 - Query parsing requires one nonblank `q`, splits parameters before decoding,
   handles percent escapes and `+` as space, and rejects duplicate `q`, malformed
-  escapes, invalid UTF-8, and parameters without `name=value` syntax.
+  escapes, invalid UTF-8, and parameters without `name=value` syntax. An optional
+  single mode must be exactly keyword, phrase or boolean; invalid/duplicate modes
+  and malformed Boolean expressions return descriptive JSON HTTP 400.
 - Application-handled query validation errors return HTTP 400 with a JSON
   `error` field. JSON strings escape quotes, backslashes, and low controls.
 - Unsupported methods on any known path return 405 with `Allow: GET`;
   unknown paths return 404. Path validation precedes method validation.
-- Seven dependency-free automated baseline regression tests for the IR core.
-- Sixteen repeatable HTTP integration smoke tests in `tests/HttpSmokeTests.ps1`.
-- An accessible native GET search form with a labeled required input. Without
-  JavaScript, it can still navigate to the API's raw JSON response.
+- Four dependency-free Java suites (60 tests), HTTP suites on both fixed
+  collections (95 checks), and a Node DOM/fetch client model (20 checks).
+- An accessible native GET form with three labeled radio modes, keyword selected
+  by default, Boolean help and a required query. Without JavaScript, it can
+  navigate to the selected mode's raw JSON response.
 - Plain JavaScript submit handling with URLSearchParams, fetch, safe textContent
   rendering, loading feedback, and empty/error messages. Repeated completed
-  searches replace earlier results; scores are rounded to two decimals for display.
+  searches replace earlier results; keyword scores are rounded to two decimals
+  for display. Mode changes abort the active fetch, invalidate its request ID,
+  and clear results/status. ID guards prevent stale success/error/cleanup updates.
 - Local responsive CSS with system fonts, blue/neutral colors, visible keyboard
   focus, disabled-button styling, wrapping results, and stacked narrow-screen controls.
 
@@ -105,12 +129,39 @@ and 120 processed tokens**. Searching `java` ranks `java_programming.txt` before
 `academic_notice.txt`. The CLI displays scores as 5.54 and 1.85; the JSON API
 returns numeric values without that two-decimal display formatting.
 
-Boolean operators are not parsed: `and` and `or` are currently stop words.
-Quoted text is treated as ordinary keywords rather than a phrase query.
+### Fixed demonstration collections
+
+| Server startup | Indexed folder | Documents |
+| --- | --- | --- |
+| `SearchServer` | Immediate `.txt` files in `data/` | 6 original fictional documents |
+| `SearchServer --phrase-demo` | `data/phrase_samples/` | 9 separate fictional IIT-themed samples |
+
+The loader is not recursive, so the nested samples never silently join the
+default corpus. The [sample README](data/phrase_samples/README.md) describes the
+nine-file collection. Both collections are fictional, not official IIT records.
+Startup selects the corpus; the browser's radio control selects an algorithm
+over that corpus. The server accepts no arbitrary document-path option.
+
+The three modes keep separate semantics. AND/OR are operators only in Boolean
+mode. In keyword mode they remain filtered stop words, and quotes do not enable
+phrase grammar. Select phrase mode and supply phrase text directly; quotes are
+ordinary separators there. Phrase matching is exact after normalization, not
+character-for-character punctuation or case matching.
 
 ## JSON Search API
 
-### Successful search
+### Search modes
+
+| mode parameter | Behavior | Successful JSON |
+| --- | --- | --- |
+| Missing or `keyword` | Ranked keyword search | query, results; each result has filename and numeric score |
+| `phrase` | Exact normalized phrase | query, mode=phrase, results; each result has filename only |
+| `boolean` | Explicit AND/OR expression | query, mode=boolean, results; each result has filename only |
+
+Mode values are case-sensitive; Boolean operators inside q are case-insensitive.
+All examples below use the default six-document startup unless stated otherwise.
+
+### Successful keyword search
 
 Request: `GET /search?q=java`
 
@@ -137,6 +188,29 @@ readability; the server emits compact JSON:
 `query` echoes the accepted decoded text. Results retain the engine's ranking
 order, and `score` is a JSON number. There is no separate rank field.
 
+### Exact phrase and Boolean results
+
+Request: `GET /search?q=computer%20networking&mode=phrase`. Status: **200**.
+
+```json
+{"query":"computer networking","mode":"phrase","results":[{"filename":"networking.txt"}]}
+```
+
+Request: `GET /search?q=java%20AND%20programming&mode=boolean`. Status: **200**.
+
+```json
+{"query":"java AND programming","mode":"boolean","results":[{"filename":"java_programming.txt"}]}
+```
+
+Both use the same JSON Content-Type and return filenames in filename order.
+No score field is fabricated. On the demo collection, the same Boolean expression
+instead matches java_programming_lab.txt and seminar_discussion.txt.
+
+For Boolean precedence, `java OR networking AND laboratory` means java OR the
+networking/laboratory intersection. It returns academic_notice.txt,
+java_programming.txt, then networking.txt on the default corpus. Parentheses
+may describe the meaning, but entering them is unsupported.
+
 ### No results
 
 Request: `GET /search?q=zzzznomatchingterm`
@@ -158,10 +232,18 @@ Status: **400**, with the same JSON Content-Type:
 {"error":"Bad request: Missing q parameter."}
 ```
 
-The prefix is exactly `Bad request: `. Blank values, duplicate `q` parameters,
-and invalid encodings also produce handled validation errors with a specific
-reason. Other well-formed parameters are decoded and ignored; `q` is
-case-sensitive. The API reads URL parameters and does not parse JSON request
+The prefix is exactly `Bad request: `. Blank values, duplicate q/mode parameters,
+invalid modes/encodings, and malformed Boolean expressions also produce handled
+validation errors with a specific reason. For example, the request
+`GET /search?q=java%20AND&mode=boolean` returns HTTP 400:
+
+```json
+{"error":"Bad request: Missing operand after AND."}
+```
+
+Valid unknown Boolean operands instead produce successful empty sets, not syntax
+errors. Other well-formed parameters are decoded and ignored; parameter names
+are case-sensitive. The API reads URL parameters and does not parse JSON request
 bodies. A malformed request URI can be rejected by the HTTP stack before the
 application's JSON error handler runs.
 
@@ -173,7 +255,7 @@ application's JSON error handler runs.
 | `GET /app.js` | 200; `text/javascript; charset=utf-8`; fixed client script |
 | `GET /styles.css` | 200; `text/css; charset=utf-8`; fixed stylesheet |
 | `GET /health` | 200; `text/plain; charset=utf-8`; exact body `OK`, without newline |
-| Valid `GET /search?q=...` | 200; JSON `query` and `results` |
+| Valid `GET /search?q=...&mode=...` | 200; mode-specific JSON described above |
 | Invalid query on GET search | 400; JSON `error` for application-handled validation |
 | Unsupported method on any of the five known paths | 405; `Allow: GET`; empty body |
 | Unknown or suffixed path, such as `/search/` | 404; empty body |
@@ -202,14 +284,22 @@ Completed milestones:
 | Phase 2.4C | Responsive CSS and fixed stylesheet route (`8b0a389`) |
 | Phase 2.5A | Sixteen repeatable PowerShell HTTP integration smoke tests (`376a699`) |
 | Phase 2.5B | Fast-forward integration into `main` at `2cc096b`, preserving all 11 feature commits |
+| Phase 2 midterm polish | Historical six-file baseline and documentation checkpoint `86d9d2b` |
+| Phase 3.1A | Positional postings alongside searchable frequencies; integrated checkpoint `736dc38` |
+| Phase 3.2A | Core exact phrase retrieval and separate fictional sample corpus; checkpoint `820d95b` |
+| Phase 3.2B | Browser/HTTP phrase mode and fixed demo startup; checkpoint `334905a` |
+| Phase 3.3A | Core Boolean AND/OR retrieval with AND precedence; checkpoint `d57b4f4` |
+| Phase 3.3B | Browser/HTTP Boolean mode and Manual #12; integrated checkpoint `2a228fc` |
 
-The integration used `git merge --ff-only feat/browser-client` followed by a
-normal push. No merge commit or history rewriting was needed. The
-[planning document](PLANNED_FEATURES.md) gives the next phases and open questions.
+The Phase 2 integration used `git merge --ff-only feat/browser-client`; later
+reviewed feature branches were also integrated with fast-forward-only merges
+and normal pushes. Phase 3.3B advanced main to `2a228fc` without a merge commit.
+The [planning document](PLANNED_FEATURES.md) separates completed phases from
+pending capabilities and unconfirmed supervisor decisions.
 
 Future work:
 
-- Positional indexing, Boolean and phrase queries, partial/fuzzy retrieval, and Top-K results.
+- Top-K result limits and partial/fuzzy retrieval.
 - Authorized document ingestion, PDF text extraction, metadata, and snippets.
 - Controlled document access and deployment on the approved IIT internal network.
 - Index persistence and its rebuild workflow, with evaluation against a sequential scan.
@@ -238,15 +328,23 @@ prototype.
 src/
   Document.java          Document ID and filename
   TextProcessor.java     Token normalization and stop-word filtering
-  InvertedIndex.java     Term-to-document frequency postings
+  InvertedIndex.java     Frequency and complete positional postings
   SearchEngine.java      Loading, indexing, retrieval, and ranking
   SearchResult.java      Document and score
   Main.java              Original CLI entry point
   SearchServer.java      Browser assets, HTTP health, and JSON search entry point
 tests/
   BaselineTests.java     Seven automated regression tests
-  HttpSmokeTests.ps1     Repeatable HTTP integration smoke tests
+  PositionalIndexTests.java  Thirteen positional-index tests
+  PhraseSearchTests.java Eighteen core phrase tests
+  BooleanSearchTests.java Twenty-two core Boolean tests
+  HttpSmokeTests.ps1     Sixteen original default-corpus HTTP checks
+  PhraseHttpTests.ps1    Thirteen default / twenty-two demo HTTP checks
+  BooleanHttpTests.ps1   Twenty-two checks per collection
+  RunHttpIntegrationTests.ps1  Owned-server test runner for both collections
+  BrowserClientTests.js  Twenty DOM/fetch client model checks
 data/                    Six fictional demonstration text documents
+  phrase_samples/       Nine separate fictional samples and collection README
 web/
   index.html            Semantic search form and result containers
   app.js                GET API requests and safe DOM result rendering
@@ -261,6 +359,11 @@ learnings/               Learning journal and viva preparation
   02-04-html-browser-client.md
   02-05-javascript-search-client.md
   02-06-responsive-css.md
+  03-01-positional-index.md
+  03-02-exact-phrase-search.md
+  03-03-browser-phrase-search.md
+  03-04-boolean-search.md
+  03-05-browser-boolean-search.md
 out/                     Ignored generated classes and local verification output
 iit-search-engine-prototype-v0.1.zip   Archived prototype
 PLANNED_FEATURES.md       Future work and supervisor questions
@@ -269,7 +372,8 @@ README.md
 
 The proposal, slides, and prototype archive preserve earlier project stages.
 Their proposed algorithms and schedules are not a record of current features.
-The seven learning manuals keep their historical checkpoints and test evidence.
+The twelve published learning manuals keep their historical checkpoints and
+test evidence.
 
 ## Build, run, and test
 
@@ -283,7 +387,8 @@ project's verified toolchain is JDK 25; no dependency installation is needed.
 $projectJdk = 'C:\Program Files\Eclipse Adoptium\jdk-25.0.3.9-hotspot'
 & "$projectJdk\bin\javac.exe" -version
 & "$projectJdk\bin\java.exe" -version
-& "$projectJdk\bin\javac.exe" -encoding UTF-8 -d out\app src\*.java tests\BaselineTests.java
+& "$projectJdk\bin\javac.exe" -encoding UTF-8 -d out\app src\*.java tests\BaselineTests.java tests\PositionalIndexTests.java tests\PhraseSearchTests.java tests\BooleanSearchTests.java
+if ($LASTEXITCODE -ne 0) { throw 'Compilation failed' }
 ```
 
 Compile successfully before running the following commands. Classes are written
@@ -299,16 +404,22 @@ The CLI builds from relative folder `data`, so keep the repository root as the
 working directory. Choose `3` for statistics, `2` then `java` for a sample search,
 and `4` to exit.
 
-### Regression tests
+The CLI remains keyword-only; phrase and Boolean mode selection is available
+through the browser/API and the separate Java core methods.
+
+### Java regression tests
 
 ```powershell
-& "$projectJdk\bin\java.exe" -cp out\app BaselineTests
+foreach ($suite in @('BaselineTests', 'PositionalIndexTests', 'PhraseSearchTests', 'BooleanSearchTests')) {
+    & "$projectJdk\bin\java.exe" -cp out\app $suite
+    if ($LASTEXITCODE -ne 0) { throw "Java suite failed: $suite" }
+}
 ```
 
-The runner reports seven individual results and totals. Expected baseline:
-`Total passed: 7`, `Total failed: 0`, exit code 0. Checks use explicit
-`AssertionError`s, so `-ea` is unnecessary. Temporary fixtures are separate from
-`data` and cleaned up by the harness.
+Expected totals are 7, 13, 18 and 22 passed respectively, each with zero failures
+and exit code 0: **60 Java tests**. Checks use explicit `AssertionError`s, so `-ea`
+is unnecessary. Temporary fixtures are separate from data and cleaned up by the
+harnesses; corpus-specific tests read the existing six- and nine-file collections.
 
 ### HTTP server
 
@@ -319,15 +430,28 @@ When port 8080 is available, start the server in its own console:
 ```
 
 Keep the repository root as the working directory: `data` and all three
-`web` files use relative paths. The server first prints `Indexed 6 documents.`
-for the bundled collection, then `Listening on http://127.0.0.1:8080` after
+`web` files use relative paths. The server prints `Collection: data`,
+`Indexed 6 documents.`, then `Listening on http://127.0.0.1:8080` after
 successful startup. An index or web-file loading failure prevents startup.
+
+Alternatively, start only the nine-document collection instead of the default:
+
+```powershell
+& "$projectJdk\bin\java.exe" -cp out\app SearchServer --phrase-demo
+```
+
+Its startup log identifies `data/phrase_samples` and 9 documents. Run one server
+at a time on the fixed port. Unsupported command-line arguments are rejected;
+selecting a browser mode does not change this startup choice.
 
 Open **http://127.0.0.1:8080/** in Microsoft Edge or another suitable browser.
 Enter `java` and submit. With JavaScript enabled, ranked filenames and scores
-appear beneath the form without navigation. An unknown term gives an empty
-result message; whitespace receives the server's nonblank-query error. Empty
-input is blocked by native required validation in the tested browser.
+appear beneath the form without navigation. Select Exact Phrase Search for
+`computer networking`, or Boolean Search for `java AND programming`, on the
+default collection. Those modes display filenames without scores. Try `java AND`
+to see a descriptive Boolean error and then submit a corrected expression.
+An unknown term gives an empty result message; whitespace receives the server's
+nonblank-query error. Empty input is blocked by native required validation.
 
 Do not open `web/index.html` directly with a file URL. The page needs the Java
 HTTP origin for its root-relative assets and search requests. Without working
@@ -341,15 +465,19 @@ responses independently of the page:
 curl.exe --noproxy '*' -i 'http://127.0.0.1:8080/health'
 curl.exe --noproxy '*' -i 'http://127.0.0.1:8080/search?q=java'
 curl.exe --noproxy '*' -i 'http://127.0.0.1:8080/search?q=java%20programming'
+curl.exe --noproxy '*' -i 'http://127.0.0.1:8080/search?q=computer%20networking&mode=phrase'
+curl.exe --noproxy '*' -i 'http://127.0.0.1:8080/search?q=java%20AND%20programming&mode=boolean'
+curl.exe --noproxy '*' -i 'http://127.0.0.1:8080/search?q=java%20AND&mode=boolean'
 curl.exe --noproxy '*' -i 'http://127.0.0.1:8080/search?q=zzzznomatchingterm'
 curl.exe --noproxy '*' -i 'http://127.0.0.1:8080/search'
 curl.exe --noproxy '*' -i -X POST 'http://127.0.0.1:8080/search?q=java'
 curl.exe --noproxy '*' -i 'http://127.0.0.1:8080/unknown'
 ```
 
-These demonstrate health, ranked search, an encoded multi-word query, no
-matches, missing-query validation, method rejection, and unknown-path handling.
-Expected statuses are 200, 200, 200, 200, 400, 405, and 404 respectively.
+These demonstrate health, ranked search, an encoded multi-word query, phrase
+search, Boolean search/error handling, no matches, missing-query validation,
+method rejection, and unknown-path handling. Expected statuses in order are
+200, 200, 200, 200, 200, 400, 200, 400, 405 and 404.
 
 Use Ctrl+C in the server's own console to stop the instance you launched.
 If it remains running, verify that process's PID, executable, and command line
@@ -357,7 +485,33 @@ before stopping only the confirmed owned process. If startup reports
 `Address already in use`, do not terminate an unidentified process to free
 the port.
 
-### HTTP integration smoke tests (Phase 2.5A)
+### Complete HTTP and browser-client regressions
+
+After compiling, stop any server you launched before running the managed HTTP
+runner from the repository root:
+
+```powershell
+powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\tests\RunHttpIntegrationTests.ps1
+if ($LASTEXITCODE -ne 0) { throw 'HTTP integration tests failed' }
+node.exe --check web\app.js
+if ($LASTEXITCODE -ne 0) { throw 'Client syntax check failed' }
+node.exe --check tests\BrowserClientTests.js
+if ($LASTEXITCODE -ne 0) { throw 'Client-test syntax check failed' }
+node.exe tests\BrowserClientTests.js
+if ($LASTEXITCODE -ne 0) { throw 'Browser-client tests failed' }
+```
+
+Node.js is needed only for the client model/syntax checks, not to serve the app.
+The HTTP runner uses Windows PowerShell/.NET and the configured JDK 25.0.3 path
+inside the script. It requires free port 8080, starts its own hidden servers,
+verifies executable/PID/command line and listener ownership, and stops only
+those owned processes. It runs 16 original default-corpus checks, 13/22 phrase
+checks and 22/22 Boolean checks on the corresponding collections: **95 HTTP
+checks**. Startup-argument and collection-log checks are additional supporting
+checks. The Node model has **20 checks**; combined with Java, the suite total is
+**175**. The model does not substitute for a real browser.
+
+### Original HTTP integration smoke tests (Phase 2.5A)
 
 Compile using the JDK configuration above, then start `SearchServer` from the
 repository root in a separate console. With the unchanged six fictional sample
@@ -382,6 +536,58 @@ These are HTTP integration checks, not browser interaction or accessibility test
 
 ## Testing and verification record
 
+### Latest integrated verification: Phase 3.3B
+
+Before fast-forward integration into main at
+`2a228fc88eee32c35925d10208f6e3e835ef2599`, Codex reported a fresh successful
+Temurin JDK 25.0.3 compilation and the following automated results:
+
+| Suite | Passed | Failed |
+| --- | --- | --- |
+| [BaselineTests](tests/BaselineTests.java) | 7 | 0 |
+| [PositionalIndexTests](tests/PositionalIndexTests.java) | 13 | 0 |
+| [PhraseSearchTests](tests/PhraseSearchTests.java) | 18 | 0 |
+| [BooleanSearchTests](tests/BooleanSearchTests.java) | 22 | 0 |
+| [Original HTTP smoke tests](tests/HttpSmokeTests.ps1), default | 16 | 0 |
+| [Phrase HTTP tests](tests/PhraseHttpTests.ps1), default | 13 | 0 |
+| Phrase HTTP tests, demo | 22 | 0 |
+| [Boolean HTTP tests](tests/BooleanHttpTests.ps1), default | 22 | 0 |
+| Boolean HTTP tests, demo | 22 | 0 |
+| [Browser-client model](tests/BrowserClientTests.js) | 20 | 0 |
+| **Codex-reported total** | **175** | **0** |
+
+These are named test groups, not a count of every assertion. JavaScript syntax
+and syntax parsing of all four PowerShell scripts also passed in that reported
+run. Checks covered exact legacy keyword JSON and scores, unchanged phrase
+matching/JSON, Boolean precedence and escaped HTTP 400 errors, score-free
+phrase/Boolean results, both collections, and default statistics 6/75/120.
+The HTTP runner verified ownership before stopping its temporary servers and
+reported port 8080 free afterward. Core algorithms, datasets, tests and manuals
+were not modified during integration; no merge commit was created.
+
+The student separately reported these real Microsoft Edge checks:
+
+| Collection | User-reported verification | Result |
+| --- | --- | --- |
+| Default six-document collection | Keyword, phrase, Boolean and malformed-expression behavior | Passed |
+| Nine-document fictional collection | Boolean, phrase and malformed-expression checks | Passed |
+
+These two groups do not establish additional Phase 3.3B keyboard-only,
+responsive-layout, JavaScript-disabled, or delayed-response tests. Earlier
+milestones have their own recorded Edge observations. The Node suite is a
+DOM/fetch model, not an automated end-to-end browser suite; Codex did not perform
+new manual Edge checks during final integration.
+
+This overview/roadmap synchronization checks documentation, links, commands,
+source/test consistency and file scope only. No compilation, application tests,
+server requests or browser checks are rerun for this documentation task.
+
+### Historical Phase 1-2 evidence
+
+The following records describe the earlier baseline and its verification tools.
+Their smaller counts and references to ad hoc scripts belong to those milestones,
+not the full current suite above.
+
 The committed [baseline harness](tests/BaselineTests.java) contains seven IR
 tests: text preprocessing, inverted-index correctness, keyword retrieval,
 ranking, empty/unknown queries, rebuild correctness, and failed-rebuild
@@ -390,7 +596,7 @@ preservation. It does not start an HTTP server or test JSON serialization.
 Prior Phase 1 verification recorded JDK 25.0.3 compilation, a successful CLI
 smoke test, and seven passing tests. Task 2.3 verification again recorded
 successful compilation and **7 passed, 0 failed**. These are historical results;
-the final acceptance rerun is recorded below.
+the historical Phase 2 final acceptance rerun is recorded below.
 
 Separate Codex-run HTTP integration checks used an external PowerShell/.NET
 HTTP client script. That script is not a committed HTTP test suite. Its
@@ -425,8 +631,9 @@ Microsoft Edge interaction:
 Node checks used a minimal DOM stub and mocked fetch, not a real browser.
 CSS checks were structural and arithmetic, not a complete CSS validator or
 automated screenshot suite. The Edge results were explicitly confirmed by
-the user. These integration scripts were not committed as new test files;
-there is no automated end-to-end browser test suite in this repository.
+the user. Those Phase 2.4 ad hoc integration scripts were not committed as new
+test files. Later phases added the committed BrowserClientTests.js model and
+managed HTTP suites; there is still no automated end-to-end browser suite.
 
 Phase 2.5A verification compiled with JDK 25.0.3, passed all seven Java baseline
 tests, and passed all 16 checks in `tests/HttpSmokeTests.ps1` under Windows
@@ -444,11 +651,16 @@ browser/viewport combinations beyond the reported cases remain unverified.
 
 ## Learning documentation
 
-The [learning journal](learnings/README.md) links seven manuals in recommended
-reading order: IR foundations, HTTP health, HTTP search integration, JSON,
+The [learning journal](learnings/README.md) links twelve published manuals in
+recommended reading order: IR foundations, HTTP health, HTTP search integration, JSON,
 [HTML architecture](learnings/02-04-html-browser-client.md),
 [JavaScript integration](learnings/02-05-javascript-search-client.md), and
 [responsive CSS](learnings/02-06-responsive-css.md).
+The sequence continues with [positional indexing](learnings/03-01-positional-index.md),
+[core phrase retrieval](learnings/03-02-exact-phrase-search.md),
+[browser phrase search](learnings/03-03-browser-phrase-search.md),
+[core Boolean retrieval](learnings/03-04-boolean-search.md), and
+[browser Boolean retrieval](learnings/03-05-browser-boolean-search.md), Manual #12.
 They include implementation explanations, worked examples,
 verification evidence and limits, viva preparation, and self-practice prompts.
 Earlier manuals retain their historical milestone context.
@@ -456,26 +668,30 @@ Earlier manuals retain their historical milestone context.
 ## Current limitations
 
 The bundled sample data is **fictional demonstration content, not official IIT
-documentation**. The current demonstrations use the six bundled `.txt` files;
-loading is limited to immediate text files in the selected folder. The index
+documentation**. Server startup selects the six bundled files or the separate
+nine-file collection; loading is limited to immediate text files. The index
 is in memory, and document IDs depend on sorted filenames.
 
 - UTF-8 transport and file reading do not provide general Unicode word search;
   tokenization retains ASCII letters and digits.
 - The server is loopback-only on fixed port 8080. It serves three known web
   assets and the API, with no TLS, authentication, or general file hosting.
-- No PDF import, OCR, fuzzy/substring matching, snippets, positional index,
-  phrase search, or Boolean query parser is implemented.
+- No PDF import, OCR, fuzzy/substring matching or snippets are implemented.
+- Boolean syntax supports only explicit AND/OR and single searchable operands.
+  No parentheses/grouping, NOT, Boolean phrase operands or wildcard expansion
+  is supported; Boolean stop-word operands are rejected. There is no quotation-mark
+  query grammar in keyword search. Phrase mode supplies the separate phrase API.
 - There is no index persistence, HTTP rebuild endpoint, automatic file refresh,
   pagination, or Top-K limit. The HTTP index is built once at startup.
 - The API parses URL parameters rather than JSON request bodies. Its manual
   serializer does not explicitly guard non-finite scores or validate malformed
   Java UTF-16 strings; see the [JSON manual](learnings/02-03-json-search-api.md).
-- The client trusts the current JSON success schema, has no application timeout
-  or request cancellation, and allows one in-flight search through its handler.
-  A pending query is not replaced merely by editing the input. Its generic
+- The client trusts the current JSON success schema and has no application timeout.
+  It prevents duplicate submissions while busy; mode changes cancel/invalidate
+  older requests. Editing the query alone does not invalidate a pending request.
+  Browser cancellation does not guarantee server-side cancellation. The generic
   failure message also covers JSON parsing or rendering errors.
-- Filenames and scores are text only: no snippets, previews, clickable result
+- Filenames and keyword scores are text only: no snippets, previews, clickable result
   documents, or download links are provided.
 
 Broader retrieval quality, scalability, and network behavior remain to be

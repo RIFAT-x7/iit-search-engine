@@ -1,41 +1,56 @@
 # Planned Features and Supervisor Decisions
 
-This is the plan for the work after the midterm baseline, along with questions
-for the supervisor. The [README](README.md) explains how the current application
-works and how to run it. The plans below may change after discussion; listing a
-feature here does not mean it has been approved or implemented.
+This document separates completed implementation from remaining plans and
+unconfirmed supervisor decisions. The [README](README.md) explains the current
+application and run commands. At this synchronization checkpoint, main includes
+Phase 3.3B at `2a228fc88eee32c35925d10208f6e3e835ef2599`.
+Listing a future feature here does not establish approval or implementation.
 
 ## Current implementation
 
-Phases 1 and 2 are complete. The application on `main` is the stable midterm
-demonstration baseline, with:
+Phases 1 and 2 established the midterm baseline. Phases 3.1-3.3 are now also
+complete and integrated, with:
 
-- A custom Java Information Retrieval core with an in-memory inverted index,
-  raw term-frequency postings, and TF-IDF-style ranking over distinct query terms.
-  Current multi-word retrieval uses ranked OR semantics and returns all matches.
+- A custom Java IR core with in-memory frequency postings and complete zero-based
+  positional postings. Positions include stop words, gaps and repeated occurrences;
+  searchable frequencies exclude the configured twelve stop words.
+- Three retrieval algorithms: ranked keyword search over distinct filtered terms,
+  exact normalized phrase matching using positions, and explicit Boolean AND/OR
+  using document-ID sets. AND takes precedence over OR. Phrase and Boolean
+  matches are unique documents in filename order, without ranking scores.
 - A CLI and a separate Java HTTP server that reuse the same IR core. The CLI
-  supports manual index rebuilds; the HTTP server builds its index at startup.
-- A JSON search API at `GET /search?q=...`, with query validation and ranked
-  filenames and numeric scores, plus `GET /health`.
-- A plain HTML/CSS/JavaScript browser client with in-page search results,
-  loading/error feedback, and responsive styling. Java performs retrieval and
-  ranking on the server.
-- Six fictional demonstration text documents in `data/`, not real IIT records.
-- Seven dependency-free IR regression tests in `tests/BaselineTests.java`, plus
-  16 repeatable HTTP integration smoke tests in `tests/HttpSmokeTests.ps1`
-  from Phase 2.5A. Verification records are in the README;
-  there is no automated browser end-to-end suite.
+  supports keyword search and manual rebuilds; the HTTP server builds once at
+  startup and exposes all three retrieval modes.
+- `GET /search?q=...&mode=...` accepts keyword, phrase or boolean, plus the
+  separate `GET /health` endpoint. Missing mode
+  preserves legacy keyword JSON with numeric scores; phrase/Boolean responses
+  include mode and filenames only. Invalid/duplicate modes and invalid Boolean
+  expressions produce escaped descriptive JSON HTTP 400.
+- A plain HTML/CSS/JavaScript client with three accessible radio modes, in-page
+  results, responsive styling and error/loading feedback. Mode changes clear
+  results and cancel/invalidate stale requests; safe textContent renders output.
+- Two separate fixed fictional corpora: default startup loads the six immediate
+  `.txt` files in `data/`; `--phrase-demo` loads only the nine samples in
+  `data/phrase_samples/`. Neither is an official IIT document collection.
+- Four Java suites, original/phrase/Boolean HTTP suites and a DOM/fetch client
+  model: the latest integration run passed **175/175 checks, as reported by
+  Codex**, using JDK 25.0.3. The user separately confirmed the two collection
+  groups of Edge checks recorded in the [verification record](README.md#testing-and-verification-record).
+  There is no automated end-to-end browser suite. This documentation sync does
+  not rerun application tests or add browser-verification claims.
 - A localhost-only server configuration at `127.0.0.1:8080`. Cross-computer
   access and IIT network deployment are not implemented.
-- Seven learning manuals, listed in the [learning journal](learnings/README.md),
-  covering foundations, HTTP health, HTTP search, JSON, HTML, JavaScript, and CSS.
+- Twelve published learning manuals, listed in the [learning journal](learnings/README.md),
+  covering foundations through browser Boolean retrieval.
   Earlier manuals retain their historical milestone context.
 
-Current results contain filenames and scores as text. There are no document
-preview/download routes, login, or document permission system. The server serves
+Current results contain plain-text filenames and keyword-only scores. There are
+no document preview/download routes, login, or document permission system. The server serves
 only its fixed browser assets, health endpoint, and search API. PDF extraction,
-OCR, positional postings, Boolean query parsing, phrase search, partial/fuzzy
-retrieval, Top-K limits, snippets, and index persistence remain future work.
+OCR, partial/fuzzy retrieval, Top-K limits, snippets, and index persistence remain
+future work. Boolean parentheses/grouping, NOT, phrase operands and wildcards
+are unsupported; stop-word operands are rejected. Keyword ranking and all-matches
+behavior remain unchanged. There is no quotation-mark grammar in keyword search.
 Current tokenization retains ASCII letters and digits; UTF-8 file reading and
 JSON transport do not establish Bengali search support.
 
@@ -97,15 +112,22 @@ use public or explicitly authorized documents.
 
 ## Roadmap
 
-The next phases build on the completed midterm baseline. Their scope can be
-adjusted after the supervisor discussion.
+Completed milestones are recorded below separately from pending work. Phase 3
+is partially complete overall: its 3.1-3.3 milestones are integrated, while Top-K
+and partial/fuzzy retrieval remain pending. Future scope can change after
+documented supervisor decisions.
 
 | Phase | Status | Scope |
 | --- | --- | --- |
 | 1-2.4 | Completed | Custom IR core, CLI, baseline tests, HTTP health/search, JSON API, and HTML/CSS/JavaScript browser client. |
 | 2.5A | Completed | Sixteen repeatable HTTP integration smoke tests covering existing routes, JSON results, validation errors, and routing behavior. |
 | 2.5B | Completed | Fast-forward integration of `feat/browser-client` into `main`, preserving all 11 feature commits. |
-| 3 | Planned | Advanced IR algorithms: positional indexing, explicit Boolean queries, phrase retrieval, partial/fuzzy retrieval, and Top-K results. |
+| 3.1A | Completed and integrated | Positional inverted index alongside searchable frequency postings; thirteen focused tests and learning manual. |
+| 3.2A | Completed and integrated | Exact phrase retrieval in the Java core; eighteen tests and separate nine-document fictional corpus. |
+| 3.2B | Completed and integrated | Browser/HTTP phrase mode, fixed --phrase-demo startup, HTTP/client regression coverage and learning manual. |
+| 3.3A | Completed and integrated | Core Boolean AND/OR retrieval with AND precedence, strict validation, twenty-two tests and learning manual. |
+| 3.3B | Completed and integrated | Browser/HTTP Boolean mode, shared score-free JSON, 175-check integration verification and Manual #12. |
+| 3 (remaining) | Pending; not implemented | Top-K result limits and partial/fuzzy retrieval. Their policy, matching definition and evaluation still need agreement. |
 | 4 | Planned; document scope pending approval | Authorized document ingestion and text-based PDF extraction; OCR only if separately approved. |
 | 5 | Planned; access policy pending approval | Result metadata, snippets, and controlled file viewing/downloading, subject to approved permissions. |
 | 6 | Planned; deployment and identity decisions pending approval | IIT internal network deployment and approved authentication/authorization. |
@@ -120,6 +142,12 @@ Broader browser, zoom/reflow, accessibility, and usability checks remain part of
 the planned testing work.
 
 ## Questions for the supervisor: November 1, 2026
+
+This dated list was prepared when Phase 2 was the current baseline. It is retained
+as a historical discussion agenda, not a record of answers. Positional indexing,
+phrase retrieval and Boolean retrieval have since been implemented through
+Phase 3.3B; that progress does not confirm what the supervisor required for the
+midterm or authorize future document/deployment scope.
 
 1. **Midterm scope:** Is the current Phase 2 application sufficient for the
    midterm presentation? Are any changes needed before the demonstration?
@@ -143,5 +171,8 @@ the planned testing work.
 9. **Final deliverables:** What minimum algorithms, dataset size, Top-K policy,
    relevance measures, performance comparison, and other deliverables are expected?
 
-These questions are still unanswered. I'll discuss them with my supervisor
-before deciding which features to work on next.
+No supervisor answers or approvals for these decisions are documented in the
+repository. Midterm sufficiency, remaining algorithm requirements, deployment,
+identity, document permissions, viewing/downloading, PDF/OCR, Bengali scope and
+final deliverables therefore remain unconfirmed. Record actual decisions when
+available; completed implementation is not evidence of supervisor approval.
