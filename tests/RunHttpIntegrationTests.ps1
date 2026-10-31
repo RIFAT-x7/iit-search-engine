@@ -95,6 +95,8 @@ foreach ($collection in @('default', 'phrase-demo')) {
         if ($LASTEXITCODE -ne 0) { throw "Phrase HTTP tests failed for $collection" }
         & powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\tests\BooleanHttpTests.ps1 -Collection $collection
         if ($LASTEXITCODE -ne 0) { throw "Boolean HTTP tests failed for $collection" }
+        & powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\tests\TopKHttpTests.ps1 -Collection $collection
+        if ($LASTEXITCODE -ne 0) { throw "Top-K HTTP tests failed for $collection" }
     } finally {
         Stop-OwnedProcess $process
         $output = $stdout.GetAwaiter().GetResult()

@@ -62,7 +62,8 @@ public class SearchServer {
                                     engine.searchBoolean(request.query())));
                         } else {
                             sendJson(exchange, 200, searchJson(request.query(),
-                                    engine.search(request.query())));
+                                    request.k() == null ? engine.search(request.query())
+                                            : engine.searchTopK(request.query(), request.k())));
                         }
                     } catch (IllegalArgumentException invalidQuery) {
                         sendJson(exchange, 400, "{\"error\":"
@@ -79,7 +80,8 @@ public class SearchServer {
         System.out.println("Listening on http://127.0.0.1:8080");
     }
 
-    private record SearchRequest(String query, String mode) { }
+    // A null limit preserves the existing full keyword search; no default Top-K.
+    private record SearchRequest(String query, String mode, Integer k) { }
 
     private static SearchRequest parseQuery(String rawQuery) {
         if (rawQuery == null) {
@@ -87,6 +89,7 @@ public class SearchServer {
         }
         String query = null;
         String mode = null;
+        String kValue = null;
         // Split before decoding so an encoded '&' remains part of a value.
         for (String parameter : rawQuery.split("&", -1)) {
             int separator = parameter.indexOf('=');
@@ -105,6 +108,11 @@ public class SearchServer {
                     throw new IllegalArgumentException("Duplicate mode parameter.");
                 }
                 mode = value;
+            } else if ("k".equals(name)) {
+                if (kValue != null) {
+                    throw new IllegalArgumentException("Duplicate k parameter.");
+                }
+                kValue = value;
             }
         }
         if (query == null || query.isBlank()) {
@@ -115,7 +123,37 @@ public class SearchServer {
         } else if (!"keyword".equals(mode) && !"phrase".equals(mode) && !"boolean".equals(mode)) {
             throw new IllegalArgumentException("mode must be keyword or phrase or boolean.");
         }
-        return new SearchRequest(query, mode);
+        Integer k = null;
+        if (kValue != null) {
+            if (!"keyword".equals(mode)) {
+                throw new IllegalArgumentException("k is supported only in keyword mode.");
+            }
+            k = parseK(kValue);
+        }
+        return new SearchRequest(query, mode, k);
+    }
+
+    private static int parseK(String value) {
+        String message = "k must be a decimal integer from 1 to 2147483647.";
+        if (value.isEmpty()) {
+            throw new IllegalArgumentException(message);
+        }
+        // Accept ASCII decimal digits only, after the existing URL decoding.
+        // parseInt alone would also accept signs and some non-ASCII digits.
+        for (int i = 0; i < value.length(); i++) {
+            if (value.charAt(i) < '0' || value.charAt(i) > '9') {
+                throw new IllegalArgumentException(message);
+            }
+        }
+        try {
+            int k = Integer.parseInt(value);
+            if (k < 1) {
+                throw new IllegalArgumentException(message);
+            }
+            return k;
+        } catch (NumberFormatException outOfRange) {
+            throw new IllegalArgumentException(message);
+        }
     }
 
     private static String decodeParameter(String encoded) {
