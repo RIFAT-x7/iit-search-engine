@@ -44,6 +44,9 @@ assistance and should be read alongside the source code.
 12. [Phase 3.3B: Browser-based Boolean retrieval](03-05-browser-boolean-search.md) —
     Three browser/API modes, shared filename-only JSON, validation and safe rendering,
     cancellation, fixed collections, regression coverage, and verification evidence.
+13. [Phase 3.4A: Optimized Top-K retrieval](03-06-optimized-top-k.md) —
+    Exact keyword ranking prefixes, sparse scoring, a bounded binary heap,
+    worked traces, complexity, twenty-six tests, benchmarks and viva preparation.
 
 Phases 1 and 2 are complete and integrated into `main`. The seven Java regression
 tests and 16 [HTTP smoke tests](../tests/HttpSmokeTests.ps1) support the current
