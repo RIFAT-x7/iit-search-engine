@@ -41,6 +41,9 @@ assistance and should be read alongside the source code.
 11. [Phase 3.3A: Core Boolean retrieval](03-04-boolean-search.md) —
     Frequency-posting sets, explicit AND/OR parsing, precedence, strict operands,
     twenty-two tests, preserved retrieval behavior, and verification evidence.
+12. [Phase 3.3B: Browser-based Boolean retrieval](03-05-browser-boolean-search.md) —
+    Three browser/API modes, shared filename-only JSON, validation and safe rendering,
+    cancellation, fixed collections, regression coverage, and verification evidence.
 
 Phases 1 and 2 are complete and integrated into `main`. The seven Java regression
 tests and 16 [HTTP smoke tests](../tests/HttpSmokeTests.ps1) support the current
