@@ -26,13 +26,15 @@ function client() {
     const button = element();
     const status = element();
     const list = element();
+    const keywordLimit = Object.assign(element(), { value: "", disabled: true });
     const radios = [Object.assign(element(), { value: "keyword", checked: true }),
         Object.assign(element(), { value: "phrase", checked: false }),
         Object.assign(element(), { value: "boolean", checked: false })];
     const requests = [];
     form.querySelector = (selector) => selector.startsWith("button") ? button : radios.find(radio => radio.checked);
     form.querySelectorAll = () => radios;
-    const elements = { "search-form": form, query, "search-status": status, "result-list": list };
+    const elements = { "search-form": form, query, "search-status": status, "result-list": list,
+        "keyword-limit": keywordLimit };
     const context = {
         document: { getElementById: id => elements[id], createElement: () => element() },
         URLSearchParams,
@@ -43,7 +45,12 @@ function client() {
     };
     vm.runInNewContext(source, context);
     return {
-        query, button, status, list, requests,
+        query, button, status, list, requests, keywordLimit,
+        limit(value) {
+            assert.equal(keywordLimit.disabled, false, "A disabled native selector cannot be changed by the user");
+            keywordLimit.value = value;
+            keywordLimit.listeners.change();
+        },
         submit(text) {
             query.value = text;
             return form.listeners.submit({ preventDefault() {} });
@@ -317,6 +324,316 @@ async function main() {
         assert.equal(page.status.textContent, "1 Boolean match(es) found.");
         assert.equal(page.button.disabled, false);
         assert.equal(page.list.attributes["aria-busy"], "false");
+    });
+    await test("All results initializes enabled in keyword mode and omits k, including after a limited search", async () => {
+        const page = client();
+        assert.equal(page.keywordLimit.disabled, false);
+        assert.equal(page.keywordLimit.value, "");
+        let pending = page.submit("java");
+        assert.equal(new URL(page.requests[0].url, "http://localhost").searchParams.has("k"), false);
+        page.respond(0, { results: [{ filename: "a.txt", score: 2 }] });
+        await pending;
+        assert.equal(page.status.textContent, "1 result(s) found.");
+        page.limit("3");
+        pending = page.submit("java");
+        page.respond(1, { results: [] });
+        await pending;
+        page.limit("");
+        pending = page.submit("java");
+        assert.equal(new URL(page.requests[2].url, "http://localhost").searchParams.has("k"), false);
+        page.respond(2, { results: [] });
+        await pending;
+    });
+    await test("Top 1, 3, 5 and 10 send exactly one numeric k without corrupting query encoding", async () => {
+        for (const value of ["1", "3", "5", "10"]) {
+            const page = client();
+            page.limit(value);
+            const query = 'Java & search + ? "Unicode: \u09ac"';
+            const pending = page.submit(query);
+            const params = new URL(page.requests[0].url, "http://localhost").searchParams;
+            assert.equal(params.get("q"), query);
+            assert.equal(params.get("mode"), "keyword");
+            assert.deepEqual(params.getAll("k"), [value]);
+            page.respond(0, { results: [] });
+            await pending;
+        }
+    });
+    await test("Top-K preserves server order and score formatting with an explicit limited-count status", async () => {
+        const page = client();
+        page.limit("3");
+        const pending = page.submit("java");
+        page.respond(0, { results: [{ filename: "z.txt", score: 10 },
+            { filename: "a.txt", score: 5.541893581161611 }, { filename: "m.txt", score: 1.8472978603872037 }] });
+        await pending;
+        assert.deepEqual(page.texts(), ["z.txt - Score: 10.00", "a.txt - Score: 5.54", "m.txt - Score: 1.85"]);
+        assert.equal(page.status.textContent, "Showing 3 ranked result(s) (Top 3 limit).");
+        assert.equal(page.button.disabled, false);
+        assert.equal(page.list.attributes["aria-busy"], "false");
+    });
+    await test("Fewer-than-K status reports returned count without claiming total matches", async () => {
+        const page = client();
+        page.limit("10");
+        const pending = page.submit("java");
+        page.respond(0, { results: [{ filename: "java_programming.txt", score: 5.541893581161611 },
+            { filename: "academic_notice.txt", score: 1.8472978603872037 }] });
+        await pending;
+        assert.equal(page.status.textContent, "Showing 2 ranked result(s) (Top 10 limit).");
+        assert.equal(page.texts().length, 2);
+    });
+    await test("Empty Top-K results clear earlier results and retain the existing empty message", async () => {
+        const page = client();
+        page.limit("1");
+        let pending = page.submit("java");
+        page.respond(0, { results: [{ filename: "a.txt", score: 1 }] });
+        await pending;
+        pending = page.submit("unknown");
+        assert.deepEqual(page.texts(), []);
+        page.respond(1, { results: [] });
+        await pending;
+        assert.equal(page.status.textContent, "No results found.");
+        assert.equal(page.keywordLimit.value, "1");
+    });
+    await test("Phrase mode disables but preserves the keyword limit and never sends k", async () => {
+        const page = client();
+        page.limit("5");
+        page.mode("phrase");
+        assert.equal(page.keywordLimit.disabled, true);
+        assert.equal(page.keywordLimit.value, "5");
+        const pending = page.submit("java search");
+        const params = new URL(page.requests[0].url, "http://localhost").searchParams;
+        assert.equal(params.get("mode"), "phrase");
+        assert.equal(params.has("k"), false);
+        page.respond(0, { results: [{ filename: "phrase.txt" }] });
+        await pending;
+        assert.equal(page.status.textContent, "1 phrase match(es) found.");
+        assert.deepEqual(page.texts(), ["phrase.txt"]);
+    });
+    await test("Boolean mode disables but preserves the keyword limit and never sends k", async () => {
+        const page = client();
+        page.limit("10");
+        page.mode("boolean");
+        assert.equal(page.keywordLimit.disabled, true);
+        assert.equal(page.keywordLimit.value, "10");
+        const pending = page.submit("java AND programming");
+        const params = new URL(page.requests[0].url, "http://localhost").searchParams;
+        assert.equal(params.get("mode"), "boolean");
+        assert.equal(params.has("k"), false);
+        page.respond(0, { results: [{ filename: "boolean.txt" }] });
+        await pending;
+        assert.equal(page.status.textContent, "1 Boolean match(es) found.");
+        assert.deepEqual(page.texts(), ["boolean.txt"]);
+    });
+    await test("Returning through phrase and Boolean to keyword restores the previous limit", async () => {
+        const page = client();
+        page.limit("3");
+        page.mode("phrase");
+        page.mode("boolean");
+        page.mode("keyword");
+        assert.equal(page.keywordLimit.disabled, false);
+        assert.equal(page.keywordLimit.value, "3");
+        const pending = page.submit("java");
+        assert.equal(new URL(page.requests[0].url, "http://localhost").searchParams.get("k"), "3");
+        page.respond(0, { results: [] });
+        await pending;
+    });
+    await test("Changing the limit clears completed content and status without submitting", async () => {
+        const page = client();
+        const pending = page.submit("java");
+        page.respond(0, { results: [{ filename: "old.txt", score: 4 }] });
+        await pending;
+        page.limit("5");
+        assert.deepEqual(page.texts(), []);
+        assert.equal(page.status.textContent, "");
+        assert.equal(page.requests.length, 1);
+        assert.equal(page.button.disabled, false);
+        assert.equal(page.list.attributes["aria-busy"], "false");
+    });
+    await test("Limit changes abort pending search and restore controls before any new submission", async () => {
+        const page = client();
+        const old = page.submit("java");
+        assert.equal(page.keywordLimit.disabled, false, "Limit must remain usable while searching");
+        page.limit("1");
+        assert.equal(page.requests[0].options.signal.aborted, true);
+        assert.equal(page.button.disabled, false);
+        assert.equal(page.list.attributes["aria-busy"], "false");
+        assert.deepEqual(page.texts(), []);
+        assert.equal(page.status.textContent, "");
+        page.respond(0, { results: [{ filename: "obsolete.txt", score: 1 }] });
+        await old;
+        assert.deepEqual(page.texts(), []);
+        assert.equal(page.status.textContent, "");
+    });
+    await test("Late success after a K change cannot render or unlock a newer pending search", async () => {
+        const page = client();
+        page.limit("1");
+        const old = page.submit("java");
+        page.limit("3");
+        const current = page.submit("search");
+        page.respond(0, { results: [{ filename: "obsolete.txt", score: 1 }] });
+        await old;
+        assert.deepEqual(page.texts(), []);
+        assert.equal(page.status.textContent, "Searching...");
+        assert.equal(page.button.disabled, true);
+        assert.equal(page.list.attributes["aria-busy"], "true");
+        page.respond(1, { results: [{ filename: "current.txt", score: 2 }] });
+        await current;
+        assert.equal(page.status.textContent, "Showing 1 ranked result(s) (Top 3 limit).");
+    });
+    await test("Late success after a K change cannot overwrite a newer completed search", async () => {
+        const page = client();
+        const old = page.submit("java");
+        page.limit("5");
+        const current = page.submit("search");
+        page.respond(1, { results: [{ filename: "current.txt", score: 2 }] });
+        await current;
+        page.respond(0, { results: [{ filename: "obsolete.txt", score: 9 }] });
+        await old;
+        assert.deepEqual(page.texts(), ["current.txt - Score: 2.00"]);
+        assert.equal(page.status.textContent, "Showing 1 ranked result(s) (Top 5 limit).");
+    });
+    await test("Late network failure after a K change cannot unlock the current request", async () => {
+        const page = client();
+        const old = page.submit("java");
+        page.limit("3");
+        const current = page.submit("search");
+        page.requests[0].reject(new Error("obsolete failure"));
+        await old;
+        assert.equal(page.status.textContent, "Searching...");
+        assert.equal(page.button.disabled, true);
+        assert.equal(page.list.attributes["aria-busy"], "true");
+        page.respond(1, { results: [] });
+        await current;
+    });
+    await test("Late server error after a K change cannot replace completed content", async () => {
+        const page = client();
+        const old = page.submit("java");
+        page.limit("1");
+        const current = page.submit("search");
+        page.respond(1, { results: [{ filename: "current.txt", score: 2 }] });
+        await current;
+        page.respond(0, { error: "Bad request: obsolete" }, false);
+        await old;
+        assert.deepEqual(page.texts(), ["current.txt - Score: 2.00"]);
+        assert.equal(page.status.textContent, "Showing 1 ranked result(s) (Top 1 limit).");
+        assert.equal(page.button.disabled, false);
+    });
+    await test("A K change during JSON parsing invalidates the old response too", async () => {
+        const page = client();
+        const old = page.submit("java");
+        let finishJson;
+        let markParsingStarted;
+        const parsingStarted = new Promise(resolve => { markParsingStarted = resolve; });
+        page.requests[0].resolve({ ok: true, json() {
+            return new Promise(resolve => { finishJson = resolve; markParsingStarted(); });
+        } });
+        await parsingStarted;
+        assert.equal(typeof finishJson, "function");
+        page.limit("10");
+        const current = page.submit("search");
+        page.respond(1, { results: [{ filename: "current.txt", score: 3 }] });
+        await current;
+        finishJson({ results: [{ filename: "obsolete.txt", score: 9 }] });
+        await old;
+        assert.deepEqual(page.texts(), ["current.txt - Score: 3.00"]);
+        assert.equal(page.status.textContent, "Showing 1 ranked result(s) (Top 10 limit).");
+    });
+    await test("Top-K preserves duplicate-submit prevention while busy", async () => {
+        const page = client();
+        page.limit("3");
+        const pending = page.submit("java");
+        await page.submit("search");
+        assert.equal(page.requests.length, 1);
+        page.respond(0, { results: [] });
+        await pending;
+    });
+    await test("Top-K server errors render as text and keep the selected limit for retry", async () => {
+        const page = client();
+        page.limit("5");
+        const pending = page.submit("java");
+        page.respond(0, { error: 'Bad request: <img src=x onerror="alert(1)">' }, false);
+        await pending;
+        assert.equal(page.status.textContent, 'Bad request: <img src=x onerror="alert(1)">');
+        assert.deepEqual(page.texts(), []);
+        assert.equal(page.keywordLimit.value, "5");
+        assert.equal(page.button.disabled, false);
+        assert.equal(page.list.attributes["aria-busy"], "false");
+        const retry = page.submit("java");
+        assert.equal(new URL(page.requests[1].url, "http://localhost").searchParams.get("k"), "5");
+        page.respond(1, { results: [] });
+        await retry;
+    });
+    await test("Top-K network failures, invalid JSON and invalid result shapes restore controls safely", async () => {
+        for (const kind of ["network", "json", "shape"]) {
+            const page = client();
+            page.limit("3");
+            const pending = page.submit("java");
+            if (kind === "network") {
+                page.requests[0].reject(new Error("offline"));
+            } else if (kind === "json") {
+                page.requests[0].resolve({ ok: true, async json() { throw new Error("invalid JSON"); } });
+            } else {
+                page.respond(0, { results: null });
+            }
+            await pending;
+            assert.match(page.status.textContent, /Unable to load/);
+            assert.deepEqual(page.texts(), []);
+            assert.equal(page.button.disabled, false);
+            assert.equal(page.list.attributes["aria-busy"], "false");
+            assert.equal(page.keywordLimit.disabled, false);
+            assert.equal(page.keywordLimit.value, "3");
+        }
+    });
+    await test("Top-K filenames are rendered only as safe text", async () => {
+        const page = client();
+        page.limit("1");
+        const pending = page.submit("java");
+        const filename = '<img src=x onerror="alert(1)">.txt';
+        page.respond(0, { results: [{ filename, score: 2.75 }] });
+        await pending;
+        assert.deepEqual(page.texts(), [filename + " - Score: 2.75"]);
+    });
+    await test("The browser renders the returned payload without client-side Top-K truncation", async () => {
+        const page = client();
+        page.limit("1");
+        const pending = page.submit("java");
+        // Deliberately oversized mocked payload: real server enforces the limit.
+        page.respond(0, { results: [{ filename: "z.txt", score: 3 }, { filename: "a.txt", score: 2 }] });
+        await pending;
+        assert.deepEqual(page.texts(), ["z.txt - Score: 3.00", "a.txt - Score: 2.00"]);
+        assert.doesNotMatch(source, /\.slice\(|\.splice\(|\.sort\(/);
+    });
+    await test("Malformed scores cannot leave partially rendered Top-K results", async () => {
+        const page = client();
+        page.limit("3");
+        const pending = page.submit("java");
+        page.respond(0, { results: [{ filename: "valid.txt", score: 2 }, { filename: "invalid.txt" }] });
+        await pending;
+        assert.match(page.status.textContent, /Unable to load/);
+        assert.deepEqual(page.texts(), []);
+        assert.equal(page.button.disabled, false);
+        assert.equal(page.list.attributes["aria-busy"], "false");
+    });
+    await test("Native Top-K select has an explicit label, fixed choices and safe no-JavaScript fallback", async () => {
+        const html = fs.readFileSync("web/index.html", "utf8");
+        assert.match(html, /<label for="keyword-limit">Keyword result limit<\/label>/);
+        const select = html.match(/<select\b([^>]*)>([\s\S]*?)<\/select>/);
+        assert.ok(select);
+        assert.match(select[1], /id="keyword-limit"/);
+        assert.match(select[1], /aria-describedby="keyword-limit-help"/);
+        assert.match(select[1], /\bdisabled\b/);
+        assert.doesNotMatch(select[1], /\bname\s*=/);
+        const options = [...select[2].matchAll(/<option value="([^"]*)"([^>]*)>([^<]+)<\/option>/g)];
+        assert.deepEqual(options.map(option => [option[1], option[3]]),
+            [["", "All results"], ["1", "Top 1"], ["3", "Top 3"], ["5", "Top 5"], ["10", "Top 10"]]);
+        assert.match(options[0][2], /\bselected\b/);
+        assert.equal(options.filter(option => /\bselected\b/.test(option[2])).length, 1);
+        assert.match(html, /id="keyword-limit-help"[\s\S]*Keyword limits require JavaScript/);
+        assert.match(html, /Without it, searches remain unrestricted/);
+        assert.doesNotMatch(html, /name="k"/);
+        assert.match(html, /<form[^>]*action="\/search"[^>]*method="get"/);
+        const css = fs.readFileSync("web/styles.css", "utf8");
+        assert.match(css, /select:focus-visible/);
+        assert.match(css, /#keyword-limit:disabled/);
     });
     console.log("Total passed: " + passed + "; total failed: 0");
 }

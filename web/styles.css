@@ -68,12 +68,14 @@ label {
     font-weight: 400;
 }
 
-#search-help {
+#search-help,
+#keyword-limit-help {
     margin: 0 0 0.75rem;
     color: #475569;
 }
 
 input[type="search"],
+#keyword-limit,
 button {
     min-height: 3rem;
     padding: 0.75rem 1rem;
@@ -81,7 +83,8 @@ button {
     font: inherit;
 }
 
-input[type="search"] {
+input[type="search"],
+#keyword-limit {
     flex: 1;
     min-width: 0;
     width: 100%;
@@ -104,12 +107,14 @@ button:hover:not(:disabled) {
 }
 
 input:focus-visible,
+select:focus-visible,
 button:focus-visible {
     outline: 3px solid #1d4ed8;
     outline-offset: 3px;
 }
 
-button:disabled {
+button:disabled,
+#keyword-limit:disabled {
     border-color: #94a3b8;
     background: #e2e8f0;
     color: #475569;

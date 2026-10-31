@@ -4,23 +4,29 @@ const submitButton = form.querySelector('button[type="submit"]');
 const statusMessage = document.getElementById("search-status");
 const resultList = document.getElementById("result-list");
 const modeInputs = form.querySelectorAll('input[name="mode"]');
+const keywordLimit = document.getElementById("keyword-limit");
 let latestRequestId = 0;
 let activeRequest = null;
 
-for (const input of modeInputs) {
-    input.addEventListener("change", () => {
-        // Ignore even a late response whose cancellation has not completed yet.
-        latestRequestId++;
-        if (activeRequest) {
-            activeRequest.abort();
-            activeRequest = null;
-        }
-        resultList.replaceChildren();
-        statusMessage.textContent = "";
-        resultList.setAttribute("aria-busy", "false");
-        submitButton.disabled = false;
-    });
+function clearSearch() {
+    // Ignore even a late response whose cancellation has not completed yet.
+    latestRequestId++;
+    if (activeRequest) {
+        activeRequest.abort();
+        activeRequest = null;
+    }
+    resultList.replaceChildren();
+    statusMessage.textContent = "";
+    resultList.setAttribute("aria-busy", "false");
+    submitButton.disabled = false;
+    keywordLimit.disabled = form.querySelector('input[name="mode"]:checked').value !== "keyword";
 }
+
+for (const input of modeInputs) {
+    input.addEventListener("change", clearSearch);
+}
+keywordLimit.addEventListener("change", clearSearch);
+keywordLimit.disabled = form.querySelector('input[name="mode"]:checked').value !== "keyword";
 
 form.addEventListener("submit", async (event) => {
     event.preventDefault();
@@ -34,7 +40,11 @@ form.addEventListener("submit", async (event) => {
     submitButton.disabled = true;
 
     const mode = form.querySelector('input[name="mode"]:checked').value;
+    const limit = mode === "keyword" ? keywordLimit.value : "";
     const parameters = new URLSearchParams({ q: queryInput.value, mode });
+    if (limit !== "") {
+        parameters.set("k", limit);
+    }
     const requestId = ++latestRequestId;
     activeRequest = new AbortController();
     try {
@@ -60,11 +70,13 @@ form.addEventListener("submit", async (event) => {
                 : result.filename;
             resultList.appendChild(item);
         }
-        statusMessage.textContent = data.results.length
-            + (mode === "keyword" ? " result(s) found."
+        statusMessage.textContent = limit !== ""
+            ? "Showing " + data.results.length + " ranked result(s) (Top " + limit + " limit)."
+            : data.results.length + (mode === "keyword" ? " result(s) found."
                 : mode === "phrase" ? " phrase match(es) found." : " Boolean match(es) found.");
     } catch (error) {
         if (requestId === latestRequestId) {
+            resultList.replaceChildren();
             statusMessage.textContent = "Unable to load search results. Check your connection and try again.";
         }
     } finally {

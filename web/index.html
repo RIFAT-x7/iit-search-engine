@@ -17,6 +17,16 @@
                 <label><input type="radio" name="mode" value="phrase"> Exact Phrase Search</label>
                 <label><input type="radio" name="mode" value="boolean"> Boolean Search</label>
             </fieldset>
+            <label for="keyword-limit">Keyword result limit</label>
+            <select id="keyword-limit" aria-describedby="keyword-limit-help" disabled>
+                <option value="" selected>All results</option>
+                <option value="1">Top 1</option>
+                <option value="3">Top 3</option>
+                <option value="5">Top 5</option>
+                <option value="10">Top 10</option>
+            </select>
+            <p id="keyword-limit-help">Keyword limits require JavaScript. Without it, searches remain unrestricted.
+                This limit does not apply to phrase or Boolean search.</p>
             <label for="query">Search text</label>
             <p id="search-help">Exact Phrase Search matches consecutive words, including stop words.
                 Boolean Search uses AND/OR, with AND before OR. Use single searchable words;
