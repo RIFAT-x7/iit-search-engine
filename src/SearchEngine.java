@@ -4,7 +4,9 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -75,6 +77,125 @@ public class SearchEngine {
             results.set(j + 1, current);
         }
         return results;
+    }
+
+    /**
+     * Scores posting-list candidates only and retains at most k in a worst-first
+     * binary heap. Scores and query-term addition order match search() exactly.
+     * No full result sort or document-text scan is needed.
+     *
+     * @throws IllegalArgumentException when k is less than one
+     */
+    public List<SearchResult> searchTopK(String query, int k) {
+        if (k < 1) {
+            throw new IllegalArgumentException("Top-K limit must be at least 1.");
+        }
+        Set<String> queryTerms = new LinkedHashSet<>(processor.process(query));
+        Map<Integer, Double> scores = new HashMap<>();
+        for (String term : queryTerms) {
+            Map<Integer, Integer> postings = index.getPostings(term);
+            if (postings.isEmpty()) {
+                continue;
+            }
+            int documentFrequency = postings.size();
+            double idf = Math.log((documents.size() + 1.0)
+                    / (documentFrequency + 1.0)) + 1.0;
+            for (Map.Entry<Integer, Integer> posting : postings.entrySet()) {
+                int documentId = posting.getKey();
+                scores.put(documentId, scores.getOrDefault(documentId, 0.0)
+                        + posting.getValue() * idf);
+            }
+        }
+
+        BoundedResultHeap heap = new BoundedResultHeap(k);
+        for (Map.Entry<Integer, Double> candidate : scores.entrySet()) {
+            if (candidate.getValue() > 0) {
+                // buildIndex assigns contiguous IDs starting at 1, so metadata
+                // lookup is O(1); no scan of all N documents is required.
+                Document document = documents.get(candidate.getKey() - 1);
+                heap.offer(new SearchResult(document, candidate.getValue()));
+            }
+        }
+        List<SearchResult> results = new ArrayList<>();
+        while (!heap.entries.isEmpty()) {
+            results.add(heap.removeWorst());
+        }
+        // Extractions are worst-to-best. Reverse only the retained entries.
+        Collections.reverse(results);
+        return results;
+    }
+
+    private static class BoundedResultHeap {
+        private final int limit;
+        // Grow on demand rather than allocating k slots (k may be MAX_VALUE).
+        private final List<SearchResult> entries = new ArrayList<>();
+
+        private BoundedResultHeap(int limit) {
+            this.limit = limit;
+        }
+
+        private static boolean isWorse(SearchResult left, SearchResult right) {
+            if (left.getScore() != right.getScore()) {
+                return left.getScore() < right.getScore();
+            }
+            return left.getDocument().getFilename()
+                    .compareTo(right.getDocument().getFilename()) > 0;
+        }
+
+        private void offer(SearchResult candidate) {
+            if (entries.size() < limit) {
+                entries.add(candidate);
+                siftUp(entries.size() - 1);
+            } else if (isWorse(entries.get(0), candidate)) {
+                entries.set(0, candidate);
+                siftDown(0);
+            }
+        }
+
+        private void siftUp(int child) {
+            while (child > 0) {
+                int parent = (child - 1) / 2;
+                if (!isWorse(entries.get(child), entries.get(parent))) {
+                    break;
+                }
+                swap(child, parent);
+                child = parent;
+            }
+        }
+
+        private void siftDown(int parent) {
+            // A node has a child iff parent < size/2. This also avoids overflow
+            // in 2*parent+1 even for an unusually large heap.
+            while (parent < entries.size() / 2) {
+                int worseChild = 2 * parent + 1;
+                int right = worseChild + 1;
+                if (right < entries.size()
+                        && isWorse(entries.get(right), entries.get(worseChild))) {
+                    worseChild = right;
+                }
+                if (!isWorse(entries.get(worseChild), entries.get(parent))) {
+                    break;
+                }
+                swap(parent, worseChild);
+                parent = worseChild;
+            }
+        }
+
+        private SearchResult removeWorst() {
+            SearchResult worst = entries.get(0);
+            SearchResult last = entries.remove(entries.size() - 1);
+            if (!entries.isEmpty()) {
+                entries.set(0, last);
+                siftDown(0);
+            }
+            return worst;
+        }
+
+        private void swap(int first, int second) {
+            SearchResult saved = entries.get(first);
+            entries.set(first, entries.get(second));
+            entries.set(second, saved);
+        }
     }
 
     /** Matches consecutive normalized tokens, including stop words, in filename order.
