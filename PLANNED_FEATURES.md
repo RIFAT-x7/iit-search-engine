@@ -3,12 +3,12 @@
 This document separates completed implementation from remaining plans and
 unconfirmed supervisor decisions. The [README](README.md) explains the current
 application and run commands. At this synchronization checkpoint, main includes
-Phase 3.3B at `2a228fc88eee32c35925d10208f6e3e835ef2599`.
+Phase 3.4B at `39f835359860866b504a487eef929a273c41c614`.
 Listing a future feature here does not establish approval or implementation.
 
 ## Current implementation
 
-Phases 1 and 2 established the midterm baseline. Phases 3.1-3.3 are now also
+Phases 1 and 2 established the midterm baseline. Phases 3.1-3.4 are now also
 complete and integrated, with:
 
 - A custom Java IR core with in-memory frequency postings and complete zero-based
@@ -18,6 +18,11 @@ complete and integrated, with:
   exact normalized phrase matching using positions, and explicit Boolean AND/OR
   using document-ID sets. AND takes precedence over OR. Phrase and Boolean
   matches are unique documents in filename order, without ranking scores.
+- Optimized keyword Top-K through `searchTopK(query, k)`: sparse posting-driven
+  scoring and a manually implemented bounded binary heap retain the exact
+  ranking prefix and numerical scores of full keyword search. It does not call
+  full search then truncate or sort every matching document. Candidate scoring
+  is still required; core optimization does not establish browser-level speedup.
 - A CLI and a separate Java HTTP server that reuse the same IR core. The CLI
   supports keyword search and manual rebuilds; the HTTP server builds once at
   startup and exposes all three retrieval modes.
@@ -26,31 +31,45 @@ complete and integrated, with:
   preserves legacy keyword JSON with numeric scores; phrase/Boolean responses
   include mode and filenames only. Invalid/duplicate modes and invalid Boolean
   expressions produce escaped descriptive JSON HTTP 400.
+- Optional keyword-only `k` calls `searchTopK()` directly, reusing legacy keyword
+  JSON. Absent K means unrestricted search, without a default server limit.
+  Accept one ASCII-decimal positive int through 2147483647, including leading
+  zeros. Reject blanks, zero, negatives/signs, fractions, exponents, Unicode
+  digits, overflow, duplicate K and K supplied with phrase/Boolean mode.
 - A plain HTML/CSS/JavaScript client with three accessible radio modes, in-page
-  results, responsive styling and error/loading feedback. Mode changes clear
-  results and cancel/invalidate stale requests; safe textContent renders output.
+  results, responsive styling and error/loading feedback. The keyword limit
+  select offers All results (default), Top 1, Top 3, Top 5 and Top 10. It is
+  disabled outside keyword mode and preserves the chosen limit across modes;
+  only limited keyword requests send K. JavaScript-free keyword GET remains
+  unrestricted because the select begins disabled and has no form name. Mode or limit changes
+  clear results and cancel/invalidate stale requests; safe textContent renders
+  output in server order, without client-side sorting or truncation.
 - Two separate fixed fictional corpora: default startup loads the six immediate
   `.txt` files in `data/`; `--phrase-demo` loads only the nine samples in
   `data/phrase_samples/`. Neither is an official IIT document collection.
-- Four Java suites, original/phrase/Boolean HTTP suites and a DOM/fetch client
-  model: the latest integration run passed **175/175 checks, as reported by
-  Codex**, using JDK 25.0.3. The user separately confirmed the two collection
-  groups of Edge checks recorded in the [verification record](README.md#testing-and-verification-record).
+- Five Java suites (86), original/phrase/Boolean/Top-K HTTP suites (159) and a
+  DOM/fetch client model (42): Codex previously reported a fresh **287/287**
+  integration regression run, with JDK 25.0.3 compilation and JavaScript/all five
+  PowerShell script syntax checks. The user separately reported working Edge
+  functionality after the prescribed Phase 3.4B browser checks. Earlier Phase
+  3.3B collection groups remain historical evidence in the
+  [verification record](README.md#testing-and-verification-record).
   There is no automated end-to-end browser suite. This documentation sync does
   not rerun application tests or add browser-verification claims.
 - A localhost-only server configuration at `127.0.0.1:8080`. Cross-computer
   access and IIT network deployment are not implemented.
-- Twelve published learning manuals, listed in the [learning journal](learnings/README.md),
-  covering foundations through browser Boolean retrieval.
+- Fourteen published learning manuals, listed in the [learning journal](learnings/README.md),
+  covering foundations through [optimized Top-K core retrieval](learnings/03-06-optimized-top-k.md)
+  and [Top-K HTTP/browser integration](learnings/03-07-top-k-http-browser.md).
   Earlier manuals retain their historical milestone context.
 
 Current results contain plain-text filenames and keyword-only scores. There are
 no document preview/download routes, login, or document permission system. The server serves
 only its fixed browser assets, health endpoint, and search API. PDF extraction,
-OCR, partial/fuzzy retrieval, Top-K limits, snippets, and index persistence remain
+OCR, partial/fuzzy retrieval, snippets, and index persistence remain
 future work. Boolean parentheses/grouping, NOT, phrase operands and wildcards
-are unsupported; stop-word operands are rejected. Keyword ranking and all-matches
-behavior remain unchanged. There is no quotation-mark grammar in keyword search.
+are unsupported; stop-word operands are rejected. Keyword ranking and no-K
+all-matches behavior remain unchanged. There is no quotation-mark grammar in keyword search.
 Current tokenization retains ASCII letters and digits; UTF-8 file reading and
 JSON transport do not establish Bengali search support.
 
@@ -113,8 +132,8 @@ use public or explicitly authorized documents.
 ## Roadmap
 
 Completed milestones are recorded below separately from pending work. Phase 3
-is partially complete overall: its 3.1-3.3 milestones are integrated, while Top-K
-and partial/fuzzy retrieval remain pending. Future scope can change after
+is partially complete overall: its 3.1-3.4 milestones are integrated, while
+partial/fuzzy retrieval remains pending. Future scope can change after
 documented supervisor decisions.
 
 | Phase | Status | Scope |
@@ -127,7 +146,9 @@ documented supervisor decisions.
 | 3.2B | Completed and integrated | Browser/HTTP phrase mode, fixed --phrase-demo startup, HTTP/client regression coverage and learning manual. |
 | 3.3A | Completed and integrated | Core Boolean AND/OR retrieval with AND precedence, strict validation, twenty-two tests and learning manual. |
 | 3.3B | Completed and integrated | Browser/HTTP Boolean mode, shared score-free JSON, 175-check integration verification and Manual #12. |
-| 3 (remaining) | Pending; not implemented | Top-K result limits and partial/fuzzy retrieval. Their policy, matching definition and evaluation still need agreement. |
+| 3.4A | Completed and integrated | Optimized bounded-heap Top-K Java retrieval, exact ranking/score compatibility, 26 core checks and Manual #13; checkpoint 498de05. |
+| 3.4B | Completed and integrated | Strict keyword K parameter, browser result-limit select, 287-check integration verification and Manual #14; checkpoint 39f8353. |
+| 3 (remaining) | Pending; not implemented | Partial/fuzzy retrieval. Matching policy and evaluation still need agreement; completed Top-K defaults/options do not establish supervisor approval of final requirements. |
 | 4 | Planned; document scope pending approval | Authorized document ingestion and text-based PDF extraction; OCR only if separately approved. |
 | 5 | Planned; access policy pending approval | Result metadata, snippets, and controlled file viewing/downloading, subject to approved permissions. |
 | 6 | Planned; deployment and identity decisions pending approval | IIT internal network deployment and approved authentication/authorization. |
@@ -145,9 +166,9 @@ the planned testing work.
 
 This dated list was prepared when Phase 2 was the current baseline. It is retained
 as a historical discussion agenda, not a record of answers. Positional indexing,
-phrase retrieval and Boolean retrieval have since been implemented through
-Phase 3.3B; that progress does not confirm what the supervisor required for the
-midterm or authorize future document/deployment scope.
+phrase retrieval, Boolean retrieval and optimized keyword Top-K have since been
+implemented through Phase 3.4B; that progress does not confirm what the supervisor
+required for the midterm or authorize future document/deployment scope.
 
 1. **Midterm scope:** Is the current Phase 2 application sufficient for the
    midterm presentation? Are any changes needed before the demonstration?

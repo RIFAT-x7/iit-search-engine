@@ -14,27 +14,30 @@ Retrieval (IR), with custom Java code for preprocessing, indexing, matching,
 and ranking. The aim is to understand these algorithms and eventually apply
 them to public or supervisor-authorized IIT documents.
 
-The current browser and HTTP JSON API support ranked keyword search, exact
-phrase retrieval, and explicit Boolean AND/OR retrieval. The server indexes
-either six original fictional demonstration files or a separate nine-document
-fictional collection. A separate CLI retains its original keyword-search menu.
+The current browser and HTTP JSON API support ranked keyword search with optional
+optimized Top-K selection, exact phrase retrieval, and explicit Boolean AND/OR
+retrieval. The server indexes either six original fictional demonstration files
+or a separate nine-document fictional collection. A separate CLI retains its
+original keyword-search menu.
 The browser uses plain HTML, JavaScript, and CSS; Java performs all indexing,
 query validation, retrieval, and keyword ranking.
 
 ## Midterm demonstration
 
 Phases 1 and 2 established the midterm baseline. Main now also includes completed
-Phases 3.1-3.3: positional indexing, core/browser phrase retrieval, and core/browser
-Boolean retrieval. The verified integration checkpoint is
-`2a228fc88eee32c35925d10208f6e3e835ef2599`. Twelve published learning manuals
-explain these milestones. The latest integration run passed **175/175 automated
-checks as reported by Codex**, with Temurin JDK 25.0.3 compilation; the
+Phases 3.1-3.4: positional indexing, core/browser phrase and Boolean retrieval,
+and optimized Top-K in the Java core, HTTP API and browser. The verified
+integration checkpoint is `39f835359860866b504a487eef929a273c41c614`.
+Fourteen published learning manuals explain these milestones. Before that
+integration, Codex reported a fresh successful run of **287/287 automated checks**:
+86 Java, 159 HTTP and 42 browser-client model checks, with Temurin JDK 25.0.3
+compilation and JavaScript/PowerShell syntax checks. The
 [verification record](#testing-and-verification-record) separates those prior
 executions from user-reported Edge checks and this documentation-only update.
 
 The demonstration runs only on `127.0.0.1:8080` with fictional sample documents.
 IIT network deployment, login and authorization, document viewing/downloading,
-PDF extraction, OCR, Top-K, and fuzzy/partial retrieval are future work. Bengali
+PDF extraction, OCR, and fuzzy/partial retrieval are future work. Bengali
 indexing and Bengali OCR remain undecided. No supervisor answers are documented
 in the repository; see the retained
 [November 1 supervisor questions](PLANNED_FEATURES.md#questions-for-the-supervisor-november-1-2026).
@@ -55,9 +58,9 @@ flowchart TD
     Index["In-memory frequency and positional postings"]
     Data["One fixed fictional UTF-8 .txt collection: 6 or 9 files"]
     Assets -->|"Read once at startup"| Server
-    Client -->|"GET page, assets, and /search?q=...&mode=..."| Server
+    Client -->|"GET page, assets, and /search?q=...&mode=... with optional keyword k"| Server
     Server -->|"HTML / JS / CSS and JSON results"| Client
-    Server -->|"search / searchPhrase / searchBoolean"| Core
+    Server -->|"search / searchTopK / searchPhrase / searchBoolean"| Core
     CLI -->|"Keyword search and manual rebuild"| Core
     Data -->|"Loading and preprocessing"| Core
     Core <--> Index
@@ -85,8 +88,13 @@ The browser presents results; Java retains all search algorithms.
 - TF-IDF-style ranking using
   `idf = ln((N + 1) / (df + 1)) + 1`, multiplied by raw term frequency and summed
   over distinct query terms. There is no document-length normalization.
-- Descending score ordering with filename order for ties; all matches returned.
-  The engine uses a manual stable insertion sort for this small collection.
+- Descending score ordering with filename order for ties. Unrestricted keyword
+  search returns all matches using the existing manual stable insertion sort.
+- `searchTopK(query, k)` uses posting-driven sparse scoring and a manually
+  implemented bounded binary heap. It retains at most K matches without sorting
+  all matches or delegating to full search. Scores, query-term accumulation order
+  and filename tie-breaking preserve the exact prefix of unrestricted search.
+  Candidate relevance scores still have to be calculated.
 - Exact normalized phrase retrieval using positional alignment in the same
   document, retaining stop words and repeated terms.
 - Explicit Boolean AND/OR retrieval using frequency-posting document-ID sets.
@@ -102,25 +110,39 @@ The browser presents results; Java retains all search algorithms.
 - Exact `GET /search?q=...&mode=...` selects keyword, phrase or Boolean retrieval.
   Missing mode or mode=keyword preserves the original query/results JSON with
   numeric scores. Phrase/Boolean JSON includes mode and filename-only results.
+- Optional `k` in keyword mode dispatches directly to `searchTopK()` and uses the
+  same keyword JSON serializer, scores and field ordering. Without `k`, retrieval
+  remains unrestricted; no server-selected default limit is imposed.
 - Query parsing requires one nonblank `q`, splits parameters before decoding,
   handles percent escapes and `+` as space, and rejects duplicate `q`, malformed
   escapes, invalid UTF-8, and parameters without `name=value` syntax. An optional
   single mode must be exactly keyword, phrase or boolean; invalid/duplicate modes
   and malformed Boolean expressions return descriptive JSON HTTP 400.
+- A supplied `k` must consist only of ASCII decimal digits and represent an int
+  from 1 through 2147483647. Leading zeros are accepted. Empty/blank values,
+  zero, signs, negatives, fractions, exponents, Unicode digits, overflow and
+  duplicate `k` are rejected. Phrase and Boolean modes reject any supplied `k`.
 - Application-handled query validation errors return HTTP 400 with a JSON
   `error` field. JSON strings escape quotes, backslashes, and low controls.
 - Unsupported methods on any known path return 405 with `Allow: GET`;
   unknown paths return 404. Path validation precedes method validation.
-- Four dependency-free Java suites (60 tests), HTTP suites on both fixed
-  collections (95 checks), and a Node DOM/fetch client model (20 checks).
+- Five dependency-free Java suites (86 checks), HTTP suites on both fixed
+  collections (159 checks), and a Node DOM/fetch client model (42 checks).
 - An accessible native GET form with three labeled radio modes, keyword selected
   by default, Boolean help and a required query. Without JavaScript, it can
   navigate to the selected mode's raw JSON response.
+- An accessible keyword result-limit select: All results (default), Top 1, Top 3,
+  Top 5 and Top 10. JavaScript enables it only in keyword mode and adds `k` only
+  for a selected limit. Mode changes preserve its value. The unnamed select
+  starts disabled so JavaScript-free GET submission never sends `k`.
 - Plain JavaScript submit handling with URLSearchParams, fetch, safe textContent
   rendering, loading feedback, and empty/error messages. Repeated completed
   searches replace earlier results; keyword scores are rounded to two decimals
-  for display. Mode changes abort the active fetch, invalidate its request ID,
-  and clear results/status. ID guards prevent stale success/error/cleanup updates.
+  for display. Mode or limit changes abort the active fetch, invalidate its
+  request ID, and clear results/status. ID guards prevent stale success/error/
+  cleanup updates; rendering exceptions clear any partial results. The browser
+  does not rank or truncate results. Limited status reports returned count and
+  selected limit without claiming a total matching count.
 - Local responsive CSS with system fonts, blue/neutral colors, visible keyboard
   focus, disabled-button styling, wrapping results, and stacked narrow-screen controls.
 
@@ -140,7 +162,8 @@ The loader is not recursive, so the nested samples never silently join the
 default corpus. The [sample README](data/phrase_samples/README.md) describes the
 nine-file collection. Both collections are fictional, not official IIT records.
 Startup selects the corpus; the browser's radio control selects an algorithm
-over that corpus. The server accepts no arbitrary document-path option.
+over that corpus, and its keyword selector optionally limits ranked results.
+The server accepts no arbitrary document-path option.
 
 The three modes keep separate semantics. AND/OR are operators only in Boolean
 mode. In keyword mode they remain filtered stop words, and quotes do not enable
@@ -154,7 +177,7 @@ character-for-character punctuation or case matching.
 
 | mode parameter | Behavior | Successful JSON |
 | --- | --- | --- |
-| Missing or `keyword` | Ranked keyword search | query, results; each result has filename and numeric score |
+| Missing or `keyword` | Ranked keyword search; optional positive `k` selects optimized Top-K | query, results; each result has filename and numeric score |
 | `phrase` | Exact normalized phrase | query, mode=phrase, results; each result has filename only |
 | `boolean` | Explicit AND/OR expression | query, mode=boolean, results; each result has filename only |
 
@@ -187,6 +210,38 @@ readability; the server emits compact JSON:
 
 `query` echoes the accepted decoded text. Results retain the engine's ranking
 order, and `score` is a JSON number. There is no separate rank field.
+
+### Optimized keyword Top-K
+
+Request: `GET /search?q=java&mode=keyword&k=1`. Status: **200**, with the same
+JSON Content-Type and keyword schema:
+
+```json
+{"query":"java","results":[{"filename":"java_programming.txt","score":5.541893581161611}]}
+```
+
+`GET /search?q=java&k=1` is equivalent. The server calls `searchTopK()` directly;
+it does not call full search and truncate. The response contains the exact
+ranking prefix and numeric scores, without extra mode/K/total-count fields.
+If K exceeds the matching count, every match is returned. For example, `java`
+with `k=10` returns the two results in the unrestricted example. Valid unknown
+queries still return HTTP 200 with an empty results array.
+
+K is keyword-only and must be a single ASCII-digit decimal value from 1 through
+`Integer.MAX_VALUE` (2147483647); `003` is valid. There is no whitespace trimming
+or support for signs, fractions, exponent/radix notation or Unicode digits.
+Overflow and duplicates are errors. Maximum K is valid without proportional heap
+preallocation. Missing K preserves full search, including its legacy JSON.
+
+`GET /search?q=java&k=0` returns HTTP **400**:
+
+```json
+{"error":"Bad request: k must be a decimal integer from 1 to 2147483647."}
+```
+
+Supplying `k` with `mode=phrase` or `mode=boolean` returns HTTP **400** with
+`Bad request: k is supported only in keyword mode.` Invalid requests do not
+change the next request's limit or stop the server.
 
 ### Exact phrase and Boolean results
 
@@ -232,8 +287,8 @@ Status: **400**, with the same JSON Content-Type:
 {"error":"Bad request: Missing q parameter."}
 ```
 
-The prefix is exactly `Bad request: `. Blank values, duplicate q/mode parameters,
-invalid modes/encodings, and malformed Boolean expressions also produce handled
+The prefix is exactly `Bad request: `. Blank values, duplicate q/mode/k parameters,
+invalid modes/encodings/limits, and malformed Boolean expressions also produce handled
 validation errors with a specific reason. For example, the request
 `GET /search?q=java%20AND&mode=boolean` returns HTTP 400:
 
@@ -255,7 +310,7 @@ application's JSON error handler runs.
 | `GET /app.js` | 200; `text/javascript; charset=utf-8`; fixed client script |
 | `GET /styles.css` | 200; `text/css; charset=utf-8`; fixed stylesheet |
 | `GET /health` | 200; `text/plain; charset=utf-8`; exact body `OK`, without newline |
-| Valid `GET /search?q=...&mode=...` | 200; mode-specific JSON described above |
+| Valid `GET /search?q=...&mode=...` with optional keyword `k` | 200; mode-specific JSON described above |
 | Invalid query on GET search | 400; JSON `error` for application-handled validation |
 | Unsupported method on any of the five known paths | 405; `Allow: GET`; empty body |
 | Unknown or suffixed path, such as `/search/` | 404; empty body |
@@ -290,16 +345,19 @@ Completed milestones:
 | Phase 3.2B | Browser/HTTP phrase mode and fixed demo startup; checkpoint `334905a` |
 | Phase 3.3A | Core Boolean AND/OR retrieval with AND precedence; checkpoint `d57b4f4` |
 | Phase 3.3B | Browser/HTTP Boolean mode and Manual #12; integrated checkpoint `2a228fc` |
+| Phase 3.4A | Optimized bounded-heap Top-K Java API, 26 tests and Manual #13; checkpoint `498de05` |
+| Phase 3.4B | Strict keyword K parameter, browser limit selector and Manual #14; integrated checkpoint `39f8353` |
 
 The Phase 2 integration used `git merge --ff-only feat/browser-client`; later
 reviewed feature branches were also integrated with fast-forward-only merges
-and normal pushes. Phase 3.3B advanced main to `2a228fc` without a merge commit.
+and normal pushes. Phase 3.3B advanced main to `2a228fc`; Phase 3.4A to `498de05`
+and Phase 3.4B to `39f8353`, each without a merge commit.
 The [planning document](PLANNED_FEATURES.md) separates completed phases from
 pending capabilities and unconfirmed supervisor decisions.
 
 Future work:
 
-- Top-K result limits and partial/fuzzy retrieval.
+- Partial/fuzzy retrieval, with its matching policy and evaluation still pending.
 - Authorized document ingestion, PDF text extraction, metadata, and snippets.
 - Controlled document access and deployment on the approved IIT internal network.
 - Index persistence and its rebuild workflow, with evaluation against a sequential scan.
@@ -338,11 +396,13 @@ tests/
   PositionalIndexTests.java  Thirteen positional-index tests
   PhraseSearchTests.java Eighteen core phrase tests
   BooleanSearchTests.java Twenty-two core Boolean tests
+  TopKSearchTests.java   Twenty-six optimized Top-K tests; optional synthetic benchmark
   HttpSmokeTests.ps1     Sixteen original default-corpus HTTP checks
   PhraseHttpTests.ps1    Thirteen default / twenty-two demo HTTP checks
   BooleanHttpTests.ps1   Twenty-two checks per collection
+  TopKHttpTests.ps1      Thirty-two checks per collection
   RunHttpIntegrationTests.ps1  Owned-server test runner for both collections
-  BrowserClientTests.js  Twenty DOM/fetch client model checks
+  BrowserClientTests.js  Forty-two DOM/fetch client model checks
 data/                    Six fictional demonstration text documents
   phrase_samples/       Nine separate fictional samples and collection README
 web/
@@ -364,6 +424,8 @@ learnings/               Learning journal and viva preparation
   03-03-browser-phrase-search.md
   03-04-boolean-search.md
   03-05-browser-boolean-search.md
+  03-06-optimized-top-k.md
+  03-07-top-k-http-browser.md
 out/                     Ignored generated classes and local verification output
 iit-search-engine-prototype-v0.1.zip   Archived prototype
 PLANNED_FEATURES.md       Future work and supervisor questions
@@ -372,7 +434,7 @@ README.md
 
 The proposal, slides, and prototype archive preserve earlier project stages.
 Their proposed algorithms and schedules are not a record of current features.
-The twelve published learning manuals keep their historical checkpoints and
+The fourteen published learning manuals keep their historical checkpoints and
 test evidence.
 
 ## Build, run, and test
@@ -387,7 +449,7 @@ project's verified toolchain is JDK 25; no dependency installation is needed.
 $projectJdk = 'C:\Program Files\Eclipse Adoptium\jdk-25.0.3.9-hotspot'
 & "$projectJdk\bin\javac.exe" -version
 & "$projectJdk\bin\java.exe" -version
-& "$projectJdk\bin\javac.exe" -encoding UTF-8 -d out\app src\*.java tests\BaselineTests.java tests\PositionalIndexTests.java tests\PhraseSearchTests.java tests\BooleanSearchTests.java
+& "$projectJdk\bin\javac.exe" -encoding UTF-8 -d out\app src\*.java tests\BaselineTests.java tests\PositionalIndexTests.java tests\PhraseSearchTests.java tests\BooleanSearchTests.java tests\TopKSearchTests.java
 if ($LASTEXITCODE -ne 0) { throw 'Compilation failed' }
 ```
 
@@ -404,20 +466,21 @@ The CLI builds from relative folder `data`, so keep the repository root as the
 working directory. Choose `3` for statistics, `2` then `java` for a sample search,
 and `4` to exit.
 
-The CLI remains keyword-only; phrase and Boolean mode selection is available
-through the browser/API and the separate Java core methods.
+The CLI retains its original unrestricted keyword menu. Phrase/Boolean modes
+and keyword Top-K are available through the browser/API and Java core methods;
+there is no CLI Top-K selector.
 
 ### Java regression tests
 
 ```powershell
-foreach ($suite in @('BaselineTests', 'PositionalIndexTests', 'PhraseSearchTests', 'BooleanSearchTests')) {
+foreach ($suite in @('BaselineTests', 'PositionalIndexTests', 'PhraseSearchTests', 'BooleanSearchTests', 'TopKSearchTests')) {
     & "$projectJdk\bin\java.exe" -cp out\app $suite
     if ($LASTEXITCODE -ne 0) { throw "Java suite failed: $suite" }
 }
 ```
 
-Expected totals are 7, 13, 18 and 22 passed respectively, each with zero failures
-and exit code 0: **60 Java tests**. Checks use explicit `AssertionError`s, so `-ea`
+Expected totals are 7, 13, 18, 22 and 26 passed respectively, each with zero failures
+and exit code 0: **86 Java checks**. Checks use explicit `AssertionError`s, so `-ea`
 is unnecessary. Temporary fixtures are separate from data and cleaned up by the
 harnesses; corpus-specific tests read the existing six- and nine-file collections.
 
@@ -453,6 +516,20 @@ to see a descriptive Boolean error and then submit a corrected expression.
 An unknown term gives an empty result message; whitespace receives the server's
 nonblank-query error. Empty input is blocked by native required validation.
 
+For keyword searches, leave **All results** selected for the original unrestricted
+behavior, or select **Top 1**, **Top 3**, **Top 5** or **Top 10** before submitting.
+The server selects the results; JavaScript preserves their order and score display.
+For default-corpus `java` with Top 10, the page says
+`Showing 2 ranked result(s) (Top 10 limit).` This is the returned count and chosen
+limit, not a claim about a total supplied by the API. Empty matches still say
+`No results found.`
+
+The limit is disabled in phrase/Boolean modes, which never send `k`. Switching
+back to keyword restores the prior selection. Changing mode or K clears old
+results and cancels/invalidates pending work; submit again to run the new choice.
+Top-K selection requires JavaScript. Without it, native GET keyword searches
+remain unrestricted; the three mode controls still work.
+
 Do not open `web/index.html` directly with a file URL. The page needs the Java
 HTTP origin for its root-relative assets and search requests. Without working
 JavaScript, the native form can still navigate to raw JSON. Changing a web file
@@ -464,6 +541,8 @@ responses independently of the page:
 ```powershell
 curl.exe --noproxy '*' -i 'http://127.0.0.1:8080/health'
 curl.exe --noproxy '*' -i 'http://127.0.0.1:8080/search?q=java'
+curl.exe --noproxy '*' -i 'http://127.0.0.1:8080/search?q=java&mode=keyword&k=1'
+curl.exe --noproxy '*' -i 'http://127.0.0.1:8080/search?q=java&k=0'
 curl.exe --noproxy '*' -i 'http://127.0.0.1:8080/search?q=java%20programming'
 curl.exe --noproxy '*' -i 'http://127.0.0.1:8080/search?q=computer%20networking&mode=phrase'
 curl.exe --noproxy '*' -i 'http://127.0.0.1:8080/search?q=java%20AND%20programming&mode=boolean'
@@ -474,10 +553,11 @@ curl.exe --noproxy '*' -i -X POST 'http://127.0.0.1:8080/search?q=java'
 curl.exe --noproxy '*' -i 'http://127.0.0.1:8080/unknown'
 ```
 
-These demonstrate health, ranked search, an encoded multi-word query, phrase
-search, Boolean search/error handling, no matches, missing-query validation,
-method rejection, and unknown-path handling. Expected statuses in order are
-200, 200, 200, 200, 200, 400, 200, 400, 405 and 404.
+These demonstrate health, full ranked search, Top 1, an invalid K, an encoded
+multi-word query, phrase search, Boolean search/error handling, no matches,
+missing-query validation, method rejection, and unknown-path handling.
+Expected statuses in order are
+200, 200, 200, 400, 200, 200, 200, 400, 200, 400, 405 and 404.
 
 Use Ctrl+C in the server's own console to stop the instance you launched.
 If it remains running, verify that process's PID, executable, and command line
@@ -505,11 +585,11 @@ Node.js is needed only for the client model/syntax checks, not to serve the app.
 The HTTP runner uses Windows PowerShell/.NET and the configured JDK 25.0.3 path
 inside the script. It requires free port 8080, starts its own hidden servers,
 verifies executable/PID/command line and listener ownership, and stops only
-those owned processes. It runs 16 original default-corpus checks, 13/22 phrase
-checks and 22/22 Boolean checks on the corresponding collections: **95 HTTP
+those owned processes. It runs 16 original default-corpus checks, 13/22 phrase,
+22/22 Boolean and 32/32 Top-K checks on the corresponding collections: **159 HTTP
 checks**. Startup-argument and collection-log checks are additional supporting
-checks. The Node model has **20 checks**; combined with Java, the suite total is
-**175**. The model does not substitute for a real browser.
+checks. The Node model has **42 checks**; combined with 86 Java checks, the suite
+total is **287**. The model does not substitute for a real browser.
 
 ### Original HTTP integration smoke tests (Phase 2.5A)
 
@@ -536,7 +616,54 @@ These are HTTP integration checks, not browser interaction or accessibility test
 
 ## Testing and verification record
 
-### Latest integrated verification: Phase 3.3B
+### Latest integrated verification: Phase 3.4B
+
+Before fast-forward integration at `39f835359860866b504a487eef929a273c41c614`,
+Codex reported fresh Temurin JDK 25.0.3 compilation and these results:
+
+| Suite | Passed | Failed |
+| --- | --- | --- |
+| [BaselineTests](tests/BaselineTests.java) | 7 | 0 |
+| [PositionalIndexTests](tests/PositionalIndexTests.java) | 13 | 0 |
+| [PhraseSearchTests](tests/PhraseSearchTests.java) | 18 | 0 |
+| [BooleanSearchTests](tests/BooleanSearchTests.java) | 22 | 0 |
+| [TopKSearchTests](tests/TopKSearchTests.java) | 26 | 0 |
+| **Java subtotal** | **86** | **0** |
+| [Original HTTP smoke tests](tests/HttpSmokeTests.ps1), default | 16 | 0 |
+| [Phrase HTTP tests](tests/PhraseHttpTests.ps1), default / demo | 13 + 22 | 0 |
+| [Boolean HTTP tests](tests/BooleanHttpTests.ps1), default / demo | 22 + 22 | 0 |
+| [Top-K HTTP tests](tests/TopKHttpTests.ps1), default / demo | 32 + 32 | 0 |
+| **HTTP subtotal** | **159** | **0** |
+| [Browser-client model](tests/BrowserClientTests.js) | 42 | 0 |
+| **Codex-reported total** | **287** | **0** |
+
+Both JavaScript files and all five PowerShell scripts passed syntax checks in
+that reported run. Coverage included legacy no-K keyword JSON and ranking,
+direct optimized Top-K dispatch, exact score bits and raw numeric JSON literals,
+strict K validation, unchanged phrase/Boolean retrieval, keyword-only browser
+limits, stale-response protection, safe rendering and native GET fallback.
+Both collections and default statistics **6/75/120** passed. The HTTP runner
+verified ownership before stopping its temporary servers; port 8080 was free
+afterward. No files were edited during integration, and no merge commit was
+created.
+
+The user separately reported that Microsoft Edge browser functionality worked
+correctly after the prescribed Phase 3.4B browser checks. This is user-reported
+manual verification, without additional precise observations invented here.
+The 42 JavaScript checks use a DOM/fetch model, not automated Edge execution.
+No fresh manual Edge verification occurred during final integration.
+
+The optional synthetic Java Top-K benchmark was not rerun during integration or
+this documentation sync. Its earlier exploratory measurements and limitations
+remain in [Manual #13](learnings/03-06-optimized-top-k.md#14-previously-reported-exploratory-benchmark).
+Heap selection avoids sorting every match, but candidate scoring, HTTP/JSON
+processing and browser rendering still cost time. Neither passing regressions
+nor those Java-only measurements prove an end-to-end browser speedup.
+
+These are previously reported fresh regression results, not newly executed tests
+for this overview/roadmap sync. This task performs documentation-only checks.
+
+### Historical Phase 3.3B verification
 
 Before fast-forward integration into main at
 `2a228fc88eee32c35925d10208f6e3e835ef2599`, Codex reported a fresh successful
@@ -651,7 +778,7 @@ browser/viewport combinations beyond the reported cases remain unverified.
 
 ## Learning documentation
 
-The [learning journal](learnings/README.md) links twelve published manuals in
+The [learning journal](learnings/README.md) links fourteen published manuals in
 recommended reading order: IR foundations, HTTP health, HTTP search integration, JSON,
 [HTML architecture](learnings/02-04-html-browser-client.md),
 [JavaScript integration](learnings/02-05-javascript-search-client.md), and
@@ -659,8 +786,10 @@ recommended reading order: IR foundations, HTTP health, HTTP search integration,
 The sequence continues with [positional indexing](learnings/03-01-positional-index.md),
 [core phrase retrieval](learnings/03-02-exact-phrase-search.md),
 [browser phrase search](learnings/03-03-browser-phrase-search.md),
-[core Boolean retrieval](learnings/03-04-boolean-search.md), and
-[browser Boolean retrieval](learnings/03-05-browser-boolean-search.md), Manual #12.
+[core Boolean retrieval](learnings/03-04-boolean-search.md),
+[browser Boolean retrieval](learnings/03-05-browser-boolean-search.md),
+[optimized Top-K core retrieval](learnings/03-06-optimized-top-k.md), and
+[Top-K HTTP/browser integration](learnings/03-07-top-k-http-browser.md), Manual #14.
 They include implementation explanations, worked examples,
 verification evidence and limits, viva preparation, and self-practice prompts.
 Earlier manuals retain their historical milestone context.
@@ -681,13 +810,15 @@ is in memory, and document IDs depend on sorted filenames.
   No parentheses/grouping, NOT, Boolean phrase operands or wildcard expansion
   is supported; Boolean stop-word operands are rejected. There is no quotation-mark
   query grammar in keyword search. Phrase mode supplies the separate phrase API.
-- There is no index persistence, HTTP rebuild endpoint, automatic file refresh,
-  pagination, or Top-K limit. The HTTP index is built once at startup.
+- There is no index persistence, HTTP rebuild endpoint, automatic file refresh
+  or pagination. The HTTP index is built once at startup. Top-K is keyword-only;
+  browser limits are fixed choices, with no custom K input or total-match count.
+  Without JavaScript, native keyword GET submission remains unrestricted.
 - The API parses URL parameters rather than JSON request bodies. Its manual
   serializer does not explicitly guard non-finite scores or validate malformed
   Java UTF-16 strings; see the [JSON manual](learnings/02-03-json-search-api.md).
 - The client trusts the current JSON success schema and has no application timeout.
-  It prevents duplicate submissions while busy; mode changes cancel/invalidate
+  It prevents duplicate submissions while busy; mode or limit changes cancel/invalidate
   older requests. Editing the query alone does not invalidate a pending request.
   Browser cancellation does not guarantee server-side cancellation. The generic
   failure message also covers JSON parsing or rendering errors.
