@@ -104,34 +104,80 @@ unchanged main. No new application regression or manual browser results are clai
 
 **Status: pending implementation.**
 
-Rename the browser's Boolean Search mode to **Advanced Search**. Provide multiple
-keyword-entry rows inspired by IEEE Xplore, with add/remove controls and AND/OR
-choices between rows. This is a keyword expression builder, not metadata-field
-search: author, title, publication date and similar indexed fields do not exist.
+**Basic Keyword Search** retains the existing ranked keyword behavior. For
+`computer java python`, a document containing any searchable query term may
+appear: candidate retrieval is OR-like, not strict Boolean AND. TF-IDF-style
+scores rank the matches; more matching terms or stronger term contributions may
+rank a document higher, without guaranteeing that term count alone determines
+order. This is not identical to explicit Boolean OR: Boolean results have no
+relevance ranking and remain in filename order.
 
-Each row must produce one searchable operand accepted by the existing evaluator.
-Do not silently reinterpret multiple words as a phrase or invent implicit
-operators. Derive validation and blank-row behavior from the current parser and
-make errors understandable. Preserve the evaluator and its AND-before-OR rule.
-For example, `X AND Y OR Z` selects documents containing both X and Y, or Z;
-`X OR Y AND Z` selects X, or both Y and Z. This is not left-to-right evaluation.
-Explain precedence beside the controls; any explanatory grouping must not imply
-that parentheses can be entered.
+Rename the browser's Boolean Search mode to **Advanced Search** and distinguish
+it clearly from Basic Keyword Search. Plan a simple IEEE Xplore-inspired grouped
+keyword builder for the November 12 midterm:
 
-Keep internal `mode=boolean` compatibility unless a compelling reason is reviewed.
-Do not add parentheses, NOT, wildcards, multiword Boolean operands or matching
-algorithms. Hide numerical keyword scores only in browser presentation. Preserve
-the internal TF-IDF-style scoring, ranking/ties, numeric HTTP score contract,
-keyword-only limits and exact Top-K behavior. The browser must retain server order.
+- Each keyword input supplies one searchable Boolean operand.
+- Within each group, words are linked by AND: every condition in that group
+  must match the same document, without requiring adjacent words.
+- Between complete groups, use OR: matching any complete group is sufficient.
+- Provide **Add AND Word**, **Add OR Group**, and remove-word/group controls.
+- Show a readable expression preview and validate groups before submission.
+
+This is a query-composition layer around the existing Boolean retrieval method,
+not a new algorithm. Users build complete AND groups explicitly; for a shared
+condition, repeat that word in each applicable group. For example:
+
+| Group | AND-linked words |
+| --- | --- |
+| 1 | computer AND java |
+| 2 | computer AND python |
+
+The intended logical condition is `computer AND (java OR python)`. Submit the
+supported expansion `computer AND java OR computer AND python` with
+`mode=boolean`. Do not generate `computer AND java OR python`: under existing
+precedence that could match a document containing only python.
+
+| Searchable words present in the document | Expected grouped match |
+| --- | --- |
+| computer + java | MATCH |
+| computer + python | MATCH |
+| computer + java + python | MATCH |
+| computer only | NO MATCH |
+| java only | NO MATCH |
+| python only | NO MATCH |
+| java + python without computer | NO MATCH |
+
+The evaluator remains unchanged: AND takes precedence over OR. `X AND Y OR Z`
+means `(X AND Y) OR Z`. If the intended condition is `X AND (Y OR Z)`, the builder
+must represent groups X AND Y and X AND Z and generate `X AND Y OR X AND Z`.
+Parentheses here explain logical meaning only; the parser does not accept them.
+The builder joins words inside each group with AND, then complete groups with OR.
+
+Retain existing backend `mode=boolean` compatibility. Respect single-word
+operand, stop-word and syntax restrictions; do not silently drop an invalid
+condition or reinterpret multiple words as one operand. Do not promise parser
+parentheses, arbitrary nested queries, NOT, wildcards, multiword Boolean operands,
+metadata-field search, date filters or a new Advanced Search ranking algorithm.
+
+Hide numerical keyword scores only in browser presentation. Preserve Basic
+Keyword Search's internal TF-IDF-style scoring, ranking/ties, numeric HTTP score
+contract, keyword-only limits and exact Top-K behavior. The browser must retain
+server order. The current browser still shows scores until this phase is implemented.
 
 Acceptance criteria and test expectations:
 
-- Add/remove rows with keyboard-accessible labeled controls and predictable focus;
-  preserve valid connectors when rows change and define the minimum row count.
-- AND-only, OR-only and mixed expressions reach the existing evaluator in row order.
-  Test both mixed examples above, case handling, unknown terms, stop-word operands,
-  invalid syntax, empty rows and correction after errors.
-- Keyword and exact phrase modes remain correct; Boolean requests send no `k`.
+- Add/remove words and groups with keyboard-accessible labeled controls and
+  predictable focus. Preserve valid group structure and define minimum word/group
+  counts. Reject empty/malformed groups or clearly handle them without silently
+  changing the intended logic; validate before submission and allow correction.
+- Automated query-expansion tests must verify the exact generated expressions
+  above and preview/submission agreement. Automated retrieval tests must cover all
+  seven matching-table cases, including rejection of python-only and java+python
+  without computer. Test AND-only, OR-only, multiple AND groups, case handling,
+  unknown terms, stop-word operands and unsupported syntax. Keep the Boolean
+  evaluator unchanged and existing HTTP `mode=boolean` requests compatible.
+- Ranked keyword retrieval, exact phrase and Top-K functionality remain unchanged;
+  Boolean requests send no `k`.
   Test mode/limit transitions, stale responses, loading, empty and error states.
 - Browser results contain no numerical keyword scores, but retain the same order
   and Top-K selection. HTTP tests still verify numeric scores and legacy no-K JSON.
@@ -250,8 +296,8 @@ Acceptance criteria, limitations and test expectations:
 
 Future work remains unchecked until implemented and verified.
 
-- [ ] Advanced Search label, multiple rows and add/remove controls work.
-- [ ] AND/OR combinations work and precedence is understandable.
+- [ ] Advanced Search label, AND words within OR groups and add/remove controls work.
+- [ ] Group expansion passes the matching table and precedence is understandable.
 - [ ] Ranked results preserve ordering/Top-K without visible numerical scores;
       HTTP numerical score compatibility is preserved.
 - [ ] Open the correct indexed text document in the browser.

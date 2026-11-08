@@ -22,6 +22,19 @@ ranking. Midterm work stays on localhost and the current text-file scope.
 Fuzzy/semantic and other new retrieval algorithms are not current priorities;
 PDF, images/OCR, Bangla processing and date filters are deferred after midterm.
 
+The clarified Phase 3.5A design uses AND-linked single-word inputs within each
+Advanced Search group and OR between complete groups, with Add AND Word, Add OR
+Group, remove controls, validation and an expression preview. For the intended
+`computer AND (java OR python)`, compose groups computer AND java and computer AND
+python, generating `computer AND java OR computer AND python` with `mode=boolean`.
+`computer AND java OR python` would wrongly allow python-only matches. Parentheses
+are explanatory, not supported parser syntax; the evaluator and operand/stop-word
+restrictions remain unchanged. No nested query grammar or new ranking is planned.
+Basic Keyword Search remains OR-like candidate retrieval with TF-IDF-style ranking,
+not strict AND or identical to score-free Boolean OR. Hide only browser numerical
+scores; preserve ranking, Top-K and the HTTP numeric score contract. The detailed
+plan includes the matching table and future automated expansion/retrieval checks.
+
 The [detailed Phase 3.5 plan](docs/MIDTERM_SUPERVISOR_PLAN_2026-11.md) defines
 acceptance criteria, tests, boundaries and risks. Phase 3.5R is in progress until
 reviewed integration; 3.5A-3.5D are pending. November 9-10 is the focused work
@@ -184,7 +197,7 @@ not blanket supervisor approvals.
 | 3.4A | Completed and integrated | Optimized bounded-heap Top-K Java retrieval, exact ranking/score compatibility, 26 core checks and Manual #13; checkpoint 498de05. |
 | 3.4B | Completed and integrated | Strict keyword K parameter, browser result-limit select, 287-check integration verification and Manual #14; checkpoint 39f8353. |
 | 3.5R | In progress until reviewed integration | Documentation and planning checkpoint: this plan, README and roadmap only. |
-| 3.5A | Pending midterm implementation | Advanced Search rows/add/remove/AND/OR, existing precedence and mode=boolean compatibility; hide browser scores, preserve HTTP scores/ranking/Top-K. |
+| 3.5A | Pending midterm implementation | Advanced Search AND words within OR groups, add/remove controls, validation and preview; existing evaluator and mode=boolean compatibility; hide browser scores, preserve ranked keyword retrieval/HTTP scores/Top-K. |
 | 3.5B | Pending midterm implementation | View and download only indexed allowed fictional .txt documents through validated record mappings. |
 | 3.5C | Pending midterm implementation | Contextual snippets and safe matching-text highlighting in snippets and viewer, without retrieval changes. |
 | 3.5D | Pending midterm stabilization | Both collections, regressions, Edge verification, error/security review, learning/viva notes, reviewed integration and reproducible demo. |

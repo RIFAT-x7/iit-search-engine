@@ -63,7 +63,19 @@ pending Phases 3.5A-3.5D with acceptance criteria and test expectations. Work
 stays on localhost with the existing fictional text collections. Numerical
 scores must remain in the HTTP API and internal ranking; hiding them is a
 future browser presentation change only. IEEE Xplore inspires keyword rows,
-without implying metadata-field search.
+without implying metadata-field search. The planned builder uses AND-linked
+single-word inputs within each group and OR between complete groups, with
+add/remove controls, validation and an expression preview. It retains
+`mode=boolean` and the existing evaluator. For the intended condition
+`computer AND (java OR python)`, groups computer AND java and computer AND python
+generate `computer AND java OR computer AND python`. Parentheses explain intent;
+they are not supported parser syntax.
+
+Basic Keyword Search remains ranked OR-like retrieval: `computer java python`
+may return documents containing any searchable term, ordered by TF-IDF-style
+scores. It is not strict AND or identical to score-free Boolean OR. The planned
+Advanced Search composes explicit conditions without adding a ranking algorithm;
+keyword scoring, Top-K and numeric HTTP scores remain unchanged.
 
 November 9-10 is reserved for focused implementation, tests and documentation;
 November 11 is protected for slides, speech, code comprehension and viva study.
@@ -387,8 +399,8 @@ pending capabilities and unconfirmed supervisor decisions.
 
 Future work:
 
-- Pending midterm Phase 3.5A: Advanced Search rows using existing Boolean
-  evaluation, plus browser-only hiding of numerical keyword scores.
+- Pending midterm Phase 3.5A: Advanced Search AND words within OR groups using
+  existing Boolean evaluation, plus browser-only hiding of numerical keyword scores.
 - Pending Phase 3.5B: controlled open/download access to indexed fictional text.
 - Pending Phase 3.5C: contextual snippets and safe snippet/viewer highlighting.
 - Pending Phase 3.5D: regressions, Edge checks, learning notes and a reproducible demo.
