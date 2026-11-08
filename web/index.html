@@ -13,9 +13,9 @@
         <form id="search-form" action="/search" method="get" accept-charset="UTF-8">
             <fieldset class="search-modes">
                 <legend>Search mode</legend>
-                <label><input type="radio" name="mode" value="keyword" checked> Keyword Search</label>
+                <label><input type="radio" name="mode" value="keyword" checked> Basic Keyword Search</label>
                 <label><input type="radio" name="mode" value="phrase"> Exact Phrase Search</label>
-                <label><input type="radio" name="mode" value="boolean"> Boolean Search</label>
+                <label><input type="radio" name="mode" value="boolean"> Advanced Search</label>
             </fieldset>
             <label for="keyword-limit">Keyword result limit</label>
             <select id="keyword-limit" aria-describedby="keyword-limit-help" disabled>
@@ -26,15 +26,32 @@
                 <option value="10">Top 10</option>
             </select>
             <p id="keyword-limit-help">Keyword limits require JavaScript. Without it, searches remain unrestricted.
-                This limit does not apply to phrase or Boolean search.</p>
-            <label for="query">Search text</label>
-            <p id="search-help">Exact Phrase Search matches consecutive words, including stop words.
-                Boolean Search uses AND/OR, with AND before OR. Use single searchable words;
-                stop-word operands, parentheses and NOT are not supported.</p>
-            <div class="search-controls">
+                This limit does not apply to phrase or Advanced Search.</p>
+            <div id="raw-query">
+                <label for="query">Search text</label>
+                <p id="search-help">Basic Keyword Search accepts ordinary multiword queries: any searchable term
+                    may match, with results ordered by relevance. Exact Phrase Search matches consecutive words
+                    under normalization, including stop words. Advanced Search uses explicit Boolean conditions
+                    and returns matches in filename order, without relevance ranking.
+                    Without JavaScript, enter a manual AND/OR expression here: AND before OR. Use single searchable words;
+                    stop-word operands, parentheses and NOT are not supported.</p>
                 <input type="search" id="query" name="q" aria-describedby="search-help" required>
-                <button type="submit">Search</button>
             </div>
+            <fieldset id="advanced-search" hidden disabled aria-describedby="advanced-help">
+                <legend>Advanced Search groups</legend>
+                <p id="advanced-help">Every AND word in a group must match the same document, without needing
+                    to be adjacent. OR separates alternative complete groups. Results are in filename order.
+                    Use one word of ASCII letters or digits per input, without punctuation or stop words.
+                    Repeat shared conditions in each group. For computer with either java or python, use
+                    computer AND java OR computer AND python. AND is evaluated before OR; no parentheses,
+                    NOT, wildcards or metadata fields are supported.</p>
+                <div id="advanced-groups"></div>
+                <button type="button" id="add-or-group">Add OR Group</button>
+                <h2>Generated Expression Preview</h2>
+                <p id="advanced-preview"></p>
+                <p id="advanced-validation" role="status" aria-live="polite" aria-atomic="true"></p>
+            </fieldset>
+            <button type="submit">Search</button>
         </form>
         <section aria-labelledby="results-heading">
             <h2 id="results-heading">Search results</h2>
