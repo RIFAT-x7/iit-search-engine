@@ -220,7 +220,20 @@ form.addEventListener("submit", async (event) => {
                     || (mode === "keyword" && (typeof result.score !== "number" || !Number.isFinite(result.score)))) {
                 throw new Error("Invalid search result.");
             }
-            item.textContent = result.filename;
+            const parameters = new URLSearchParams({ name: result.filename });
+            const open = document.createElement("a");
+            open.textContent = result.filename;
+            open.setAttribute("href", "/document/view?" + parameters.toString());
+            open.setAttribute("target", "_blank");
+            open.setAttribute("rel", "noopener noreferrer");
+            open.setAttribute("aria-label", "Open " + result.filename + " in a new tab");
+            const download = document.createElement("a");
+            download.textContent = "Download";
+            download.setAttribute("href", "/document/download?" + parameters.toString());
+            download.setAttribute("aria-label", "Download " + result.filename);
+            download.className = "document-download";
+            item.appendChild(open);
+            item.appendChild(download);
             resultList.appendChild(item);
         }
         statusMessage.textContent = limit !== ""

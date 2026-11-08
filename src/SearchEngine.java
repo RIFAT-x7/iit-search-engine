@@ -1,7 +1,12 @@
 import java.io.File;
 import java.io.IOException;
+import java.nio.ByteBuffer;
+import java.nio.channels.Channels;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
+import java.nio.file.LinkOption;
+import java.nio.file.Path;
+import java.nio.file.StandardOpenOption;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -18,11 +23,15 @@ public class SearchEngine {
     private final TextProcessor processor = new TextProcessor();
     private List<Document> documents = new ArrayList<>();
     private InvertedIndex index = new InvertedIndex();
+    private Map<String, byte[]> indexedDocuments = new HashMap<>();
 
     public void buildIndex(String folderPath) throws IOException {
         File folder = new File(folderPath);
-        File[] files = folder.listFiles(file -> file.isFile()
-                && file.getName().toLowerCase(Locale.ROOT).endsWith(".txt"));
+        if (Files.isSymbolicLink(folder.toPath())) {
+            throw new IOException("Symbolic-link collections are not allowed.");
+        }
+        Path collectionRoot = folder.toPath().toRealPath();
+        File[] files = folder.listFiles(file -> file.getName().toLowerCase(Locale.ROOT).endsWith(".txt"));
         if (files == null) {
             throw new IOException("Cannot read data folder. Run from the prototype folder.");
         }
@@ -31,14 +40,37 @@ public class SearchEngine {
         // Build fresh structures so a failed read cannot leave a half-built index.
         List<Document> newDocuments = new ArrayList<>();
         InvertedIndex newIndex = new InvertedIndex();
+        Map<String, byte[]> newIndexedDocuments = new HashMap<>();
         for (File file : files) {
-            String text = Files.readString(file.toPath(), StandardCharsets.UTF_8);
+            Path path = file.toPath();
+            // Reject even dangling .txt symlinks rather than silently following or skipping them.
+            if (Files.isSymbolicLink(path)) {
+                throw new IOException("Symbolic-link documents are not allowed.");
+            }
+            if (!Files.isRegularFile(path, LinkOption.NOFOLLOW_LINKS)) { continue; }
+            if (!path.toRealPath().getParent().equals(collectionRoot)) {
+                throw new IOException("Document is outside the collection.");
+            }
+            byte[] bytes;
+            // NOFOLLOW_LINKS also refuses a file replaced by a symlink before opening.
+            try (var channel = Files.newByteChannel(path, StandardOpenOption.READ, LinkOption.NOFOLLOW_LINKS)) {
+                bytes = Channels.newInputStream(channel).readAllBytes();
+            }
+            String text = StandardCharsets.UTF_8.newDecoder().decode(ByteBuffer.wrap(bytes)).toString();
             Document document = new Document(newDocuments.size() + 1, file.getName());
             newDocuments.add(document);
             newIndex.addDocumentWithPositions(document, processor.tokenize(text));
+            newIndexedDocuments.put(document.getFilename(), bytes);
         }
         documents = newDocuments;
         index = newIndex;
+        indexedDocuments = newIndexedDocuments;
+    }
+
+    // Exact indexed-name lookup only. No paths are resolved and callers cannot modify stored bytes.
+    public byte[] getIndexedDocumentBytes(String filename) {
+        byte[] bytes = indexedDocuments.get(filename);
+        return bytes == null ? null : bytes.clone();
     }
 
     public List<SearchResult> search(String query) {

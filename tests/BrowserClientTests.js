@@ -123,7 +123,8 @@ function client() {
         respond(index, data, ok = true) {
             requests[index].resolve({ ok, async json() { return data; } });
         },
-        texts() { return list.children.map(item => item.textContent); }
+        // Preserve existing filename/order assertions while checking link structure separately below.
+        texts() { return list.children.map(item => item.children[0].textContent); }
     };
 }
 
@@ -984,6 +985,98 @@ async function main() {
         assert.deepEqual(page.texts(), ["z.txt", "a.txt"]);
         assert.doesNotMatch(page.list.textContent + page.status.textContent, /Score|12345|12\.34/);
         assert.deepEqual(page.list.children.map(item => item.attributes), [{}, {}]);
+    });
+    for (const mode of ["keyword", "phrase", "boolean"]) {
+        await test(mode + " results expose their own safe Open and Download links in server order", async () => {
+            const page = client();
+            page.mode(mode);
+            if (mode === "boolean") { page.setGroups([["java"]]); }
+            const pending = page.submit("java");
+            const names = ["z.txt", "a.txt"];
+            page.respond(0, { results: names.map(filename => ({ filename, score: 12345.6789 })) });
+            await pending;
+            assert.deepEqual(page.texts(), names);
+            for (let i = 0; i < names.length; i++) {
+                const item = page.list.children[i];
+                assert.equal(item.children.length, 2);
+                const [open, download] = item.children;
+                assert.equal(open.tagName, "a");
+                assert.equal(download.tagName, "a");
+                assert.equal(open.textContent, names[i]);
+                assert.equal(download.textContent, "Download");
+                assert.equal(open.attributes.href, "/document/view?name=" + names[i]);
+                assert.equal(download.attributes.href, "/document/download?name=" + names[i]);
+                assert.equal(open.attributes.target, "_blank");
+                assert.equal(open.attributes.rel, "noopener noreferrer");
+                assert.equal(open.attributes["aria-label"], "Open " + names[i] + " in a new tab");
+                assert.equal(download.attributes["aria-label"], "Download " + names[i]);
+                assert.equal(download.attributes.download, undefined, "Server attachment header controls downloads");
+                assert.equal(open.attributes.tabindex, undefined, "Native href links remain keyboard-focusable");
+                assert.equal(item.textContent, names[i] + "Download");
+                assert.doesNotMatch(item.textContent, /Score|12345/);
+            }
+        });
+    }
+    await test("Document names with spaces, percent, plus, ampersand and Unicode round-trip through URLSearchParams", async () => {
+        const page = client();
+        const pending = page.submit("java");
+        const filename = "notes + 50% & \u09ac.txt";
+        page.respond(0, { results: [{ filename, score: 2 }] });
+        await pending;
+        for (const link of page.list.children[0].children) {
+            const url = new URL(link.attributes.href, "http://localhost");
+            assert.deepEqual([...url.searchParams.keys()], ["name"]);
+            assert.equal(url.searchParams.get("name"), filename);
+            assert.match(link.attributes.href, /%2B/);
+            assert.match(link.attributes.href, /%25/);
+            assert.match(link.attributes.href, /%26/);
+            assert.match(link.attributes.href, /%E0%A6%AC/);
+        }
+    });
+    await test("Markup-like filenames stay text and cannot inject links, attributes or executable URLs", async () => {
+        const page = client();
+        const pending = page.submit("java");
+        const filename = 'javascript:<img src=x onerror="alert(1)"> & #?.txt';
+        page.respond(0, { results: [{ filename, score: 2 }] });
+        await pending;
+        const [open, download] = page.list.children[0].children;
+        assert.equal(open.textContent, filename);
+        assert.equal(open.children.length, 0);
+        for (const link of [open, download]) {
+            assert.ok(link.attributes.href.startsWith("/document/"));
+            assert.equal(new URL(link.attributes.href, "http://localhost").searchParams.get("name"), filename);
+            assert.equal(link.attributes.onclick, undefined);
+            assert.equal(link.attributes.onerror, undefined);
+        }
+        assert.doesNotMatch(source, /innerHTML|insertAdjacentHTML/);
+    });
+    await test("A literal encoded-looking filename is encoded as data rather than interpreted as a path", async () => {
+        const page = client();
+        const pending = page.submit("java");
+        page.respond(0, { results: [{ filename: "%2e%2e%2fnotes.txt", score: 1 }] });
+        await pending;
+        for (const link of page.list.children[0].children) {
+            assert.match(link.attributes.href, /name=%252e%252e%252fnotes.txt$/);
+        }
+    });
+    await test("Top-K linked results preserve returned order without truncating or showing scores", async () => {
+        const page = client();
+        page.limit("1");
+        const pending = page.submit("java");
+        page.respond(0, { results: [{ filename: "z.txt", score: 10 }, { filename: "a.txt", score: 2 }] });
+        await pending;
+        assert.deepEqual(page.texts(), ["z.txt", "a.txt"]);
+        assert.equal(page.list.children.length, 2);
+        assert.equal(page.list.textContent, "z.txtDownloada.txtDownload");
+    });
+    await test("Document links are progressively enhanced while the unchanged native GET still submits raw queries", async () => {
+        const html = fs.readFileSync("web/index.html", "utf8");
+        assert.match(html, /<form[^>]*action="\/search"[^>]*method="get"/);
+        assert.match(html, /<input type="search" id="query" name="q"[^>]*required>/);
+        assert.match(html, /<fieldset id="advanced-search" hidden disabled/);
+        assert.match(html, /Without JavaScript, enter a manual AND\/OR expression/);
+        const css = fs.readFileSync("web/styles.css", "utf8");
+        assert.match(css, /li a:focus-visible/);
     });
     console.log("Total passed: " + passed + "; total failed: 0");
 }

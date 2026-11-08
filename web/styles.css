@@ -152,6 +152,22 @@ li::marker {
     font-weight: 600;
 }
 
+li a {
+    color: #1d4ed8;
+    text-decoration: underline;
+}
+
+li a:focus-visible {
+    outline: 3px solid #1d4ed8;
+    outline-offset: 3px;
+}
+
+.document-download {
+    display: inline-block;
+    margin-left: 1rem;
+    padding: 0.25rem 0;
+}
+
 [hidden] {
     display: none !important;
 }

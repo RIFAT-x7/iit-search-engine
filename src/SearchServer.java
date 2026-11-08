@@ -36,9 +36,10 @@ public class SearchServer {
         server.createContext("/", exchange -> {
             try {
                 String path = exchange.getRequestURI().getRawPath();
+                boolean documentRoute = "/document/view".equals(path) || "/document/download".equals(path);
                 // Context matching uses prefixes, so check each endpoint path exactly.
                 if (!"/".equals(path) && !"/app.js".equals(path) && !"/styles.css".equals(path)
-                        && !"/health".equals(path) && !"/search".equals(path)) {
+                        && !"/health".equals(path) && !"/search".equals(path) && !documentRoute) {
                     exchange.sendResponseHeaders(404, -1);
                 } else if (!"GET".equals(exchange.getRequestMethod())) {
                     exchange.getResponseHeaders().set("Allow", "GET");
@@ -51,6 +52,23 @@ public class SearchServer {
                     sendResponse(exchange, 200, stylesCss, "text/css; charset=utf-8");
                 } else if ("/health".equals(path)) {
                     sendText(exchange, 200, "OK");
+                } else if (documentRoute) {
+                    try {
+                        String name = parseDocumentName(exchange.getRequestURI().getRawQuery());
+                        byte[] bytes = engine.getIndexedDocumentBytes(name);
+                        if (bytes == null) {
+                            sendJson(exchange, 404, "{\"error\":\"Document not found.\"}");
+                        } else {
+                            exchange.getResponseHeaders().set("X-Content-Type-Options", "nosniff");
+                            if ("/document/download".equals(path)) {
+                                // Only an exact allowlist hit reaches header construction.
+                                exchange.getResponseHeaders().set("Content-Disposition", attachmentFilename(name));
+                            }
+                            sendBytes(exchange, bytes, "text/plain; charset=utf-8");
+                        }
+                    } catch (IllegalArgumentException invalidName) {
+                        sendJson(exchange, 400, "{\"error\":\"Bad request: Invalid document name.\"}");
+                    }
                 } else {
                     try {
                         SearchRequest request = parseQuery(exchange.getRequestURI().getRawQuery());
@@ -82,6 +100,50 @@ public class SearchServer {
 
     // A null limit preserves the existing full keyword search; no default Top-K.
     private record SearchRequest(String query, String mode, Integer k) { }
+
+    private static String parseDocumentName(String rawQuery) {
+        if (rawQuery == null) { throw new IllegalArgumentException(); }
+        String name = null;
+        for (String parameter : rawQuery.split("&", -1)) {
+            int separator = parameter.indexOf('=');
+            if (separator < 0 || !"name".equals(decodeParameter(parameter.substring(0, separator))) || name != null) {
+                throw new IllegalArgumentException();
+            }
+            name = decodeParameter(parameter.substring(separator + 1));
+        }
+        if (name == null || name.isBlank() || ".".equals(name) || "..".equals(name)) {
+            throw new IllegalArgumentException();
+        }
+        for (int i = 0; i < name.length(); i++) {
+            char character = name.charAt(i);
+            if (Character.isISOControl(character) || character == '/' || character == '\\' || character == ':') {
+                throw new IllegalArgumentException();
+            }
+        }
+        return name;
+    }
+
+    private static String attachmentFilename(String name) {
+        StringBuilder fallback = new StringBuilder();
+        StringBuilder encoded = new StringBuilder();
+        for (int i = 0; i < name.length(); i++) {
+            char c = name.charAt(i);
+            fallback.append((c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z')
+                    || (c >= '0' && c <= '9') || " ._-".indexOf(c) >= 0 ? c : '_');
+        }
+        // RFC 5987: UTF-8 bytes, percent-encoded; this small unescaped subset is always safe.
+        for (byte value : name.getBytes(StandardCharsets.UTF_8)) {
+            int c = value & 0xff;
+            if ((c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z')
+                    || (c >= '0' && c <= '9') || c == '.' || c == '_' || c == '-') {
+                encoded.append((char) c);
+            } else {
+                encoded.append('%').append(Character.toUpperCase(Character.forDigit(c >> 4, 16)))
+                        .append(Character.toUpperCase(Character.forDigit(c & 15, 16)));
+            }
+        }
+        return "attachment; filename=\"" + fallback + "\"; filename*=UTF-8''" + encoded;
+    }
 
     private static SearchRequest parseQuery(String rawQuery) {
         if (rawQuery == null) {
@@ -246,6 +308,19 @@ public class SearchServer {
 
     private static void sendText(HttpExchange exchange, int status, String text) throws IOException {
         sendResponse(exchange, status, text, "text/plain; charset=utf-8");
+    }
+
+    private static void sendBytes(HttpExchange exchange, byte[] bytes, String contentType) throws IOException {
+        exchange.getResponseHeaders().set("Content-Type", contentType);
+        // HttpServer uses response length 0 for chunking; -1 correctly represents an empty file.
+        if (bytes.length == 0) {
+            exchange.sendResponseHeaders(200, -1);
+            return;
+        }
+        exchange.sendResponseHeaders(200, bytes.length);
+        try (OutputStream output = exchange.getResponseBody()) {
+            output.write(bytes);
+        }
     }
 
     private static void sendResponse(HttpExchange exchange, int status, String text,
