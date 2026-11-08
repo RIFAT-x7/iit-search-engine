@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Text Document Reader — IIT Search Engine</title>
+    <link rel="stylesheet" href="/styles.css">
+    <script src="/highlight.js" defer></script>
+    <script src="/reader.js" defer></script>
+</head>
+<body>
+    <main>
+        <h1 id="document-name">Text Document Reader</h1>
+        <p>Highlights show verified matching tokens. Advanced Search conditions apply across the whole
+            document; highlighted words need not occur together in one passage.</p>
+        <nav aria-label="Document actions">
+            <a id="download-original" hidden>Download Original</a>
+            <a id="view-raw" hidden>View Raw Text</a>
+            <a href="/">Back to Search</a>
+        </nav>
+        <p id="reader-status" role="status" aria-live="polite">Loading document…</p>
+        <pre id="document-text" aria-label="Original document text" aria-busy="true"></pre>
+        <noscript>This highlighted reader requires JavaScript. Use the raw view or download routes for plain text.</noscript>
+    </main>
+</body>
+</html>

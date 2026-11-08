@@ -168,6 +168,35 @@ li a:focus-visible {
     padding: 0.25rem 0;
 }
 
+.result-preview {
+    margin-top: 0.5rem;
+    color: #334155;
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+}
+
+mark {
+    background: #fef08a;
+    color: #1e293b;
+}
+
+#document-text {
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+    font: inherit;
+}
+
+nav a {
+    display: inline-block;
+    margin: 0 1rem 0.5rem 0;
+    color: #1d4ed8;
+}
+
+nav a:focus-visible {
+    outline: 3px solid #1d4ed8;
+    outline-offset: 3px;
+}
+
 [hidden] {
     display: none !important;
 }

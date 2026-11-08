@@ -7,7 +7,7 @@ let passed = 0;
 
 function element(tagName = "div", ownerDocument = null) {
     return {
-        tagName,
+        tagName, ownerDocument,
         value: "",
         hidden: false,
         parentElement: null,
@@ -62,6 +62,7 @@ function client() {
         Object.assign(element(), { value: "phrase", checked: false }),
         Object.assign(element(), { value: "boolean", checked: false })];
     const requests = [];
+    const previewRequests = [];
     form.querySelector = (selector) => selector.startsWith("button") ? button : radios.find(radio => radio.checked);
     form.querySelectorAll = () => radios;
     const elements = { "search-form": form, query, "search-status": status, "result-list": list,
@@ -70,12 +71,14 @@ function client() {
         "advanced-preview": preview, "advanced-validation": validation };
     document.getElementById = id => elements[id];
     document.createElement = tag => element(tag, document);
+    document.createTextNode = text => { const node = element("#text", document); node.textContent = text; return node; };
     const context = {
+        HighlightPresentation: require("../web/highlight.js"),
         document,
         URLSearchParams,
         AbortController,
         fetch(url, options) {
-            return new Promise((resolve, reject) => requests.push({ url, options, resolve, reject }));
+            return new Promise((resolve, reject) => (url.startsWith("/document/view?") ? previewRequests : requests).push({ url, options, resolve, reject }));
         }
     };
     vm.runInNewContext(source, context);
@@ -88,7 +91,7 @@ function client() {
         input(g, w).listeners.input();
     }
     return {
-        query, button, status, list, requests, keywordLimit, document, rawQuery, advanced,
+        query, button, status, list, requests, previewRequests, keywordLimit, document, rawQuery, advanced,
         preview, validation, groupList, groups, rows, input, edit, groupButton,
         addWord(g) { groupButton(g, "Add AND Word").click(); },
         addGroup() { addGroup.click(); },
@@ -123,6 +126,12 @@ function client() {
         respond(index, data, ok = true) {
             requests[index].resolve({ ok, async json() { return data; } });
         },
+        excerpt(i = 0) { return list.children[i].children[2].children[1]; },
+        async previewResponse(i, text, ok = true) {
+            previewRequests[i].resolve({ ok, async text() { return text; } });
+            await new Promise(resolve => setImmediate(resolve));
+        },
+        editQuery(text) { query.value = text; query.listeners.input(); },
         // Preserve existing filename/order assertions while checking link structure separately below.
         texts() { return list.children.map(item => item.children[0].textContent); }
     };
@@ -998,13 +1007,13 @@ async function main() {
             assert.deepEqual(page.texts(), names);
             for (let i = 0; i < names.length; i++) {
                 const item = page.list.children[i];
-                assert.equal(item.children.length, 2);
+                assert.equal(item.children.length, 3);
                 const [open, download] = item.children;
                 assert.equal(open.tagName, "a");
                 assert.equal(download.tagName, "a");
                 assert.equal(open.textContent, names[i]);
                 assert.equal(download.textContent, "Download");
-                assert.equal(open.attributes.href, "/document/view?name=" + names[i]);
+                assert.equal(open.attributes.href, "/reader.html?" + new URLSearchParams({ name: names[i], q: "java", mode }));
                 assert.equal(download.attributes.href, "/document/download?name=" + names[i]);
                 assert.equal(open.attributes.target, "_blank");
                 assert.equal(open.attributes.rel, "noopener noreferrer");
@@ -1012,7 +1021,7 @@ async function main() {
                 assert.equal(download.attributes["aria-label"], "Download " + names[i]);
                 assert.equal(download.attributes.download, undefined, "Server attachment header controls downloads");
                 assert.equal(open.attributes.tabindex, undefined, "Native href links remain keyboard-focusable");
-                assert.equal(item.textContent, names[i] + "Download");
+                assert.equal(item.textContent, names[i] + "DownloadPreview: Loading...");
                 assert.doesNotMatch(item.textContent, /Score|12345/);
             }
         });
@@ -1023,9 +1032,9 @@ async function main() {
         const filename = "notes + 50% & \u09ac.txt";
         page.respond(0, { results: [{ filename, score: 2 }] });
         await pending;
-        for (const link of page.list.children[0].children) {
+        for (const link of page.list.children[0].children.slice(0, 2)) {
             const url = new URL(link.attributes.href, "http://localhost");
-            assert.deepEqual([...url.searchParams.keys()], ["name"]);
+            assert.deepEqual([...url.searchParams.keys()], url.pathname === "/reader.html" ? ["name", "q", "mode"] : ["name"]);
             assert.equal(url.searchParams.get("name"), filename);
             assert.match(link.attributes.href, /%2B/);
             assert.match(link.attributes.href, /%25/);
@@ -1043,7 +1052,7 @@ async function main() {
         assert.equal(open.textContent, filename);
         assert.equal(open.children.length, 0);
         for (const link of [open, download]) {
-            assert.ok(link.attributes.href.startsWith("/document/"));
+            assert.ok(link.attributes.href.startsWith("/reader.html?") || link.attributes.href.startsWith("/document/download?"));
             assert.equal(new URL(link.attributes.href, "http://localhost").searchParams.get("name"), filename);
             assert.equal(link.attributes.onclick, undefined);
             assert.equal(link.attributes.onerror, undefined);
@@ -1055,8 +1064,8 @@ async function main() {
         const pending = page.submit("java");
         page.respond(0, { results: [{ filename: "%2e%2e%2fnotes.txt", score: 1 }] });
         await pending;
-        for (const link of page.list.children[0].children) {
-            assert.match(link.attributes.href, /name=%252e%252e%252fnotes.txt$/);
+        for (const link of page.list.children[0].children.slice(0, 2)) {
+            assert.match(link.attributes.href, /name=%252e%252e%252fnotes.txt(?:&|$)/);
         }
     });
     await test("Top-K linked results preserve returned order without truncating or showing scores", async () => {
@@ -1067,7 +1076,7 @@ async function main() {
         await pending;
         assert.deepEqual(page.texts(), ["z.txt", "a.txt"]);
         assert.equal(page.list.children.length, 2);
-        assert.equal(page.list.textContent, "z.txtDownloada.txtDownload");
+        assert.equal(page.list.textContent, "z.txtDownloadPreview: Loading...a.txtDownloadPreview: Loading...");
     });
     await test("Document links are progressively enhanced while the unchanged native GET still submits raw queries", async () => {
         const html = fs.readFileSync("web/index.html", "utf8");
@@ -1077,6 +1086,72 @@ async function main() {
         assert.match(html, /Without JavaScript, enter a manual AND\/OR expression/);
         const css = fs.readFileSync("web/styles.css", "utf8");
         assert.match(css, /li a:focus-visible/);
+    });
+    await test("Previews use original source and leave controls usable before text arrives", async () => {
+        const page = client();
+        const pending = page.submit("java");
+        page.respond(0, { results: [{ filename: "a + &.txt", score: 2 }] });
+        await pending;
+        assert.equal(page.button.disabled, false);
+        assert.equal(new URL(page.previewRequests[0].url, "http://localhost").searchParams.get("name"), "a + &.txt");
+        await page.previewResponse(0, 'Original JAVA, <script>alert(1)</script>.');
+        assert.equal(page.excerpt().textContent, 'Original JAVA, <script>alert(1)</script>.');
+        assert.deepEqual(page.excerpt().children.filter(node => node.tagName === "mark").map(node => node.textContent), ["JAVA"]);
+    });
+    for (const mode of ["phrase", "boolean"]) {
+        await test(mode + " previews use verified full matches only", async () => {
+            const page = client(); page.mode(mode);
+            if (mode === "boolean") { page.setGroups([["java", "programming"], ["python"]]); }
+            const pending = page.submit("java programming");
+            page.respond(0, { results: [{ filename: "a.txt" }] }); await pending;
+            await page.previewResponse(0, mode === "phrase" ? "JAVA, programming; java alone." : "java alone. PYTHON.");
+            assert.deepEqual(page.excerpt().children.filter(node => node.tagName === "mark").map(node => node.textContent),
+                mode === "phrase" ? ["JAVA", "programming"] : ["PYTHON"]);
+        });
+    }
+    for (const action of ["new search", "raw edit", "mode", "limit", "group edit", "add word", "remove group"]) {
+        await test(action + " aborts previews and ignores obsolete text responses", async () => {
+            const page = client();
+            if (["group edit", "add word", "remove group"].includes(action)) { page.mode("boolean"); page.setGroups([["java"], ["python"]]); }
+            let pending = page.submit("java");
+            page.respond(0, { results: [{ filename: "old.txt", score: 2 }] }); await pending;
+            const detached = page.excerpt();
+            if (action === "raw edit") { page.editQuery("python"); }
+            else if (action === "mode") { page.mode("phrase"); }
+            else if (action === "limit") { page.limit("3"); }
+            else if (action === "group edit") { page.edit(0, 0, "computer"); }
+            else if (action === "add word") { page.addWord(0); }
+            else if (action === "remove group") { page.removeGroup(1); }
+            else { pending = page.submit("python"); page.respond(1, { results: [{ filename: "new.txt", score: 2 }] }); await pending; }
+            assert.equal(page.previewRequests[0].options.signal.aborted, true);
+            await page.previewResponse(0, "obsolete JAVA");
+            assert.equal(detached.textContent, "Loading...");
+            assert.deepEqual(page.texts(), action === "new search" ? ["new.txt"] : []);
+        });
+    }
+    await test("Preview failures and missing matches never erase results or change their order", async () => {
+        const page = client(); const pending = page.submit("java");
+        page.respond(0, { results: ["z.txt", "b.txt", "a.txt", "empty.txt"].map(filename => ({ filename, score: 3 })) }); await pending;
+        page.previewRequests[0].reject(new Error("offline"));
+        await page.previewResponse(1, "no match here");
+        await page.previewResponse(2, "ignored", false);
+        await page.previewResponse(3, "");
+        assert.deepEqual(page.texts(), ["z.txt", "b.txt", "a.txt", "empty.txt"]);
+        assert.equal(page.excerpt(0).textContent, "Preview unavailable.");
+        assert.equal(page.excerpt(1).textContent, "Preview unavailable.");
+        assert.equal(page.excerpt(2).textContent, "Preview unavailable.");
+        assert.equal(page.excerpt(3).textContent, "Empty document.");
+        assert.equal(page.button.disabled, false);
+    });
+    await test("Query editing during preview body decoding ignores the late body", async () => {
+        const page = client(); const pending = page.submit("java");
+        page.respond(0, { results: [{ filename: "old.txt", score: 2 }] }); await pending;
+        const detached = page.excerpt(); let finish;
+        page.previewRequests[0].resolve({ ok: true, text() { return new Promise(resolve => { finish = resolve; }); } });
+        await new Promise(resolve => setImmediate(resolve));
+        page.editQuery("python"); finish("JAVA");
+        await new Promise(resolve => setImmediate(resolve));
+        assert.equal(detached.textContent, "Loading..."); assert.deepEqual(page.texts(), []);
     });
     console.log("Total passed: " + passed + "; total failed: 0");
 }

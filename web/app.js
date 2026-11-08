@@ -23,6 +23,23 @@ function selectedMode() {
     return form.querySelector('input[name="mode"]:checked').value;
 }
 
+async function loadPreview(container, filename, query, mode, requestId, signal) {
+    try {
+        const response = await fetch("/document/view?" + new URLSearchParams({ name: filename }), { signal });
+        if (!response.ok) { throw new Error("Preview unavailable"); }
+        const text = await response.text();
+        if (requestId !== latestRequestId || signal.aborted) { return; }
+        const excerpt = HighlightPresentation.snippet(text, HighlightPresentation.ranges(text, query, mode));
+        if (!excerpt) {
+            container.textContent = text.length ? "Preview unavailable." : "Empty document.";
+            return;
+        }
+        HighlightPresentation.render(container, excerpt.text, excerpt.ranges, excerpt.leading, excerpt.trailing);
+    } catch (error) {
+        if (requestId === latestRequestId && !signal.aborted) { container.textContent = "Preview unavailable."; }
+    }
+}
+
 function updatePreview() {
     const expressions = [];
     let firstInvalid = null;
@@ -167,6 +184,7 @@ for (const input of modeInputs) {
     input.addEventListener("change", updateMode);
 }
 keywordLimit.addEventListener("change", clearSearch);
+queryInput.addEventListener("input", clearSearch);
 renderGroups();
 updateMode();
 
@@ -186,7 +204,8 @@ form.addEventListener("submit", async (event) => {
         }
         query = expression.query;
     }
-    resultList.replaceChildren();
+    // Also abort previews from the preceding completed search.
+    clearSearch();
     statusMessage.textContent = "Searching...";
     resultList.setAttribute("aria-busy", "true");
     submitButton.disabled = true;
@@ -198,8 +217,9 @@ form.addEventListener("submit", async (event) => {
     }
     const requestId = ++latestRequestId;
     activeRequest = new AbortController();
+    const controller = activeRequest;
     try {
-        const response = await fetch("/search?" + parameters.toString(), { signal: activeRequest.signal });
+        const response = await fetch("/search?" + parameters.toString(), { signal: controller.signal });
         const data = await response.json();
         if (requestId !== latestRequestId) {
             return;
@@ -221,9 +241,10 @@ form.addEventListener("submit", async (event) => {
                 throw new Error("Invalid search result.");
             }
             const parameters = new URLSearchParams({ name: result.filename });
+            const readerParameters = new URLSearchParams({ name: result.filename, q: query, mode });
             const open = document.createElement("a");
             open.textContent = result.filename;
-            open.setAttribute("href", "/document/view?" + parameters.toString());
+            open.setAttribute("href", "/reader.html?" + readerParameters.toString());
             open.setAttribute("target", "_blank");
             open.setAttribute("rel", "noopener noreferrer");
             open.setAttribute("aria-label", "Open " + result.filename + " in a new tab");
@@ -234,7 +255,17 @@ form.addEventListener("submit", async (event) => {
             download.className = "document-download";
             item.appendChild(open);
             item.appendChild(download);
+            const preview = document.createElement("div");
+            preview.className = "result-preview";
+            const label = document.createElement("span");
+            label.textContent = "Preview: ";
+            const excerpt = document.createElement("span");
+            excerpt.textContent = "Loading...";
+            preview.appendChild(label);
+            preview.appendChild(excerpt);
+            item.appendChild(preview);
             resultList.appendChild(item);
+            void loadPreview(excerpt, result.filename, query, mode, requestId, controller.signal);
         }
         statusMessage.textContent = limit !== ""
             ? "Showing " + data.results.length + " ranked result(s) (Top " + limit + " limit)."
@@ -242,12 +273,13 @@ form.addEventListener("submit", async (event) => {
                 : mode === "phrase" ? " phrase match(es) found." : " Boolean match(es) found.");
     } catch (error) {
         if (requestId === latestRequestId) {
+            controller.abort();
             resultList.replaceChildren();
             statusMessage.textContent = "Unable to load search results. Check your connection and try again.";
         }
     } finally {
         if (requestId === latestRequestId) {
-            activeRequest = null;
+            // Keep the controller so later edits/searches can abort any pending previews.
             resultList.setAttribute("aria-busy", "false");
             submitButton.disabled = false;
         }

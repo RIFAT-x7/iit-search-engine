@@ -31,6 +31,9 @@ public class SearchServer {
         String indexHtml = Files.readString(Path.of("web", "index.html"), StandardCharsets.UTF_8);
         String appJs = Files.readString(Path.of("web", "app.js"), StandardCharsets.UTF_8);
         String stylesCss = Files.readString(Path.of("web", "styles.css"), StandardCharsets.UTF_8);
+        String readerHtml = Files.readString(Path.of("web", "reader.html"), StandardCharsets.UTF_8);
+        String readerJs = Files.readString(Path.of("web", "reader.js"), StandardCharsets.UTF_8);
+        String highlightJs = Files.readString(Path.of("web", "highlight.js"), StandardCharsets.UTF_8);
 
         HttpServer server = HttpServer.create(new InetSocketAddress("127.0.0.1", 8080), 0);
         server.createContext("/", exchange -> {
@@ -39,7 +42,8 @@ public class SearchServer {
                 boolean documentRoute = "/document/view".equals(path) || "/document/download".equals(path);
                 // Context matching uses prefixes, so check each endpoint path exactly.
                 if (!"/".equals(path) && !"/app.js".equals(path) && !"/styles.css".equals(path)
-                        && !"/health".equals(path) && !"/search".equals(path) && !documentRoute) {
+                        && !"/health".equals(path) && !"/search".equals(path) && !documentRoute
+                        && !"/reader.html".equals(path) && !"/reader.js".equals(path) && !"/highlight.js".equals(path)) {
                     exchange.sendResponseHeaders(404, -1);
                 } else if (!"GET".equals(exchange.getRequestMethod())) {
                     exchange.getResponseHeaders().set("Allow", "GET");
@@ -50,6 +54,12 @@ public class SearchServer {
                     sendResponse(exchange, 200, appJs, "text/javascript; charset=utf-8");
                 } else if ("/styles.css".equals(path)) {
                     sendResponse(exchange, 200, stylesCss, "text/css; charset=utf-8");
+                } else if ("/reader.html".equals(path)) {
+                    sendResponse(exchange, 200, readerHtml, "text/html; charset=utf-8");
+                } else if ("/reader.js".equals(path)) {
+                    sendResponse(exchange, 200, readerJs, "text/javascript; charset=utf-8");
+                } else if ("/highlight.js".equals(path)) {
+                    sendResponse(exchange, 200, highlightJs, "text/javascript; charset=utf-8");
                 } else if ("/health".equals(path)) {
                     sendText(exchange, 200, "OK");
                 } else if (documentRoute) {
