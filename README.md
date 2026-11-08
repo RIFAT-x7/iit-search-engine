@@ -37,10 +37,40 @@ executions from user-reported Edge checks and this documentation-only update.
 
 The demonstration runs only on `127.0.0.1:8080` with fictional sample documents.
 IIT network deployment, login and authorization, document viewing/downloading,
-PDF extraction, OCR, and fuzzy/partial retrieval are future work. Bengali
-indexing and Bengali OCR remain undecided. No supervisor answers are documented
-in the repository; see the retained
+PDF extraction, OCR, and fuzzy/partial retrieval are future work. Bangla/Unicode
+processing and date filtering are deferred until after midterm. The November
+student-reported feedback is recorded below; see also the retained historical
 [November 1 supervisor questions](PLANNED_FEATURES.md#questions-for-the-supervisor-november-1-2026).
+
+## Midterm Supervisor Feedback and Phase 3.5 Plan
+
+Phase 3.4 is complete. For this November 2026 planning checkpoint, clean main
+and fetched origin/main were verified at
+`bfb28f676a73443a9cc383cb9ccad52b415b94c8`; `39f8353` above remains the
+historical Phase 3.4B implementation integration checkpoint.
+
+According to the student's report of the supervisor meeting, the current
+classical IR algorithms are sufficient for the midterm on **November 12, 2026**.
+The immediate priority is practical usability: an IEEE Xplore-inspired Advanced
+Search interface over existing Boolean AND/OR retrieval, results without visible
+keyword scores, browser text viewing/downloading, contextual snippets and safe
+highlighting. These are planned features, not implemented capabilities or a
+record of verbatim meeting quotations. No precise meeting date is asserted.
+
+The [Phase 3.5 supervisor plan](docs/MIDTERM_SUPERVISOR_PLAN_2026-11.md) defines
+Phase 3.5R (this documentation checkpoint, in progress until integration) and
+pending Phases 3.5A-3.5D with acceptance criteria and test expectations. Work
+stays on localhost with the existing fictional text collections. Numerical
+scores must remain in the HTTP API and internal ranking; hiding them is a
+future browser presentation change only. IEEE Xplore inspires keyword rows,
+without implying metadata-field search.
+
+November 9-10 is reserved for focused implementation, tests and documentation;
+November 11 is protected for slides, speech, code comprehension and viva study.
+Fuzzy/semantic and other new retrieval algorithms are deferred. PDF, images/OCR,
+Bangla processing, metadata/date filters and deployment belong after midterm,
+subject to further scope and permission decisions. An eventual IIT-usable system
+still requires agreement on document rights, authorization, security and hosting.
 
 ## Current architecture
 
@@ -357,14 +387,19 @@ pending capabilities and unconfirmed supervisor decisions.
 
 Future work:
 
-- Partial/fuzzy retrieval, with its matching policy and evaluation still pending.
-- Authorized document ingestion, PDF text extraction, metadata, and snippets.
-- Controlled document access and deployment on the approved IIT internal network.
-- Index persistence and its rebuild workflow, with evaluation against a sequential scan.
-- Broader browser, zoom/reflow, accessibility, and usability testing.
+- Pending midterm Phase 3.5A: Advanced Search rows using existing Boolean
+  evaluation, plus browser-only hiding of numerical keyword scores.
+- Pending Phase 3.5B: controlled open/download access to indexed fictional text.
+- Pending Phase 3.5C: contextual snippets and safe snippet/viewer highlighting.
+- Pending Phase 3.5D: regressions, Edge checks, learning notes and a reproducible demo.
+- Proposed post-midterm Phases 4-7: metadata/date filters, authorized ingestion
+  and text-based PDF extraction, Bangla/Unicode retrieval, separately scoped
+  image/OCR work, permissions, persistence, evaluation and approved IIT architecture.
+- Future partial/fuzzy, semantic or other retrieval additions only when explicitly
+  justified and agreed after midterm.
 
-These capabilities are not implemented. OCR scope, Bengali support, document
-permissions, and account requirements need supervisor discussion.
+These capabilities are not implemented. Real-document permissions, accounts,
+OCR scope and deployment still need agreement; the prototype is localhost-only.
 
 ## Technology and academic scope
 
@@ -410,6 +445,8 @@ web/
   app.js                GET API requests and safe DOM result rendering
   styles.css            Responsive layout and interaction styling
 documents/               Original proposal form and proposal presentation
+docs/
+  MIDTERM_SUPERVISOR_PLAN_2026-11.md  November feedback and pending Phase 3.5 plan
 learnings/               Learning journal and viva preparation
   README.md             Learning index and reading sequence
   01-phase1-foundations.md

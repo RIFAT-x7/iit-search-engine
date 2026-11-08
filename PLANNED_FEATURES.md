@@ -2,9 +2,37 @@
 
 This document separates completed implementation from remaining plans and
 unconfirmed supervisor decisions. The [README](README.md) explains the current
-application and run commands. At this synchronization checkpoint, main includes
-Phase 3.4B at `39f835359860866b504a487eef929a273c41c614`.
+application and run commands. At this November 2026 planning checkpoint, fetched
+origin/main and clean local main were verified at
+`bfb28f676a73443a9cc383cb9ccad52b415b94c8`. Phase 3.4B was integrated earlier
+at `39f835359860866b504a487eef929a273c41c614`.
 Listing a future feature here does not establish approval or implementation.
+
+## Supervisor-feedback checkpoint: November 2026
+
+The student reports that the supervisor considers the existing algorithmic work
+sufficient for the November 12, 2026 SPL-1 midterm and wants practical usability
+improvements. This records the student's account, without invented quotations,
+a precise meeting date or blanket approval of later proposals.
+
+The reported priorities are Advanced Search keyword rows with AND/OR over the
+existing Boolean engine, opening and downloading indexed text, contextual
+snippets and highlighting, and hiding browser keyword scores while preserving
+ranking. Midterm work stays on localhost and the current text-file scope.
+Fuzzy/semantic and other new retrieval algorithms are not current priorities;
+PDF, images/OCR, Bangla processing and date filters are deferred after midterm.
+
+The [detailed Phase 3.5 plan](docs/MIDTERM_SUPERVISOR_PLAN_2026-11.md) defines
+acceptance criteria, tests, boundaries and risks. Phase 3.5R is in progress until
+reviewed integration; 3.5A-3.5D are pending. November 9-10 is the focused work
+window; November 11 is reserved for slides, speech, code explanation and viva
+preparation. No Phase 3.5 application functionality is implemented by this record.
+
+Exact routes, document mappings and phrase/Boolean highlighting behavior remain
+implementation-design decisions to derive from source and verify. Real IIT
+ingestion, identity, permissions, document rights and deployment architecture
+still require agreement. The earlier November 1 agenda is retained below as a
+historical record; this checkpoint updates the current priorities.
 
 ## Current implementation
 
@@ -99,7 +127,9 @@ user may access. A login alone would not grant access to every document.
 Document viewing and possible downloading require appropriate authorization.
 The server would need to check permissions for every request, including direct
 requests to a document endpoint. Hiding a browser link would not protect a file.
-Whether downloading is allowed at all is a question for the supervisor.
+For the fictional localhost midterm prototype, viewing and downloading are
+requested in the student's report. Download policy for real IIT documents
+remains a question for the supervisor.
 
 Document endpoints must use validated document identifiers that the server
 maps to approved records, rather than arbitrary paths supplied by a client.
@@ -113,6 +143,9 @@ information. No login, authorization system, or document access endpoint is
 implemented yet.
 
 ## PDF extraction, OCR, and Bengali support
+
+All items in this section are deferred beyond midterm. The revised Phases 5-6
+are proposals requiring further scope/tool decisions, not current requirements.
 
 - **Text-based PDF extraction is planned:** extract an existing text layer from
   authorized PDFs, then preprocess and index that text. This is not OCR.
@@ -131,10 +164,12 @@ use public or explicitly authorized documents.
 
 ## Roadmap
 
-Completed milestones are recorded below separately from pending work. Phase 3
-is partially complete overall: its 3.1-3.4 milestones are integrated, while
-partial/fuzzy retrieval remains pending. Future scope can change after
-documented supervisor decisions.
+Milestones through Phase 3.4 are complete and integrated. The November feedback
+replaces the earlier generic remaining-Phase-3 fuzzy priority with pending
+Phase 3.5 usability work. Fuzzy retrieval is deferred after midterm and requires
+explicit justification and agreement. The November 1 questions below retain
+their original historical context. Future phases in this table are proposals,
+not blanket supervisor approvals.
 
 | Phase | Status | Scope |
 | --- | --- | --- |
@@ -148,13 +183,18 @@ documented supervisor decisions.
 | 3.3B | Completed and integrated | Browser/HTTP Boolean mode, shared score-free JSON, 175-check integration verification and Manual #12. |
 | 3.4A | Completed and integrated | Optimized bounded-heap Top-K Java retrieval, exact ranking/score compatibility, 26 core checks and Manual #13; checkpoint 498de05. |
 | 3.4B | Completed and integrated | Strict keyword K parameter, browser result-limit select, 287-check integration verification and Manual #14; checkpoint 39f8353. |
-| 3 (remaining) | Pending; not implemented | Partial/fuzzy retrieval. Matching policy and evaluation still need agreement; completed Top-K defaults/options do not establish supervisor approval of final requirements. |
-| 4 | Planned; document scope pending approval | Authorized document ingestion and text-based PDF extraction; OCR only if separately approved. |
-| 5 | Planned; access policy pending approval | Result metadata, snippets, and controlled file viewing/downloading, subject to approved permissions. |
-| 6 | Planned; deployment and identity decisions pending approval | IIT internal network deployment and approved authentication/authorization. |
-| 7 | Planned | Persistence, rebuild support, evaluation, final testing, and documentation. The existing CLI already supports manual rebuilds; persistence and the remaining rebuild design are future work. |
+| 3.5R | In progress until reviewed integration | Documentation and planning checkpoint: this plan, README and roadmap only. |
+| 3.5A | Pending midterm implementation | Advanced Search rows/add/remove/AND/OR, existing precedence and mode=boolean compatibility; hide browser scores, preserve HTTP scores/ranking/Top-K. |
+| 3.5B | Pending midterm implementation | View and download only indexed allowed fictional .txt documents through validated record mappings. |
+| 3.5C | Pending midterm implementation | Contextual snippets and safe matching-text highlighting in snippets and viewer, without retrieval changes. |
+| 3.5D | Pending midterm stabilization | Both collections, regressions, Edge verification, error/security review, learning/viva notes, reviewed integration and reproducible demo. |
+| 4 | Deferred; proposed after midterm | Document metadata and date filters; metadata model and date meaning need agreement. |
+| 5 | Deferred; proposed after midterm | Authorized document ingestion and text-based PDF extraction; rights and permitted collection need agreement. |
+| 6 | Deferred; proposed after midterm | Bangla/Unicode-aware text processing and multilingual retrieval; image/OCR work separately scoped and evaluated. |
+| 7 | Deferred; proposed after midterm | Document permissions, persistent indexing/rebuild design, performance/evaluation and approved IIT deployment architecture. |
+| Future algorithms | Deferred; not implemented | Partial/fuzzy, semantic or other additions only when explicitly justified and agreed after midterm. |
 
-Access controls cannot wait until Phase 6 if nonpublic files or shared network
+Access controls cannot wait until Phase 7 if nonpublic files or shared network
 access are introduced earlier. The necessary identity checks, authorization,
 and network restrictions must be agreed, implemented, and verified before that
 exposure.
@@ -192,8 +232,11 @@ required for the midterm or authorize future document/deployment scope.
 9. **Final deliverables:** What minimum algorithms, dataset size, Top-K policy,
    relevance measures, performance comparison, and other deliverables are expected?
 
-No supervisor answers or approvals for these decisions are documented in the
+Historical status when this November 1 agenda was recorded:
+No supervisor answers or approvals for these decisions were documented in the
 repository. Midterm sufficiency, remaining algorithm requirements, deployment,
 identity, document permissions, viewing/downloading, PDF/OCR, Bengali scope and
-final deliverables therefore remain unconfirmed. Record actual decisions when
-available; completed implementation is not evidence of supervisor approval.
+final deliverables therefore remained unconfirmed. The November 2026 feedback
+checkpoint above now records the student's account of midterm sufficiency,
+usability priorities and deferrals. It does not settle real-document permissions,
+deployment or final deliverables; completed code is not evidence of approval.
