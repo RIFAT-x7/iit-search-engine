@@ -51,9 +51,20 @@ assistance and should be read alongside the source code.
     Strict optional limits, direct core dispatch, accessible browser selection,
     asynchronous race protection, compatibility and regression evidence.
 
-Phases 1 and 2 are complete and integrated into `main`. The seven Java regression
-tests and 16 [HTTP smoke tests](../tests/HttpSmokeTests.ps1) support the current
-midterm baseline. See the [project README](../README.md) for commands and results.
+15. [Phase 3.5: Midterm features and complete pipeline](03-08-phase-35-midterm-features.md) —
+    One consolidated manual for grouped Advanced Search, ranking/Top-K, phrases,
+    indexed original-byte access, source snippets, shared safe highlights and
+    25 viva questions. Prepared for Phase 3.5D review; student practice is pending.
+
+Phases through 3.5C are integrated at `ab6eacc43b9b8424f332304f18729255ef45d3a0`.
+The application feature set is frozen. Fresh November 9 stabilization checks
+passed 547 named checks: 100 Java, 320 HTTP, 94 browser-model and 33 presentation/
+reader checks; 0 failed and 1 Windows symlink fixture skipped. The student
+separately reported successful manual Edge acceptance of 3.5A-3.5C on both
+collections; Codex did not independently perform those browser checks.
+See the [project README](../README.md) for current commands and evidence, and the
+[demo runbook](../docs/MIDTERM_DEMO_RUNBOOK_2026-11.md) for a reproducible presentation.
+The earlier seven Java/16 HTTP and 287-check records remain historical baselines.
 Each manual keeps the historical checkpoint it explains, so an older description
 of a planned feature may refer to work completed in a later milestone.
 
@@ -66,8 +77,10 @@ Task 2.3 then explains the move from plain text to JSON responses. Read the
 frontend manuals next: HTML defines the document and native submission,
 JavaScript consumes that JSON API within the page, and CSS controls presentation
 and responsive layout. Indexing, TF-IDF-style scoring, and ranking stay in Java.
-Continue with Phase 3.1A for positional indexing beneath the existing keyword search.
-Phase 3.2A then uses those positions for exact phrase matching in the Java core.
+Continue with positional and phrase retrieval, Boolean evaluation, then the
+Top-K core and HTTP/browser manuals. Manual #15 connects these algorithms to the
+current usability features. Existing fourteen manuals are preserved without
+rewriting their historical milestone descriptions.
 
 The manuals include implementation explanations, worked examples, verification
 records and limitations, viva questions, and self-practice exercises. Read each
@@ -81,7 +94,8 @@ prompts personally; they contain no invented personal experiences or answers.
 
 Verification records identify Codex-reported automated/static checks separately
 from the user's manual Microsoft Edge confirmations. They do not imply an
-automated browser test suite or newly committed frontend test files. A source
+automated end-to-end browser test suite. The current committed Node models use
+simulated DOM/fetch behavior. A source
 walkthrough, a mock, and a real browser interaction provide different evidence.
 
 Return to the [project README](../README.md).

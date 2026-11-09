@@ -10,9 +10,12 @@
 
 **Repository:** RIFAT-x7/iit-search-engine
 
-This is a documentation and planning checkpoint. It does not implement the
-features below. The student supervises, ChatGPT plans and audits, and Codex
-implements and reports within the authorized milestone. Independent student
+This record began as the November supervisor replanning checkpoint and now
+tracks implementation and acceptance. The original rationale and requirements
+are retained below. Phases 3.5A-3.5C are integrated; 3.5D Part 1 is active and
+awaits independent review. Application features are frozen for midterm.
+The student supervises, ChatGPT plans and audits, and Codex implements and reports
+within the authorized milestone. Independent student
 review is required before a subsequent implementation instruction.
 
 ## A. Supervisor feedback
@@ -39,37 +42,55 @@ meeting quotations or blanket supervisor approvals.
 
 ### Implemented capabilities verified by source inspection
 
-At the start of this task, clean local main and fetched origin/main both pointed
-to `bfb28f676a73443a9cc383cb9ccad52b415b94c8`. Phases through 3.4 are completed;
-the earlier Phase 3.4B implementation integration is `39f8353`.
+At the original planning checkpoint, main was
+`bfb28f676a73443a9cc383cb9ccad52b415b94c8`; Phase 3.4B integrated at `39f8353`.
+At the November 9 stabilization start, clean local and fetched remote main were
+`ab6eacc43b9b8424f332304f18729255ef45d3a0`. Phases through 3.5C are integrated.
+The source table below describes that current application.
 
 | Source | Current behavior |
 | --- | --- |
 | [TextProcessor.java](../src/TextProcessor.java) | Manual lowercase ASCII letter/digit tokens; punctuation separates words; keyword processing removes twelve stop words. Complete tokens retain stop words for positions. |
 | [InvertedIndex.java](../src/InvertedIndex.java) | In-memory frequency postings (term to document-ID/count mappings) and positional postings. |
-| [SearchEngine.java](../src/SearchEngine.java) | TF-IDF-style ranked keyword retrieval, exact normalized phrase retrieval and Boolean AND/OR with AND precedence. Optimized Top-K uses sparse scoring and a bounded heap, preserving the full ranking prefix. |
+| [SearchEngine.java](../src/SearchEngine.java) | TF-IDF-style ranked keyword retrieval, exact normalized phrase retrieval and Boolean AND/OR with AND precedence. Optimized Top-K uses sparse scoring and a bounded heap, preserving the full ranking prefix. Original-byte snapshots use exact filename lookup and defensive copies, replaced only after successful builds. |
 | [Document.java](../src/Document.java) | A document currently holds an ID and filename, not original text or a stored path. IDs are assigned in sorted filename order during indexing. |
-| [SearchServer.java](../src/SearchServer.java) | Built-in JDK HttpServer binds to 127.0.0.1:8080; fixed assets, health and search routes only. Keyword JSON has numeric scores; phrase/Boolean JSON has filenames without scores. |
-| [index.html](../web/index.html) and [app.js](../web/app.js) | Keyword, phrase and Boolean modes, keyword Top-K choices, loading/error feedback, cancellation/request-ID protection and safe text rendering. Keyword scores are currently visible; filenames are plain text. |
+| [SearchServer.java](../src/SearchServer.java) | Built-in JDK HttpServer binds to 127.0.0.1:8080; fixed search/reader assets, health/search, indexed raw view and original download routes. Request names do not resolve filesystem paths. Keyword JSON retains numeric scores; phrase/Boolean JSON has filenames without scores. |
+| [index.html](../web/index.html) and [app.js](../web/app.js) | Keyword, phrase and Boolean modes, keyword Top-K choices, loading/error feedback, cancellation/request-ID protection and safe text rendering. Advanced Search groups compose existing Boolean queries. Scores are hidden in the browser; filenames link to a reader, with downloads and source previews. Shared highlight.js verifies source tokens for both pages. |
 
 The separate CLI retains keyword search and manual rebuilds. Default startup
 indexes six immediate text files in `data/`; `--phrase-demo` instead indexes nine
-files in `data/phrase_samples/`. Both collections are fictional. There are fourteen
-[learning manuals](../learnings/README.md). See the [README](../README.md) for
+files in `data/phrase_samples/`. Both collections are fictional. Fourteen
+historical [learning manuals](../learnings/README.md) are retained, plus one new
+[consolidated Phase 3.5 manual](../learnings/03-08-phase-35-midterm-features.md)
+prepared for review. See the [README](../README.md) for
 architecture, build/run commands, limitations and historical checkpoints.
 
 The previous Codex-reported integration evidence is **287/287 checks: 86 Java,
 159 HTTP and 42 JavaScript client-model checks**. These are historical results,
-not fresh executions for this planning task. Previous Edge confirmations are
-student-reported; the Node DOM/fetch model is not a real browser test.
+not the current stabilization run. Fresh November 9 evidence is **547 passed,
+0 failed, 1 skipped**: 100 Java, 320 HTTP, 94 browser-model and 33 presentation/
+reader passes, with one skipped Windows symlink fixture. Temurin 25.0.3 compilation,
+five JavaScript checks and seven PowerShell parses passed. Both HTTP collections
+passed ownership verification and cleanup; port 8080 was free afterward.
+
+The student explicitly reports successful **manual Microsoft Edge acceptance**
+of Basic Keyword Search/Top-K, exact phrases, grouped Advanced Search, opening
+and downloading, contextual snippets, keyword/phrase/Boolean highlighting,
+highlighted reader and raw text on both collections. This was not independently
+performed by Codex. It does not establish keyboard-only, screen-reader, responsive/
+zoom, slow-network or device-matrix coverage. Such broader checks remain
+unverified, rather than being invented as completed scenarios.
+The symlink fixture could not create a link because Windows denied the required
+privilege; source rejection/NOFOLLOW_LINKS checks are not a substitute for that
+execution. No claim of production-grade filesystem security is made.
 
 ### Planned work and proposals
 
-Phases 3.5A-3.5D below are pending midterm work. Phase 3.5R is the current
-documentation milestone and remains in progress until reviewed integration.
-Phases 4-7 are post-midterm proposals requiring further agreement. Exact document
-routes, record mappings, row interaction details and phrase/Boolean highlighting
-policies must be settled from actual source during implementation.
+Phases 3.5R, 3.5A, 3.5B and 3.5C are integrated. Phase 3.5D is active
+stabilization, not complete until accepted. The sections below retain the
+requirements and now record the chosen implementation and evidence. Phases 4-7
+remain post-midterm proposals requiring further agreement. No new feature,
+algorithm or UI redesign is authorized for the frozen midterm application.
 
 ## B. Why we are changing priorities
 
@@ -86,23 +107,20 @@ scope control and preparation take priority over feature quantity.
 
 ## C. Phase 3.5R: Documentation and planning checkpoint
 
-**Status: in progress until reviewed integration into main.**
+**Status: completed and integrated at `13ea98fac32a9e6bd9220f78a18979b3dc93e1c9`.**
 
-Formalize the revised scope in this document and update the README and roadmap.
-Only those three files belong to this milestone. Audit the documents against
-source, test scripts, links and Git state; commit and push the documentation
-branch for independent review. Publishing the branch does not complete integration.
-Do not merge into main or begin Phase 3.5A in this task.
-
-Acceptance: all planned features are labeled pending, reported feedback is
-attributed, historical records/manual links are retained, and only the three
-authorized Markdown files change. Run both unstaged and staged whitespace checks,
-review the full staged diff and verify the published branch SHA/status and
-unchanged main. No new application regression or manual browser results are claimed.
+The original checkpoint formalized scope in this plan, README and roadmap only.
+Its two commits were `9543bc0` (reported feedback and revised scope) and
+`13ea98f` (grouped Advanced Search semantics). The original acceptance required
+source/link/Git/whitespace audits, correctly attributed feedback, retained
+historical records and no application implementation in that checkpoint.
+Those historical three-file workflow instructions do not authorize publication
+of the six-file Phase 3.5D draft. Part 1 authoring stopped before commit/push;
+branch publication is a separate, explicitly authorized review step.
 
 ## D. Phase 3.5A: Advanced Search and result presentation
 
-**Status: pending implementation.**
+**Status: completed and integrated at `35482faceaeac37be8ed87361a307b20ef628d9f`.**
 
 **Basic Keyword Search** retains the existing ranked keyword behavior. For
 `computer java python`, a document containing any searchable query term may
@@ -112,9 +130,8 @@ rank a document higher, without guaranteeing that term count alone determines
 order. This is not identical to explicit Boolean OR: Boolean results have no
 relevance ranking and remain in filename order.
 
-Rename the browser's Boolean Search mode to **Advanced Search** and distinguish
-it clearly from Basic Keyword Search. Plan a simple IEEE Xplore-inspired grouped
-keyword builder for the November 12 midterm:
+The browser's Boolean mode is now **Advanced Search**, distinct from Basic
+Keyword Search. Its simple IEEE Xplore-inspired grouped builder implements:
 
 - Each keyword input supplies one searchable Boolean operand.
 - Within each group, words are linked by AND: every condition in that group
@@ -162,9 +179,9 @@ metadata-field search, date filters or a new Advanced Search ranking algorithm.
 Hide numerical keyword scores only in browser presentation. Preserve Basic
 Keyword Search's internal TF-IDF-style scoring, ranking/ties, numeric HTTP score
 contract, keyword-only limits and exact Top-K behavior. The browser must retain
-server order. The current browser still shows scores until this phase is implemented.
+server order. The integrated browser hides numerical scores; the API still returns them.
 
-Acceptance criteria and test expectations:
+Retained acceptance criteria and test expectations (implementation status above):
 
 - Add/remove words and groups with keyboard-accessible labeled controls and
   predictable focus. Preserve valid group structure and define minimum word/group
@@ -181,15 +198,26 @@ Acceptance criteria and test expectations:
   Test mode/limit transitions, stale responses, loading, empty and error states.
 - Browser results contain no numerical keyword scores, but retain the same order
   and Top-K selection. HTTP tests still verify numeric scores and legacy no-K JSON.
-- Update client-model assertions that currently require the Boolean label and
-  visible score strings; retain their behavioral safety coverage. Run relevant
-  core/HTTP regressions and JavaScript checks, then verify controls in Edge.
+- Client-model expectations were updated for the Advanced Search label and hidden
+  scores, retaining behavioral safety coverage. Fresh core/HTTP/JavaScript checks
+  passed; functional Edge acceptance is separately student-reported.
 - Preserve safe DOM rendering, responsive readability and accessible status/focus
   feedback. Define and test the native GET fallback for the revised interface.
 
 ## E. Phase 3.5B: Text document viewing and downloading
 
-**Status: pending implementation; exact routes/interface decided after source review.**
+**Status: completed and integrated at `e1f433cdfec11b9dfc70d0ca9a9eb156186f3f97`.**
+
+Chosen design: SearchEngine retains strictly decoded original UTF-8 bytes in a
+private exact-filename map alongside the successful index. The accessor returns
+defensive copies; a failed rebuild preserves prior search structures and bytes.
+`GET /document/view?name=...` returns original bytes with text/plain UTF-8 and
+nosniff. `GET /document/download?name=...` returns those same bytes with a safe
+ASCII/UTF-8 attachment filename. Invalid syntax is 400, valid unindexed names
+404, and unsupported methods 405 with Allow: GET. Exactly one nonempty name and
+no extra parameters are accepted; decoding is strict and performed once.
+Browser requests never open a user-derived path. Collection isolation remains.
+The Phase 3.5C primary link opens the separate reader; raw routes are unchanged.
 
 Link each result to its corresponding indexed text document. Provide browser
 viewing, preferably in a new tab, and a download action for the original `.txt`
@@ -200,9 +228,10 @@ demo collection, or vice versa.
 Use document IDs or a validated mapping to indexed records, never unrestricted
 browser-supplied filesystem paths. Current IDs are collection/startup-dependent;
 review their mapping and link lifetime rather than claiming stable global IDs.
-The current Document stores neither text nor a path, so choose how to retain or
-safely resolve original text during this milestone. Account for files changed or
-removed since startup without returning unrelated content.
+Document still stores only ID/filename; SearchEngine owns the original-byte
+snapshot. Files changed or removed after startup continue serving their indexed
+bytes until a successful rebuild/restart. This is intentional for the small
+fictional collection, not persistent storage or concurrent rebuild support.
 
 Choose correct response content types (UTF-8 text for raw text; HTML for a safe
 viewer when used), safe Content-Disposition values/filenames for downloads and
@@ -217,8 +246,8 @@ Acceptance criteria and HTTP/browser test expectations:
 - Unknown, malformed and wrong-collection identifiers, traversal attempts including
   encoded variants, absolute paths and unindexed files never expose filesystem
   content. Avoid filesystem-path leakage in errors.
-- Test supported methods, content types, disposition/header safety and chosen
-  error responses. Decide these route contracts before writing expectations.
+- Test supported methods, content types, disposition/header safety and the fixed
+  response contracts described above; preserve existing search behavior.
 - Test missing/unreadable files and special characters safely. Verify existing
   routes, search JSON, ranking and both collection startup choices remain correct.
 - In Edge, check result-link identity, new-tab behavior, keyboard link access,
@@ -226,7 +255,23 @@ Acceptance criteria and HTTP/browser test expectations:
 
 ## F. Phase 3.5C: Search snippets and highlighting
 
-**Status: pending implementation.**
+**Status: completed and integrated at `ab6eacc43b9b8424f332304f18729255ef45d3a0`.**
+
+The implemented shared module is [highlight.js](../web/highlight.js), used by
+[app.js](../web/app.js) and [reader.js](../web/reader.js). Both fetch original
+text through the unchanged raw endpoint. Keyword highlights use complete tokens
+excluding stop words; phrase highlights are individual tokens belonging to a
+verified complete normalized phrase; Boolean highlights use only operands from
+satisfied AND groups, evaluated across the whole document. Operators are not
+highlighted as terms. Invalid/unverifiable highlighting queries render plain text.
+
+Snippets use an original slice around the first verified match, targeting 200
+UTF-16 code units and avoiding token/surrogate cuts. Ellipses indicate omitted
+source. Very long matched tokens can exceed the target; length-changing Unicode
+case conversion omits highlights conservatively. Missing/failed previews show a
+neutral fallback without removing results. Shared AbortController/request-ID
+checks prevent obsolete responses from rendering. The reader is a fixed static
+page with safe DOM rendering, raw-view and original-download actions.
 
 Show a short contextual excerpt around a trustworthy match for each result when
 one can be identified. Use original document text, preserving case and punctuation;
@@ -242,12 +287,12 @@ and keep excerpts readable. If no trustworthy excerpt exists, show a clear neutr
 fallback or omit it; do not invent matching text.
 
 Phrase retrieval uses normalized consecutive positions, including stop words;
-Boolean retrieval uses operands and document sets, not source offsets. Derive
-and document their exact highlighting rules from the source, with tested examples.
+Boolean retrieval uses operands and document sets, not source offsets. The
+implemented rules above were derived from source and tested with explicit examples.
 Do not promise a contiguous raw phrase when punctuation differs, highlight
-AND/OR as operators, or imply every OR operand occurs in every result. Whether
-phrase highlights cover a verified span or individual terms must be explicitly
-decided and tested. Keep indexing, TF-IDF, phrase and Boolean logic unchanged.
+AND/OR as operators, or imply every OR operand occurs in every result. Highlighting
+individual tokens of verified phrase occurrences is now explicitly decided and tested.
+Indexing, TF-IDF, phrase and Boolean retrieval logic remain unchanged.
 
 Acceptance criteria, limitations and test expectations:
 
@@ -267,21 +312,33 @@ Acceptance criteria, limitations and test expectations:
 
 ## G. Phase 3.5D: Midterm stabilization
 
-**Status: pending stabilization after the usability increments.**
+**Status: active Part 1; fresh regression complete, documentation awaiting review.**
+
+Application features are frozen. The six-file documentation draft includes
+current README/roadmap/plan/index, one consolidated manual and the
+[demo runbook](MIDTERM_DEMO_RUNBOOK_2026-11.md). Part 1 prepared the draft without
+publication. Separately authorized branch publication enables independent review;
+it does not integrate main or complete acceptance. Slides/speech are planned
+November 10; rehearsal, code
+comprehension and student viva practice November 11. Phase 3.5D remains open
+until accepted; automated success is not presentation readiness.
 
 - Compile with Temurin JDK 25.0.3 and run the relevant complete regression suites:
   [Baseline](../tests/BaselineTests.java), [positional](../tests/PositionalIndexTests.java),
-  [phrase](../tests/PhraseSearchTests.java), [Boolean](../tests/BooleanSearchTests.java)
-  and [Top-K](../tests/TopKSearchTests.java) Java tests;
+  [phrase](../tests/PhraseSearchTests.java), [Boolean](../tests/BooleanSearchTests.java),
+  [Top-K](../tests/TopKSearchTests.java) and
+  [indexed-document](../tests/IndexedDocumentTests.java) Java tests;
   [HTTP runner](../tests/RunHttpIntegrationTests.ps1) and its original/phrase/Boolean/
-  Top-K suites; and [client model](../tests/BrowserClientTests.js), with syntax checks.
-  Extend relevant coverage for the new behavior; do not treat the old 287 count
+  Top-K/document/reader suites; [client model](../tests/BrowserClientTests.js) and
+  [highlighting/reader model](../tests/HighlightPresentationTests.js), with syntax checks.
+  Existing suites were run unchanged; do not treat the old 287 count
   as proof of new features. Record actual fresh totals and failures.
 - Test both the default six-document and nine-document phrase-demo collections.
   Preserve all prior algorithms, ranking, JSON score compatibility and Top-K.
-- Verify Microsoft Edge manually, including mixed Advanced Search, keyword and
-  phrase modes, opening/viewing, original downloads, snippets and highlights,
-  errors, keyboard access and narrow layouts. The model alone cannot prove this.
+- Functional Edge acceptance for both collections is student-reported above.
+  Errors, complete keyboard-only, narrow layouts, screen-reader and zoom/reflow
+  are not inferred from that functional confirmation. The models alone cannot
+  prove those broader manual observations.
 - Review allowed-file mappings, path/header safety, rendering and error handling.
   Use the owned-server runner; never stop an unidentified port-8080 listener.
 - Finish relevant learning documentation and viva study notes. The student should
@@ -289,28 +346,39 @@ Acceptance criteria, limitations and test expectations:
 - Integrate reviewed work into main only under the next authorized workflow.
   Prepare reproducible startup, queries, expected documents and cleanup steps for
   a fictional-data supervisor demonstration. Preserve known-working checkpoints.
-- Protect November 11 for presentation, speech and code comprehension. No network
+- Protect November 10 for slides/speech and November 11 for rehearsal/viva. No network
   deployment or new retrieval algorithm is needed for this demonstration.
 
 ## H. Midterm acceptance checklist
 
-Future work remains unchecked until implemented and verified.
+Checked implementation items are supported by integrated source, the fresh
+regression and/or the separately attributed student report; they do not claim
+exhaustive testing. Publication/preparation items remain unchecked.
 
-- [ ] Advanced Search label, AND words within OR groups and add/remove controls work.
-- [ ] Group expansion passes the matching table and precedence is understandable.
-- [ ] Ranked results preserve ordering/Top-K without visible numerical scores;
-      HTTP numerical score compatibility is preserved.
-- [ ] Open the correct indexed text document in the browser.
-- [ ] Download the original text document with correct filename and bytes.
-- [ ] Contextual snippets show authentic, readable excerpts or a safe fallback.
-- [ ] Snippet and viewer highlighting follow tested matching rules safely.
-- [ ] Existing keyword, exact phrase and Boolean behavior remains correct.
-- [ ] Relevant complete regressions and syntax checks pass on both collections.
-- [ ] Manual Microsoft Edge checks are performed and recorded separately.
-- [ ] GitHub README, roadmap and learning documentation reflect actual behavior.
-- [ ] Reviewed implementation is integrated and the demo is reproducible.
-- [ ] Presentation slides and speech are prepared for November 12.
-- [ ] Code explanation and viva preparation are completed with student practice.
+- [x] Advanced Search label, AND words within OR groups and add/remove controls.
+- [x] Correct grouped expansion, preview/submission agreement and AND precedence.
+      The seven-case temporary engine truth table belongs to prior 3.5A evidence;
+      current persistent browser and Boolean suites pass without counting it again.
+- [x] Ranking/Top-K preserved without visible scores; keyword HTTP scores retained.
+- [x] Open the corresponding indexed text in the reader and unchanged raw endpoint.
+- [x] Download original bytes with validated filename/header handling.
+- [x] Contextual source snippets and neutral unavailable/empty fallback.
+- [x] Shared safe snippet/reader highlights under documented matching rules.
+- [x] Existing keyword, phrase and Boolean retrieval regression passes.
+- [x] Fresh complete regression and syntax checks, both collections: 547 passed,
+      0 failed; one symlink fixture skipped (not a pass).
+- [x] Student-reported manual functional Microsoft Edge acceptance recorded above.
+- [x] Phase 3.5A-3.5C reviewed implementation integrated into main.
+- [ ] This six-file documentation/manual/runbook draft independently accepted
+      and integrated into main under a later explicit instruction. Branch
+      publication for review does not complete this item.
+- [ ] Runbook sequence rehearsed end-to-end by the student with timing confirmed.
+- [ ] Presentation slides and speech prepared (planned November 10).
+- [ ] Student code explanation, rehearsal and viva practice completed (November 11).
+
+**Unverified coverage:** the Windows symlink fixture and comprehensive
+keyboard/assistive-technology, responsive/zoom, slow-network and device-matrix
+manual testing. No additional such checks are represented as passed.
 
 ## I. Post-midterm roadmap
 
@@ -334,9 +402,14 @@ controls; filenames, snippets and match existence can also disclose information.
 
 | Date | Working allocation |
 | --- | --- |
-| November 9-10, 2026 | Focused Phase 3.5 implementation in small increments, with relevant tests and documentation after each change. |
-| November 11, 2026 | Protected slides, speech, code comprehension and viva preparation. |
+| November 9, 2026 | Freeze implemented 3.5A-3.5C; fresh full regression and Phase 3.5D Part 1 documentation review. |
+| November 10, 2026 | Next work session: slides and speech preparation; no slides in this task. |
+| November 11, 2026 | Rehearsal, code explanation and viva preparation. |
 | November 12, 2026 | Midterm examination and reproducible demonstration. |
+
+The original plan allocated November 9-10 to implementation/documentation and
+November 11 to presentation preparation. The updated allocation above protects
+November 10-11 now that features are frozen.
 
 Small increments keep failures attributable and give the student reviewable code
 to study. Review each increment before proceeding and keep a known-working Git

@@ -19,105 +19,122 @@ optimized Top-K selection, exact phrase retrieval, and explicit Boolean AND/OR
 retrieval. The server indexes either six original fictional demonstration files
 or a separate nine-document fictional collection. A separate CLI retains its
 original keyword-search menu.
-The browser uses plain HTML, JavaScript, and CSS; Java performs all indexing,
-query validation, retrieval, and keyword ranking.
+The browser uses plain HTML, JavaScript and CSS for query composition and
+presentation; Java owns indexing, authoritative HTTP query validation, retrieval
+and keyword ranking.
 
 ## Midterm demonstration
 
-Phases 1 and 2 established the midterm baseline. Main now also includes completed
-Phases 3.1-3.4: positional indexing, core/browser phrase and Boolean retrieval,
-and optimized Top-K in the Java core, HTTP API and browser. The verified
-integration checkpoint is `39f835359860866b504a487eef929a273c41c614`.
-Fourteen published learning manuals explain these milestones. Before that
-integration, Codex reported a fresh successful run of **287/287 automated checks**:
-86 Java, 159 HTTP and 42 browser-client model checks, with Temurin JDK 25.0.3
-compilation and JavaScript/PowerShell syntax checks. The
-[verification record](#testing-and-verification-record) separates those prior
-executions from user-reported Edge checks and this documentation-only update.
+Phases through **3.5C are implemented and fast-forward integrated**. The frozen
+application baseline is `ab6eacc43b9b8424f332304f18729255ef45d3a0`.
+Phase 3.5D Part 1 is active stabilization/documentation, awaiting independent
+review; it is not final midterm acceptance. No further features or UI redesign
+are planned before the **November 12, 2026** examination.
 
-The demonstration runs only on `127.0.0.1:8080` with fictional sample documents.
-IIT network deployment, login and authorization, document viewing/downloading,
-PDF extraction, OCR, and fuzzy/partial retrieval are future work. Bangla/Unicode
-processing and date filtering are deferred until after midterm. The November
-student-reported feedback is recorded below; see also the retained historical
-[November 1 supervisor questions](PLANNED_FEATURES.md#questions-for-the-supervisor-november-1-2026).
+Fresh Codex-run regression on November 9 passed **547 named checks, 0 failed**:
+100 Java, 320 HTTP, 94 browser-model and 33 highlighting/reader checks. One
+Windows symlink fixture was skipped because creation requires an unavailable
+privilege. See the [verification record](#testing-and-verification-record).
+The earlier Phase 3.4 total of 287 is retained below as historical evidence.
+
+The student explicitly reported successful **manual Microsoft Edge verification**
+of Basic Keyword Search/Top-K, exact phrases, grouped Advanced Search, document
+opening/downloading, snippets, keyword/phrase/Boolean highlights, the highlighted
+reader and raw-text access, on both collections. Codex did not independently
+perform those browser checks. This report does not establish a comprehensive
+keyboard, screen-reader, zoom/reflow or browser/device matrix audit.
+
+Use the [midterm demo runbook](docs/MIDTERM_DEMO_RUNBOOK_2026-11.md) for Windows
+commands and source-checked query/results. Fourteen historical learning manuals
+are preserved, with one new [consolidated Phase 3.5 manual](learnings/03-08-phase-35-midterm-features.md)
+prepared for review. November 10 is for slides/speech; November 11 is for
+rehearsal, code explanation and viva preparation. Those tasks are still pending.
 
 ## Midterm Supervisor Feedback and Phase 3.5 Plan
 
-Phase 3.4 is complete. For this November 2026 planning checkpoint, clean main
-and fetched origin/main were verified at
-`bfb28f676a73443a9cc383cb9ccad52b415b94c8`; `39f8353` above remains the
-historical Phase 3.4B implementation integration checkpoint.
+According to the student's November 2026 report of the supervisor meeting, the
+classical IR algorithms already covered the midterm algorithm scope. Practical
+usability became the priority. This is a paraphrased student report, not a
+meeting quotation or blanket approval of future work; no meeting date is invented.
+The original planning baseline was `bfb28f676a73443a9cc383cb9ccad52b415b94c8`.
 
-According to the student's report of the supervisor meeting, the current
-classical IR algorithms are sufficient for the midterm on **November 12, 2026**.
-The immediate priority is practical usability: an IEEE Xplore-inspired Advanced
-Search interface over existing Boolean AND/OR retrieval, results without visible
-keyword scores, browser text viewing/downloading, contextual snippets and safe
-highlighting. These are planned features, not implemented capabilities or a
-record of verbatim meeting quotations. No precise meeting date is asserted.
+The [supervisor plan](docs/MIDTERM_SUPERVISOR_PLAN_2026-11.md) now records:
 
-The [Phase 3.5 supervisor plan](docs/MIDTERM_SUPERVISOR_PLAN_2026-11.md) defines
-Phase 3.5R (this documentation checkpoint, in progress until integration) and
-pending Phases 3.5A-3.5D with acceptance criteria and test expectations. Work
-stays on localhost with the existing fictional text collections. Numerical
-scores must remain in the HTTP API and internal ranking; hiding them is a
-future browser presentation change only. IEEE Xplore inspires keyword rows,
-without implying metadata-field search. The planned builder uses AND-linked
-single-word inputs within each group and OR between complete groups, with
-add/remove controls, validation and an expression preview. It retains
-`mode=boolean` and the existing evaluator. For the intended condition
-`computer AND (java OR python)`, groups computer AND java and computer AND python
-generate `computer AND java OR computer AND python`. Parentheses explain intent;
-they are not supported parser syntax.
+| Phase | Current status |
+| --- | --- |
+| 3.5R | Planning checkpoint integrated at `13ea98f` |
+| 3.5A | Advanced Search and browser score hiding integrated at `35482fa` |
+| 3.5B | Indexed text viewing/downloading integrated at `e1f433c` |
+| 3.5C | Snippets and safe reader highlighting integrated at `ab6eacc` |
+| 3.5D | Active stabilization; documentation review, preparation and acceptance pending |
 
-Basic Keyword Search remains ranked OR-like retrieval: `computer java python`
-may return documents containing any searchable term, ordered by TF-IDF-style
-scores. It is not strict AND or identical to score-free Boolean OR. The planned
-Advanced Search composes explicit conditions without adding a ranking algorithm;
-keyword scoring, Top-K and numeric HTTP scores remain unchanged.
+Basic Keyword Search remains OR-like ranked retrieval: any searchable query term
+may make a document eligible. It is not strict AND or identical to unranked
+Boolean OR. Advanced Search composes AND words within OR groups and keeps
+`mode=boolean`. For `computer AND (java OR python)`, repeat the shared condition:
+`computer AND java OR computer AND python`. The shortened
+`computer AND java OR python` has different meaning. Parentheses here explain
+intent; the parser does not accept them. IEEE Xplore inspired the group layout,
+without metadata fields or an additional retrieval algorithm.
 
-November 9-10 is reserved for focused implementation, tests and documentation;
-November 11 is protected for slides, speech, code comprehension and viva study.
-Fuzzy/semantic and other new retrieval algorithms are deferred. PDF, images/OCR,
-Bangla processing, metadata/date filters and deployment belong after midterm,
-subject to further scope and permission decisions. An eventual IIT-usable system
-still requires agreement on document rights, authorization, security and hosting.
+Scores remain in Java and keyword JSON; only their browser display is hidden.
+Fuzzy/semantic search, PDF, images/OCR, Bangla processing, metadata/date filtering
+and deployment remain deferred proposals requiring further agreement. Real IIT
+use would still require document rights, authorization, security and hosting
+decisions. The historical [November 1 supervisor agenda](PLANNED_FEATURES.md#questions-for-the-supervisor-november-1-2026)
+is retained separately.
 
 ## Current architecture
 
-The Java HTTP server calls the custom IR core and reuses an in-memory inverted
-index built from the sample collection. It also serves three fixed web assets.
-The browser sends URL-encoded GET queries and renders the returned JSON array.
+Java owns retrieval. The browser composes queries and presents JSON results,
+then fetches original indexed text for previews and the highlighted reader.
 
 ```mermaid
 flowchart TD
-    Client["Browser client: HTML / CSS / JavaScript"]
-    Server["Java HTTP server: SearchServer"]
-    Assets["Fixed local HTML, JavaScript, CSS files"]
-    CLI["CLI: Main"]
-    Core["Custom Java Information Retrieval core"]
-    Index["In-memory frequency and positional postings"]
-    Data["One fixed fictional UTF-8 .txt collection: 6 or 9 files"]
-    Assets -->|"Read once at startup"| Server
-    Client -->|"GET page, assets, and /search?q=...&mode=... with optional keyword k"| Server
-    Server -->|"HTML / JS / CSS and JSON results"| Client
-    Server -->|"search / searchTopK / searchPhrase / searchBoolean"| Core
-    CLI -->|"Keyword search and manual rebuild"| Core
-    Data -->|"Loading and preprocessing"| Core
+    Search["Search page: index.html, app.js"]
+    Reader["Reader: reader.html, reader.js"]
+    Shared["Shared highlight.js and styles.css"]
+    Server["SearchServer: 127.0.0.1:8080"]
+    Assets["Six fixed web assets loaded at startup"]
+    Core["SearchEngine: keyword / Top-K / phrase / Boolean"]
+    Index["Frequency and positional postings"]
+    Snapshot["Private filename-to-original-byte snapshots"]
+    Data["One fictional UTF-8 .txt collection: 6 or 9 files"]
+    CLI["Separate Main CLI process"]
+    Search -->|"GET /search: JSON, numerical scores retained"| Server
+    Search -->|"GET /document/view: preview source"| Server
+    Search -->|"Open /reader.html with encoded name, q, mode"| Reader
+    Reader -->|"GET /document/view or /document/download"| Server
+    Shared --> Search
+    Shared --> Reader
+    Assets -->|"Fixed routes only"| Server
+    Server --> Core
     Core <--> Index
+    Data -->|"Strict UTF-8 indexing; original bytes retained"| Core
+    Core --> Snapshot
+    Server -->|"Exact indexed filename lookup; no request-derived paths"| Snapshot
+    CLI --> Core
 ```
 
-`Main` and `SearchServer` are separate entry points using the same core classes.
-Each process creates its own engine and index. The CLI supports manual rebuilds;
-the HTTP server builds once before listening and reuses that index for searches.
-It serves the page, fixed assets, health, and search on `127.0.0.1:8080`.
-The web files are loaded once at startup, so edits require restarting the server.
-The browser presents results; Java retains all search algorithms.
+`Main` and `SearchServer` are separate entry points with separate engines. The
+CLI supports manual rebuilds; the HTTP server builds once before listening.
+A successful build replaces its structures after all reads succeed; failed
+builds preserve the prior index and bytes. This is failed-build preservation,
+not a guarantee of atomic publication to concurrent rebuild/search threads.
+
+The server selects one collection and reads six trusted fixed web assets at
+startup. Restart it after intended collection or web-file changes. Document
+requests read snapshots rather than reopening filenames from the browser;
+source changes/deletions do not alter served bytes until a successful rebuild
+or restart. No HTTP rebuild endpoint exists. This small in-memory prototype is
+not a production authorization or general-purpose file server.
 
 ## Current implementation
 
-- UTF-8 loading of immediate `.txt` files, sorted by filename.
+- Strict UTF-8 loading of immediate `.txt` files, sorted by filename; original
+  byte snapshots with exact filename lookup and defensive copies. Symlink entries
+  are rejected and file opens use NOFOLLOW_LINKS; the Windows symlink fixture
+  remains skipped, so comprehensive filesystem security is not claimed.
 - Shared lowercase ASCII letter/digit tokenization with punctuation as separators.
   Keyword processing filters 12 configured stop words; complete tokenization
   retains them for positions and phrase retrieval.
@@ -168,8 +185,8 @@ The browser presents results; Java retains all search algorithms.
   `error` field. JSON strings escape quotes, backslashes, and low controls.
 - Unsupported methods on any known path return 405 with `Allow: GET`;
   unknown paths return 404. Path validation precedes method validation.
-- Five dependency-free Java suites (86 checks), HTTP suites on both fixed
-  collections (159 checks), and a Node DOM/fetch client model (42 checks).
+- Six dependency-free Java suites (100 passes, one skipped fixture), HTTP suites
+  on both fixed collections (320), and Node browser/presentation models (94 + 33).
 - An accessible native GET form with three labeled radio modes, keyword selected
   by default, Boolean help and a required query. Without JavaScript, it can
   navigate to the selected mode's raw JSON response.
@@ -179,19 +196,33 @@ The browser presents results; Java retains all search algorithms.
   starts disabled so JavaScript-free GET submission never sends `k`.
 - Plain JavaScript submit handling with URLSearchParams, fetch, safe textContent
   rendering, loading feedback, and empty/error messages. Repeated completed
-  searches replace earlier results; keyword scores are rounded to two decimals
-  for display. Mode or limit changes abort the active fetch, invalidate its
-  request ID, and clear results/status. ID guards prevent stale success/error/
-  cleanup updates; rendering exceptions clear any partial results. The browser
+  searches replace earlier results; numerical scores are hidden in the browser.
+  Mode/limit changes and query or builder edits abort obsolete search/preview
+  fetches, invalidate their request ID, and clear results/status. ID guards prevent
+  stale success/error/cleanup updates; rendering exceptions clear any partial results. The browser
   does not rank or truncate results. Limited status reports returned count and
   selected limit without claiming a total matching count.
+- Advanced Search has labeled single-word inputs, AND words within OR groups,
+  add/remove controls, validation and an exact expression preview. It retains
+  the existing Boolean backend, at least one group/word, and native GET fallback.
+- Every result links to `/reader.html` with encoded filename/query/mode, and has
+  a separate original Download action. New-tab links use noopener/noreferrer.
+- `/document/view` returns indexed original bytes as UTF-8 plain text;
+  `/document/download` adds a safe attachment filename. Both use nosniff. Only
+  an exact selected-collection snapshot hit can return content.
+- Context previews fetch that raw endpoint and select around a verified match.
+  The shared manual ASCII scanner retains original character offsets; safe DOM
+  text nodes and mark elements preserve source text rather than creating summaries.
+  Keyword highlights exclude stop words, phrase highlights belong to complete
+  normalized occurrences, and Boolean highlights belong to satisfied AND groups.
+  The reader renders the whole document and also links to raw text and download.
 - Local responsive CSS with system fonts, blue/neutral colors, visible keyboard
   focus, disabled-button styling, wrapping results, and stacked narrow-screen controls.
 
 Previously verified sample-corpus statistics are **6 documents, 75 unique terms,
 and 120 processed tokens**. Searching `java` ranks `java_programming.txt` before
 `academic_notice.txt`. The CLI displays scores as 5.54 and 1.85; the JSON API
-returns numeric values without that two-decimal display formatting.
+returns numeric values without that formatting. Browser results display no scores.
 
 ### Fixed demonstration collections
 
@@ -351,19 +382,54 @@ application's JSON error handler runs.
 | `GET /` | 200; `text/html; charset=utf-8`; browser search page |
 | `GET /app.js` | 200; `text/javascript; charset=utf-8`; fixed client script |
 | `GET /styles.css` | 200; `text/css; charset=utf-8`; fixed stylesheet |
+| `GET /reader.html` | 200; `text/html; charset=utf-8`; fixed highlighted reader |
+| `GET /highlight.js` or `/reader.js` | 200; `text/javascript; charset=utf-8`; fixed scripts |
+| Valid `GET /document/view?name=...` | 200; `text/plain; charset=utf-8`; original bytes and nosniff |
+| Valid `GET /document/download?name=...` | Same bytes/type/nosniff, plus safe attachment Content-Disposition |
 | `GET /health` | 200; `text/plain; charset=utf-8`; exact body `OK`, without newline |
 | Valid `GET /search?q=...&mode=...` with optional keyword `k` | 200; mode-specific JSON described above |
 | Invalid query on GET search | 400; JSON `error` for application-handled validation |
-| Unsupported method on any of the five known paths | 405; `Allow: GET`; empty body |
+| Unsupported method on any known path | 405; `Allow: GET`; empty body |
 | Unknown or suffixed path, such as `/search/` | 404; empty body |
 
-404 and 405 responses are not JSON bodies. Unknown paths receive 404 even
+Unknown-route 404 responses and unsupported-method 405 responses have empty bodies. Document-not-found 404 responses contain JSON. Unknown paths receive 404 even
 with an unsupported method. `/health` does not run a search or perform a new
 index diagnostic for each request.
 
-Only the exact listed paths are exposed. Asset routes read trusted fixed files
-at startup; there is no generic file server or route for downloading result
-documents. Filenames in the results are plain text, not links or previews.
+Only exact paths are exposed; there is no generic file server. Asset routes read
+trusted fixed files at startup. The reader's parameters do not select server
+assets. It fetches `/document/view` through the existing validated lookup.
+
+### Indexed document access and presentation
+
+Default examples:
+
+```text
+/document/view?name=java_programming.txt
+/document/download?name=java_programming.txt
+/reader.html?name=java_programming.txt&q=java&mode=keyword
+```
+
+Raw view/download require exactly one nonempty `name` and no other parameters.
+Invalid syntax, malformed decoding, controls, separators, traversal or absolute
+path syntax returns application-handled **400** JSON. Valid but unindexed names
+return **404** JSON. These document errors are small generic messages without
+filesystem paths. Unknown routes still have empty 404 bodies. The HTTP stack can
+reject malformed request targets before application JSON handling.
+
+Filename lookup is exact and collection-specific. The server never resolves
+request names as filesystem paths. Successful downloads contain the original
+snapshot bytes with no inserted markup, newline or BOM. Attachment headers use
+a safe ASCII fallback and UTF-8 `filename*` encoding. Viewing is raw plain text;
+`reader.html` is a separate presentation page, not a changed raw endpoint.
+
+Previews are labeled, normally about 200 UTF-16 code units, with truthful
+truncation ellipses; verified token/surrogate boundaries are preserved. A very
+long matched token can exceed that target. Unavailable/no-trustworthy previews
+show a neutral fallback without removing results. Length-changing Unicode case
+conversion conservatively omits highlights. Boolean highlights establish only
+document-wide satisfaction, not adjacent words. JavaScript is required for
+snippets, reader highlights and grouped editing; native GET still returns JSON.
 
 ## Project roadmap
 
@@ -389,6 +455,10 @@ Completed milestones:
 | Phase 3.3B | Browser/HTTP Boolean mode and Manual #12; integrated checkpoint `2a228fc` |
 | Phase 3.4A | Optimized bounded-heap Top-K Java API, 26 tests and Manual #13; checkpoint `498de05` |
 | Phase 3.4B | Strict keyword K parameter, browser limit selector and Manual #14; integrated checkpoint `39f8353` |
+| Phase 3.5R | Supervisor scope and grouped-search clarification integrated at `13ea98f` |
+| Phase 3.5A | Grouped Advanced Search and hidden browser scores; `35482fa` |
+| Phase 3.5B | Indexed original-byte viewing/downloading; `e1f433c` |
+| Phase 3.5C | Contextual snippets, shared highlights and reader; `ab6eacc` |
 
 The Phase 2 integration used `git merge --ff-only feat/browser-client`; later
 reviewed feature branches were also integrated with fast-forward-only merges
@@ -397,21 +467,20 @@ and Phase 3.4B to `39f8353`, each without a merge commit.
 The [planning document](PLANNED_FEATURES.md) separates completed phases from
 pending capabilities and unconfirmed supervisor decisions.
 
-Future work:
+Current stabilization and future work:
 
-- Pending midterm Phase 3.5A: Advanced Search AND words within OR groups using
-  existing Boolean evaluation, plus browser-only hiding of numerical keyword scores.
-- Pending Phase 3.5B: controlled open/download access to indexed fictional text.
-- Pending Phase 3.5C: contextual snippets and safe snippet/viewer highlighting.
-- Pending Phase 3.5D: regressions, Edge checks, learning notes and a reproducible demo.
-- Proposed post-midterm Phases 4-7: metadata/date filters, authorized ingestion
-  and text-based PDF extraction, Bangla/Unicode retrieval, separately scoped
-  image/OCR work, permissions, persistence, evaluation and approved IIT architecture.
-- Future partial/fuzzy, semantic or other retrieval additions only when explicitly
-  justified and agreed after midterm.
+- Phase 3.5D is active: fresh regressions, documentation, one consolidated manual
+  and a demonstration runbook. These documentation changes await review; slides,
+  speech, rehearsal and student viva practice are not completed by this task.
+- November 9 freezes features; November 10 is for slides and speech; November 11
+  is for rehearsal, code explanation and viva preparation.
+- Proposed post-midterm Phases 4-7 cover metadata/date filters, authorized ingestion
+  and text-based PDF extraction, Bangla/Unicode retrieval, separately scoped OCR,
+  permissions, persistence, evaluation and approved deployment architecture.
+- Fuzzy/semantic or other algorithms require explicit justification and agreement.
 
-These capabilities are not implemented. Real-document permissions, accounts,
-OCR scope and deployment still need agreement; the prototype is localhost-only.
+Deferred capabilities are not implemented or approved for production deployment.
+The prototype remains localhost-only with fictional documents.
 
 ## Technology and academic scope
 
@@ -437,28 +506,36 @@ src/
   SearchEngine.java      Loading, indexing, retrieval, and ranking
   SearchResult.java      Document and score
   Main.java              Original CLI entry point
-  SearchServer.java      Browser assets, HTTP health, and JSON search entry point
+  SearchServer.java      Fixed assets, health/search JSON and indexed-byte routes
 tests/
   BaselineTests.java     Seven automated regression tests
   PositionalIndexTests.java  Thirteen positional-index tests
   PhraseSearchTests.java Eighteen core phrase tests
   BooleanSearchTests.java Twenty-two core Boolean tests
   TopKSearchTests.java   Twenty-six optimized Top-K tests; optional synthetic benchmark
+  IndexedDocumentTests.java  Fourteen passes plus conditional symlink fixture
   HttpSmokeTests.ps1     Sixteen original default-corpus HTTP checks
   PhraseHttpTests.ps1    Thirteen default / twenty-two demo HTTP checks
   BooleanHttpTests.ps1   Twenty-two checks per collection
   TopKHttpTests.ps1      Thirty-two checks per collection
   RunHttpIntegrationTests.ps1  Owned-server test runner for both collections
-  BrowserClientTests.js  Forty-two DOM/fetch client model checks
+  DocumentHttpTests.ps1  55 default / 61 demo indexed-document checks
+  ReaderHttpTests.ps1    21 default / 24 demo reader compatibility checks
+  BrowserClientTests.js  94 DOM/fetch client model checks
+  HighlightPresentationTests.js  33 matcher/reader checks
 data/                    Six fictional demonstration text documents
   phrase_samples/       Nine separate fictional samples and collection README
 web/
   index.html            Semantic search form and result containers
   app.js                GET API requests and safe DOM result rendering
   styles.css            Responsive layout and interaction styling
+  highlight.js           Shared matching offsets, snippets and safe mark rendering
+  reader.html            Fixed highlighted-document page
+  reader.js              Validated raw-text fetch and reader actions
 documents/               Original proposal form and proposal presentation
 docs/
-  MIDTERM_SUPERVISOR_PLAN_2026-11.md  November feedback and pending Phase 3.5 plan
+  MIDTERM_SUPERVISOR_PLAN_2026-11.md  Reported feedback, implementation/evidence status
+  MIDTERM_DEMO_RUNBOOK_2026-11.md    Windows startup, verified queries and safe cleanup
 learnings/               Learning journal and viva preparation
   README.md             Learning index and reading sequence
   01-phase1-foundations.md
@@ -475,6 +552,7 @@ learnings/               Learning journal and viva preparation
   03-05-browser-boolean-search.md
   03-06-optimized-top-k.md
   03-07-top-k-http-browser.md
+  03-08-phase-35-midterm-features.md
 out/                     Ignored generated classes and local verification output
 iit-search-engine-prototype-v0.1.zip   Archived prototype
 PLANNED_FEATURES.md       Future work and supervisor questions
@@ -484,7 +562,7 @@ README.md
 The proposal, slides, and prototype archive preserve earlier project stages.
 Their proposed algorithms and schedules are not a record of current features.
 The fourteen published learning manuals keep their historical checkpoints and
-test evidence.
+test evidence. Manual #15 consolidates current Phase 3.5 behavior for review.
 
 ## Build, run, and test
 
@@ -498,7 +576,7 @@ project's verified toolchain is JDK 25; no dependency installation is needed.
 $projectJdk = 'C:\Program Files\Eclipse Adoptium\jdk-25.0.3.9-hotspot'
 & "$projectJdk\bin\javac.exe" -version
 & "$projectJdk\bin\java.exe" -version
-& "$projectJdk\bin\javac.exe" -encoding UTF-8 -d out\app src\*.java tests\BaselineTests.java tests\PositionalIndexTests.java tests\PhraseSearchTests.java tests\BooleanSearchTests.java tests\TopKSearchTests.java
+& "$projectJdk\bin\javac.exe" -encoding UTF-8 -d out\app src\*.java tests\BaselineTests.java tests\PositionalIndexTests.java tests\PhraseSearchTests.java tests\BooleanSearchTests.java tests\TopKSearchTests.java tests\IndexedDocumentTests.java
 if ($LASTEXITCODE -ne 0) { throw 'Compilation failed' }
 ```
 
@@ -522,14 +600,18 @@ there is no CLI Top-K selector.
 ### Java regression tests
 
 ```powershell
-foreach ($suite in @('BaselineTests', 'PositionalIndexTests', 'PhraseSearchTests', 'BooleanSearchTests', 'TopKSearchTests')) {
-    & "$projectJdk\bin\java.exe" -cp out\app $suite
+# Keep temporary fixtures in the existing ignored output directory.
+New-Item -ItemType Directory -Force -Path out\verification-temp | Out-Null
+$verificationTemp = Join-Path (Get-Location).Path 'out\verification-temp'
+foreach ($suite in @('BaselineTests', 'PositionalIndexTests', 'PhraseSearchTests', 'BooleanSearchTests', 'TopKSearchTests', 'IndexedDocumentTests')) {
+    & "$projectJdk\bin\java.exe" "-Djava.io.tmpdir=$verificationTemp" -cp out\app $suite
     if ($LASTEXITCODE -ne 0) { throw "Java suite failed: $suite" }
 }
 ```
 
-Expected totals are 7, 13, 18, 22 and 26 passed respectively, each with zero failures
-and exit code 0: **86 Java checks**. Checks use explicit `AssertionError`s, so `-ea`
+Expected passes are 7, 13, 18, 22, 26 and 14 respectively: **100 Java passes**,
+0 failures and one separately skipped symlink fixture if Windows denies creation.
+The skipped fixture is not a pass. Checks use explicit `AssertionError`s, so `-ea`
 is unnecessary. Temporary fixtures are separate from data and cleaned up by the
 harnesses; corpus-specific tests read the existing six- and nine-file collections.
 
@@ -541,8 +623,8 @@ When port 8080 is available, start the server in its own console:
 & "$projectJdk\bin\java.exe" -cp out\app SearchServer
 ```
 
-Keep the repository root as the working directory: `data` and all three
-`web` files use relative paths. The server prints `Collection: data`,
+Keep the repository root as the working directory: `data` and all six fixed
+`web` assets use relative paths. The server prints `Collection: data`,
 `Indexed 6 documents.`, then `Listening on http://127.0.0.1:8080` after
 successful startup. An index or web-file loading failure prevents startup.
 
@@ -557,27 +639,34 @@ at a time on the fixed port. Unsupported command-line arguments are rejected;
 selecting a browser mode does not change this startup choice.
 
 Open **http://127.0.0.1:8080/** in Microsoft Edge or another suitable browser.
-Enter `java` and submit. With JavaScript enabled, ranked filenames and scores
-appear beneath the form without navigation. Select Exact Phrase Search for
-`computer networking`, or Boolean Search for `java AND programming`, on the
-default collection. Those modes display filenames without scores. Try `java AND`
-to see a descriptive Boolean error and then submit a corrected expression.
-An unknown term gives an empty result message; whitespace receives the server's
-nonblank-query error. Empty input is blocked by native required validation.
+Choose **Basic Keyword Search**, enter `java`, and submit. The default collection
+returns `java_programming.txt` then `academic_notice.txt`, without numerical
+scores. Previews and filename links appear; a preview failure leaves the result
+available. Open the filename for highlighted original text; the reader also has
+View Raw Text and Download Original actions.
 
-For keyword searches, leave **All results** selected for the original unrestricted
-behavior, or select **Top 1**, **Top 3**, **Top 5** or **Top 10** before submitting.
-The server selects the results; JavaScript preserves their order and score display.
-For default-corpus `java` with Top 10, the page says
-`Showing 2 ranked result(s) (Top 10 limit).` This is the returned count and chosen
-limit, not a claim about a total supplied by the API. Empty matches still say
-`No results found.`
+Choose **Exact Phrase Search** and enter `computer networking` to get
+`networking.txt`. For **Advanced Search**, enter java and programming in one
+AND group; add an OR group with computer and networking. The preview and submitted
+query are `java AND programming OR computer AND networking`, returning
+`java_programming.txt`, then `networking.txt` in filename order. Do not type a
+whole Boolean expression into one builder field. Empty words, stop words, spaces
+inside an operand and unsupported punctuation receive client validation.
 
-The limit is disabled in phrase/Boolean modes, which never send `k`. Switching
-back to keyword restores the prior selection. Changing mode or K clears old
-results and cancels/invalidates pending work; submit again to run the new choice.
-Top-K selection requires JavaScript. Without it, native GET keyword searches
-remain unrestricted; the three mode controls still work.
+Keyword limits are All results, Top 1/3/5/10. Default `java` with Top 1 returns
+only `java_programming.txt`; Top 10 returns both files. The status reports returned
+count and selected limit, not a separate total-match count. Limits are disabled
+outside keyword mode and restored on return. Mode/limit/query/builder changes
+clear stale results and abort/invalidate old search and preview requests. Browser
+code does not rank, truncate or display scores.
+
+Try `zzzznomatchingterm` for No results found. For server-side Boolean syntax
+errors use the direct API example below: the enhanced builder prevents malformed
+expressions. Without JavaScript, native GET still sends raw query/mode and opens
+JSON; keyword searches are unrestricted and snippets/highlights are unavailable.
+
+See the [runbook](docs/MIDTERM_DEMO_RUNBOOK_2026-11.md) for the nine-document
+phrase examples, the timed demonstration and troubleshooting.
 
 Do not open `web/index.html` directly with a file URL. The page needs the Java
 HTTP origin for its root-relative assets and search requests. Without working
@@ -622,23 +711,34 @@ runner from the repository root:
 ```powershell
 powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\tests\RunHttpIntegrationTests.ps1
 if ($LASTEXITCODE -ne 0) { throw 'HTTP integration tests failed' }
-node.exe --check web\app.js
-if ($LASTEXITCODE -ne 0) { throw 'Client syntax check failed' }
-node.exe --check tests\BrowserClientTests.js
-if ($LASTEXITCODE -ne 0) { throw 'Client-test syntax check failed' }
+foreach ($file in @('web/app.js','web/highlight.js','web/reader.js','tests/BrowserClientTests.js','tests/HighlightPresentationTests.js')) {
+    node.exe --check $file
+    if ($LASTEXITCODE -ne 0) { throw "JavaScript syntax failed: $file" }
+}
 node.exe tests\BrowserClientTests.js
 if ($LASTEXITCODE -ne 0) { throw 'Browser-client tests failed' }
+node.exe tests\HighlightPresentationTests.js
+if ($LASTEXITCODE -ne 0) { throw 'Highlighting/reader tests failed' }
+Get-ChildItem -LiteralPath tests -Filter *.ps1 | ForEach-Object {
+    $syntaxTokens = $null; $syntaxErrors = $null
+    [System.Management.Automation.Language.Parser]::ParseFile($_.FullName, [ref]$syntaxTokens, [ref]$syntaxErrors) | Out-Null
+    if ($syntaxErrors.Count) { throw "PowerShell syntax failed: $($_.Name)" }
+}
 ```
 
-Node.js is needed only for the client model/syntax checks, not to serve the app.
-The HTTP runner uses Windows PowerShell/.NET and the configured JDK 25.0.3 path
-inside the script. It requires free port 8080, starts its own hidden servers,
-verifies executable/PID/command line and listener ownership, and stops only
-those owned processes. It runs 16 original default-corpus checks, 13/22 phrase,
-22/22 Boolean and 32/32 Top-K checks on the corresponding collections: **159 HTTP
-checks**. Startup-argument and collection-log checks are additional supporting
-checks. The Node model has **42 checks**; combined with 86 Java checks, the suite
-total is **287**. The model does not substitute for a real browser.
+Node.js is used for model/syntax checks, not to serve the app. The owned-server
+runner uses Windows PowerShell/.NET and the configured Temurin executable.
+It requires free port 8080, validates executable/PID/command line and listener
+ownership, and stops only its own verified servers. CIM permissions must be
+available; if denied, stop and request authorization for those safety checks.
+Never remove the ownership checks, elevate automatically or kill an unknown PID.
+
+Current HTTP checks: 16 original default-only, phrase 13/22, Boolean 22/22,
+Top-K 32/32, documents 55/61 and reader 21/24 = **320**. Startup-argument and
+collection-log checks are additional supporting checks, excluded from that count.
+The two Node models contribute **94 + 33** named checks. Together with **100**
+Java passes, the repeatable total is **547**, with one separately skipped fixture.
+These models do not substitute for a real browser.
 
 ### Original HTTP integration smoke tests (Phase 2.5A)
 
@@ -665,7 +765,42 @@ These are HTTP integration checks, not browser interaction or accessibility test
 
 ## Testing and verification record
 
-### Latest integrated verification: Phase 3.4B
+### Fresh stabilization verification: November 9, 2026
+
+Codex compiled the integrated application baseline `ab6eacc43b9b8424f332304f18729255ef45d3a0`
+with Temurin 25.0.3+9 and freshly executed all suites during Phase 3.5D Part 1:
+
+| Suite | Passed | Failed | Skipped |
+| --- | ---: | ---: | ---: |
+| Baseline / positional / phrase / Boolean / Top-K Java | 7 + 13 + 18 + 22 + 26 | 0 | 0 |
+| Indexed-document Java | 14 | 0 | 1 |
+| Existing HTTP, default / phrase-demo | 138 + 137 | 0 | 0 |
+| Reader HTTP, default / phrase-demo | 21 + 24 | 0 | 0 |
+| Browser-client model | 94 | 0 | 0 |
+| Highlighting/reader model | 33 | 0 | 0 |
+| **Total** | **547** | **0** | **1** |
+
+All five JavaScript syntax checks and seven PowerShell script parses passed.
+Both fixed collections were exercised. The runner verified executable/command
+line and listener ownership, stopped only its own server PIDs 28108 and 4324,
+and confirmed port 8080 free. The symlink fixture could not create its link:
+Windows reported that a required privilege was not held. Source inspection and
+other document tests do not replace that skipped execution or prove complete
+filesystem security. No benchmark or independent Edge session was run.
+
+The student separately reported successful manual Edge acceptance of Phases
+3.5A-3.5C on both collections: keyword/Top-K, phrases, grouped Advanced Search,
+open/download, snippets, mode-appropriate highlights, reader and raw access.
+This is **student-reported manual verification**, not Codex-run browser automation.
+No additional keyboard-only, screen-reader, responsive/zoom matrix or slow-network
+manual coverage is inferred. Documentation changes are awaiting independent
+review; slides, speech, rehearsal and viva practice remain pending.
+
+The seven Phase 3.5A temporary truth-table checks were earlier evidence and are
+not included in the persistent 547-check suite. The historical records below
+retain their original checkpoints and counts.
+
+### Historical integrated verification: Phase 3.4B
 
 Before fast-forward integration at `39f835359860866b504a487eef929a273c41c614`,
 Codex reported fresh Temurin JDK 25.0.3 compilation and these results:
@@ -709,8 +844,8 @@ Heap selection avoids sorting every match, but candidate scoring, HTTP/JSON
 processing and browser rendering still cost time. Neither passing regressions
 nor those Java-only measurements prove an end-to-end browser speedup.
 
-These are previously reported fresh regression results, not newly executed tests
-for this overview/roadmap sync. This task performs documentation-only checks.
+Those Phase 3.4B results were historical evidence for the earlier documentation
+sync. The fresh Phase 3.5D run is recorded separately above.
 
 ### Historical Phase 3.3B verification
 
@@ -754,9 +889,8 @@ milestones have their own recorded Edge observations. The Node suite is a
 DOM/fetch model, not an automated end-to-end browser suite; Codex did not perform
 new manual Edge checks during final integration.
 
-This overview/roadmap synchronization checks documentation, links, commands,
-source/test consistency and file scope only. No compilation, application tests,
-server requests or browser checks are rerun for this documentation task.
+The earlier Phase 3.3B overview/roadmap sync checked documentation only and did
+not rerun those suites. It is separate from the fresh stabilization run above.
 
 ### Historical Phase 1-2 evidence
 
@@ -827,8 +961,11 @@ browser/viewport combinations beyond the reported cases remain unverified.
 
 ## Learning documentation
 
-The [learning journal](learnings/README.md) links fourteen published manuals in
-recommended reading order: IR foundations, HTTP health, HTTP search integration, JSON,
+The [learning journal](learnings/README.md) retains fourteen published manuals in
+recommended reading order: [IR foundations](learnings/01-phase1-foundations.md),
+[HTTP health](learnings/02-01-http-health-endpoint.md),
+[HTTP search integration](learnings/02-02-http-search-api.md),
+[JSON](learnings/02-03-json-search-api.md),
 [HTML architecture](learnings/02-04-html-browser-client.md),
 [JavaScript integration](learnings/02-05-javascript-search-client.md), and
 [responsive CSS](learnings/02-06-responsive-css.md).
@@ -841,39 +978,43 @@ The sequence continues with [positional indexing](learnings/03-01-positional-ind
 [Top-K HTTP/browser integration](learnings/03-07-top-k-http-browser.md), Manual #14.
 They include implementation explanations, worked examples,
 verification evidence and limits, viva preparation, and self-practice prompts.
-Earlier manuals retain their historical milestone context.
+Earlier manuals retain their historical milestone context. The new
+[consolidated Phase 3.5 manual](learnings/03-08-phase-35-midterm-features.md),
+Manual #15, covers the integrated pipeline, document access, highlights, tradeoffs
+and 25 viva questions. It is a review draft; student study/practice is not implied.
 
 ## Current limitations
 
-The bundled sample data is **fictional demonstration content, not official IIT
-documentation**. Server startup selects the six bundled files or the separate
-nine-file collection; loading is limited to immediate text files. The index
-is in memory, and document IDs depend on sorted filenames.
+- Only the six default or nine separate fictional `.txt` documents are supported
+  for this midterm demonstration; no real IIT private-document access is authorized.
+- Loopback-only `127.0.0.1:8080`; no network deployment, TLS, login or per-document
+  authorization system. Exact snapshot allowlisting is a prototype boundary,
+  not a production security guarantee; the Windows symlink fixture is skipped.
+- ASCII-focused lowercase letter/digit tokenization is not full Bangla/Unicode
+  IR. No PDF extraction, OCR, metadata/date filters, fuzzy or semantic search.
+- Boolean grammar supports explicit AND/OR and single searchable operands only.
+  No parser parentheses, NOT, multiword/phrase operands, wildcards or nested
+  expression tree. UI OR groups are expanded strings, not parser parentheses.
+- No persistence, pagination, uploads, HTTP rebuild, automatic file refresh or
+  concurrent rebuild guarantee. The HTTP server loads index, snapshots and assets
+  once. Source changes/deletions leave the old snapshot until restart/rebuild.
+- JavaScript is required for interactive groups, snippets and highlighted reading.
+  Without it the native GET form opens JSON and keyword searches are unrestricted.
+- A preview fetch per result reads the full small text document. There is no
+  cache, application timeout, measured browser speedup or broad load evaluation.
+  Cancellation/request IDs protect presentation, not server-side cancellation.
+- Highlights are a presentation aid, not relevance or retrieval. Length-changing
+  Unicode case conversions omit highlights; very long matched tokens can exceed
+  the approximate 200-character excerpt target. Failed/no trustworthy previews
+  use a neutral fallback. Original downloads remain unmodified snapshot bytes.
+- The manual JSON serializer is not a general serializer for arbitrary non-finite
+  doubles or malformed Java UTF-16 strings; see the historical
+  [JSON manual](learnings/02-03-json-search-api.md). Current core/model tests cover
+  the supported schema and reject malformed client result shapes safely.
+- Student-reported Edge acceptance is recorded separately from automated models.
+  Comprehensive accessibility, browser/device coverage, retrieval quality,
+  scalability and production security have not been established.
 
-- UTF-8 transport and file reading do not provide general Unicode word search;
-  tokenization retains ASCII letters and digits.
-- The server is loopback-only on fixed port 8080. It serves three known web
-  assets and the API, with no TLS, authentication, or general file hosting.
-- No PDF import, OCR, fuzzy/substring matching or snippets are implemented.
-- Boolean syntax supports only explicit AND/OR and single searchable operands.
-  No parentheses/grouping, NOT, Boolean phrase operands or wildcard expansion
-  is supported; Boolean stop-word operands are rejected. There is no quotation-mark
-  query grammar in keyword search. Phrase mode supplies the separate phrase API.
-- There is no index persistence, HTTP rebuild endpoint, automatic file refresh
-  or pagination. The HTTP index is built once at startup. Top-K is keyword-only;
-  browser limits are fixed choices, with no custom K input or total-match count.
-  Without JavaScript, native keyword GET submission remains unrestricted.
-- The API parses URL parameters rather than JSON request bodies. Its manual
-  serializer does not explicitly guard non-finite scores or validate malformed
-  Java UTF-16 strings; see the [JSON manual](learnings/02-03-json-search-api.md).
-- The client trusts the current JSON success schema and has no application timeout.
-  It prevents duplicate submissions while busy; mode or limit changes cancel/invalidate
-  older requests. Editing the query alone does not invalidate a pending request.
-  Browser cancellation does not guarantee server-side cancellation. The generic
-  failure message also covers JSON parsing or rendering errors.
-- Filenames and keyword scores are text only: no snippets, previews, clickable result
-  documents, or download links are provided.
-
-Broader retrieval quality, scalability, and network behavior remain to be
-evaluated. The roadmap lists future capabilities rather than completed
-achievements.
+Feature development is frozen for the midterm. Phase 3.5D documentation review,
+November 10 slides/speech and November 11 rehearsal/viva preparation remain the
+next work; post-midterm proposals require further agreement.

@@ -2,10 +2,10 @@
 
 This document separates completed implementation from remaining plans and
 unconfirmed supervisor decisions. The [README](README.md) explains the current
-application and run commands. At this November 2026 planning checkpoint, fetched
-origin/main and clean local main were verified at
-`bfb28f676a73443a9cc383cb9ccad52b415b94c8`. Phase 3.4B was integrated earlier
-at `39f835359860866b504a487eef929a273c41c614`.
+application and run commands. On November 9, clean local main and fetched
+origin/main were verified at `ab6eacc43b9b8424f332304f18729255ef45d3a0`.
+The original November planning checkpoint was `bfb28f676a73443a9cc383cb9ccad52b415b94c8`;
+Phase 3.4B was integrated earlier at `39f835359860866b504a487eef929a273c41c614`.
 Listing a future feature here does not establish approval or implementation.
 
 ## Supervisor-feedback checkpoint: November 2026
@@ -33,16 +33,23 @@ restrictions remain unchanged. No nested query grammar or new ranking is planned
 Basic Keyword Search remains OR-like candidate retrieval with TF-IDF-style ranking,
 not strict AND or identical to score-free Boolean OR. Hide only browser numerical
 scores; preserve ranking, Top-K and the HTTP numeric score contract. The detailed
-plan includes the matching table and future automated expansion/retrieval checks.
+plan retains the matching table; expansion and retrieval behavior have been tested.
+The seven temporary Phase 3.5A truth-table checks are historical evidence, not
+part of the persistent 547-check suite.
 
 The [detailed Phase 3.5 plan](docs/MIDTERM_SUPERVISOR_PLAN_2026-11.md) defines
-acceptance criteria, tests, boundaries and risks. Phase 3.5R is in progress until
-reviewed integration; 3.5A-3.5D are pending. November 9-10 is the focused work
-window; November 11 is reserved for slides, speech, code explanation and viva
-preparation. No Phase 3.5 application functionality is implemented by this record.
+acceptance criteria, tests, boundaries and risks. Phase 3.5R is integrated;
+3.5A, 3.5B and 3.5C are completed and integrated. Phase 3.5D is active
+stabilization, awaiting acceptance. Application features are now frozen.
+The earlier November 9-10 implementation window is superseded: November 9 is
+stabilization/documentation, November 10 slides/speech, and November 11 rehearsal,
+code explanation and viva preparation. No slides are created in Part 1.
 
-Exact routes, document mappings and phrase/Boolean highlighting behavior remain
-implementation-design decisions to derive from source and verify. Real IIT
+The implementation decisions are now fixed: exact indexed filenames map to
+private original-byte snapshots; `/document/view` and `/document/download` remain
+raw-byte routes; `/reader.html` uses the same browser matcher as snippets.
+Phrase highlights require complete normalized occurrences. Boolean highlights
+include only operands from satisfied AND groups, evaluated document-wide. Real IIT
 ingestion, identity, permissions, document rights and deployment architecture
 still require agreement. The earlier November 1 agenda is retained below as a
 historical record; this checkpoint updates the current priorities.
@@ -50,7 +57,8 @@ historical record; this checkpoint updates the current priorities.
 ## Current implementation
 
 Phases 1 and 2 established the midterm baseline. Phases 3.1-3.4 are now also
-complete and integrated, with:
+complete and integrated; Phases 3.5A-3.5C now add usability without new retrieval
+algorithms. Current capabilities include:
 
 - A custom Java IR core with in-memory frequency postings and complete zero-based
   positional postings. Positions include stop words, gaps and repeated occurrences;
@@ -88,31 +96,50 @@ complete and integrated, with:
 - Two separate fixed fictional corpora: default startup loads the six immediate
   `.txt` files in `data/`; `--phrase-demo` loads only the nine samples in
   `data/phrase_samples/`. Neither is an official IIT document collection.
-- Five Java suites (86), original/phrase/Boolean/Top-K HTTP suites (159) and a
-  DOM/fetch client model (42): Codex previously reported a fresh **287/287**
-  integration regression run, with JDK 25.0.3 compilation and JavaScript/all five
-  PowerShell script syntax checks. The user separately reported working Edge
-  functionality after the prescribed Phase 3.4B browser checks. Earlier Phase
-  3.3B collection groups remain historical evidence in the
+- Grouped Advanced Search, browser-only hiding of numerical keyword scores,
+  exact filename links and separate original downloads. Basic Keyword Search
+  still ranks OR-like candidates; Advanced Search remains filename-ordered Boolean
+  matching through `mode=boolean`, with no `k` and no new parser grammar.
+- Original-byte snapshots published after successful indexing; failed builds
+  preserve the prior index and bytes. Request names only look up indexed records,
+  never resolve arbitrary filesystem paths. Source changes do not alter snapshots
+  until a deliberate successful rebuild/restart. This is not per-user authorization.
+- Shared safe source-offset highlights and contextual previews; a complete reader
+  preserves text/whitespace and links to unchanged raw text/download endpoints.
+  Failed previews do not remove results; query/group edits invalidate stale work.
+- Fresh November 9 Phase 3.5D regression: **100 Java passed, 1 Windows symlink
+  fixture skipped; 320 HTTP passed; 94 browser-model and 33 highlighting/reader
+  passed; 547 passed, 0 failed overall**. Temurin JDK 25.0.3 compilation, five
+  JavaScript syntax checks and seven PowerShell parses passed. Both collections
+  ran through the ownership-checked runner; port 8080 was free after cleanup.
+  The historical Phase 3.4 evidence remains **287/287** (86 Java, 159 HTTP, 42
+  browser model), not the current total. See the
   [verification record](README.md#testing-and-verification-record).
-  There is no automated end-to-end browser suite. This documentation sync does
-  not rerun application tests or add browser-verification claims.
+- **Student-reported manual Edge acceptance** of 3.5A-3.5C: keyword/Top-K,
+  phrases, grouped Advanced Search, opening/downloading, contextual snippets,
+  keyword/phrase/Boolean highlighting, reader and raw-text access on both
+  collections. Codex did not independently perform these manual checks; no
+  comprehensive keyboard, responsive/zoom, assistive-technology or device matrix
+  coverage is inferred. Automated models are not a real-browser suite.
 - A localhost-only server configuration at `127.0.0.1:8080`. Cross-computer
   access and IIT network deployment are not implemented.
 - Fourteen published learning manuals, listed in the [learning journal](learnings/README.md),
   covering foundations through [optimized Top-K core retrieval](learnings/03-06-optimized-top-k.md)
   and [Top-K HTTP/browser integration](learnings/03-07-top-k-http-browser.md).
-  Earlier manuals retain their historical milestone context.
+  Earlier manuals retain their historical milestone context. One new
+  [consolidated Phase 3.5 manual](learnings/03-08-phase-35-midterm-features.md)
+  and a [midterm demo runbook](docs/MIDTERM_DEMO_RUNBOOK_2026-11.md) are prepared
+  in this documentation branch for independent review; main integration and
+  final stabilization acceptance remain pending.
 
-Current results contain plain-text filenames and keyword-only scores. There are
-no document preview/download routes, login, or document permission system. The server serves
-only its fixed browser assets, health endpoint, and search API. PDF extraction,
-OCR, partial/fuzzy retrieval, snippets, and index persistence remain
-future work. Boolean parentheses/grouping, NOT, phrase operands and wildcards
-are unsupported; stop-word operands are rejected. Keyword ranking and no-K
-all-matches behavior remain unchanged. There is no quotation-mark grammar in keyword search.
-Current tokenization retains ASCII letters and digits; UTF-8 file reading and
-JSON transport do not establish Bengali search support.
+Browser results show filename links, downloads and authentic previews without
+numerical scores. Keyword JSON retains its original numeric scores and schema.
+Fixed reader assets do not add a general file-serving route. There is no login,
+per-document authorization, PDF/OCR, partial/fuzzy/semantic retrieval, persistence,
+metadata/date filtering or general Bangla/Unicode IR. Boolean parentheses, NOT,
+phrase operands and wildcards remain unsupported. UTF-8 transport alone does
+not establish multilingual search. The skipped symlink fixture limits security
+evidence; no production filesystem-security claim is made.
 
 ## Proposed IIT deployment
 
@@ -137,7 +164,7 @@ That choice is still open. Authentication verifies who a user is. Server-side
 authorization decides which searches, result information, and documents that
 user may access. A login alone would not grant access to every document.
 
-Document viewing and possible downloading require appropriate authorization.
+For future real documents, viewing and downloading require appropriate authorization.
 The server would need to check permissions for every request, including direct
 requests to a document endpoint. Hiding a browser link would not protect a file.
 For the fictional localhost midterm prototype, viewing and downloading are
@@ -146,14 +173,15 @@ remains a question for the supervisor.
 
 Document endpoints must use validated document identifiers that the server
 maps to approved records, rather than arbitrary paths supplied by a client.
-Current IDs depend on sorted filenames, so they need review before being used
-for persistent file links.
+The implemented midterm mapping uses exact indexed filenames, not numeric IDs
+or client paths. Numeric IDs still depend on sorted filenames; future stable
+identities, renamed-file link lifetimes and per-user permissions need design.
 
 Network controls and access restrictions must be in place and checked before
 real IIT documents are exposed. Permissions also need to cover filenames,
 metadata, snippets, and search matches, since these can reveal restricted
-information. No login, authorization system, or document access endpoint is
-implemented yet.
+information. Prototype indexed-document endpoints are implemented for fictional
+localhost data; no login or authorization system is implemented.
 
 ## PDF extraction, OCR, and Bengali support
 
@@ -178,8 +206,8 @@ use public or explicitly authorized documents.
 ## Roadmap
 
 Milestones through Phase 3.4 are complete and integrated. The November feedback
-replaces the earlier generic remaining-Phase-3 fuzzy priority with pending
-Phase 3.5 usability work. Fuzzy retrieval is deferred after midterm and requires
+replaced the earlier generic remaining-Phase-3 fuzzy priority with Phase 3.5
+usability work, now implemented through 3.5C. Fuzzy retrieval is deferred after midterm and requires
 explicit justification and agreement. The November 1 questions below retain
 their original historical context. Future phases in this table are proposals,
 not blanket supervisor approvals.
@@ -196,11 +224,11 @@ not blanket supervisor approvals.
 | 3.3B | Completed and integrated | Browser/HTTP Boolean mode, shared score-free JSON, 175-check integration verification and Manual #12. |
 | 3.4A | Completed and integrated | Optimized bounded-heap Top-K Java retrieval, exact ranking/score compatibility, 26 core checks and Manual #13; checkpoint 498de05. |
 | 3.4B | Completed and integrated | Strict keyword K parameter, browser result-limit select, 287-check integration verification and Manual #14; checkpoint 39f8353. |
-| 3.5R | In progress until reviewed integration | Documentation and planning checkpoint: this plan, README and roadmap only. |
-| 3.5A | Pending midterm implementation | Advanced Search AND words within OR groups, add/remove controls, validation and preview; existing evaluator and mode=boolean compatibility; hide browser scores, preserve ranked keyword retrieval/HTTP scores/Top-K. |
-| 3.5B | Pending midterm implementation | View and download only indexed allowed fictional .txt documents through validated record mappings. |
-| 3.5C | Pending midterm implementation | Contextual snippets and safe matching-text highlighting in snippets and viewer, without retrieval changes. |
-| 3.5D | Pending midterm stabilization | Both collections, regressions, Edge verification, error/security review, learning/viva notes, reviewed integration and reproducible demo. |
+| 3.5R | Completed and integrated | Original planning plus grouped semantics correction; checkpoint `13ea98f`. |
+| 3.5A | Completed and integrated (`35482fa`) | Advanced Search AND words within OR groups, add/remove controls, validation and preview; existing evaluator and mode=boolean compatibility; hide browser scores, preserve ranked keyword retrieval/HTTP scores/Top-K. |
+| 3.5B | Completed and integrated (`e1f433c`) | Exact indexed-filename snapshots; raw view and exact original download; collection isolation. |
+| 3.5C | Completed and integrated (`ab6eacc`) | Source excerpts, shared safe highlighting, reader and unchanged raw/download routes. |
+| 3.5D | Active; awaiting review and acceptance | Fresh regression and documentation Part 1; student-reported Edge acceptance recorded; manual/runbook draft; later slides, rehearsal and viva practice pending. |
 | 4 | Deferred; proposed after midterm | Document metadata and date filters; metadata model and date meaning need agreement. |
 | 5 | Deferred; proposed after midterm | Authorized document ingestion and text-based PDF extraction; rights and permitted collection need agreement. |
 | 6 | Deferred; proposed after midterm | Bangla/Unicode-aware text processing and multilingual retrieval; image/OCR work separately scoped and evaluated. |
@@ -212,8 +240,12 @@ access are introduced earlier. The necessary identity checks, authorization,
 and network restrictions must be agreed, implemented, and verified before that
 exposure.
 
-Broader browser, zoom/reflow, accessibility, and usability checks remain part of
-the planned testing work.
+Reported functional Edge acceptance is recorded above. Broader keyboard-only,
+zoom/reflow, screen-reader and device-matrix checks remain unverified; they are
+not a claim that the student must repeat already accepted functional scenarios.
+Documentation branch publication is separately authorized for GitHub review;
+main integration and final stabilization acceptance still require the next
+authorized review workflow.
 
 ## Questions for the supervisor: November 1, 2026
 
