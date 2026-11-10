@@ -1,0 +1,8 @@
+Requirements Interview Practice
+Fictional study material; not an official university document.
+
+A mock interview asks what a reader needs after finding a relevant document. Participants request a short source preview, a complete reading view, and an original download. The analyst separates those usability needs from proposals for new matching algorithms. A request for a clearer interface does not automatically justify semantic retrieval, metadata filters, or a large deployment architecture.
+
+The software team turns each request into an observable acceptance criterion. An indexed filename opens its corresponding text. A download preserves bytes. A keyword limit preserves the ranking prefix. An invalid Boolean field produces understandable feedback before submission. The group checks that each criterion can be verified without inventing hidden product capabilities.
+
+One Java developer explains the existing constraints: ASCII-focused tokens, fixed fictional collections, and a server that indexes at startup. The interview records uncertainties about real document rights and future accounts as open decisions. Participants avoid invented quotations or approvals. A final exercise rewrites vague phrases such as secure and fast into bounded statements backed by specific tests, while acknowledging that prototype evidence is not a production guarantee.

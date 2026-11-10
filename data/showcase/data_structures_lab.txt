@@ -1,0 +1,8 @@
+Data Structures Laboratory: Lists, Maps, and Heaps
+Fictional study material; not an official university document.
+
+A laboratory session follows one document query through several data structures. A list preserves returned result order, a map associates terms with document counts, and a set removes repeated query words. Students draw each structure before writing Java code. They discuss which operations need ordering and which need membership only, rather than choosing a container from habit.
+
+The software worksheet introduces a bounded binary heap for retaining a small number of strong candidates. Its root holds the weakest retained result, making replacement straightforward when a better candidate arrives. Equal scores use filename order so repeated runs remain predictable. A heap is partially ordered; reading its backing array directly would not produce the final ranked list.
+
+Pairs trace insertion, replacement, and extraction on paper with invented filenames. They test a requested limit larger than the candidate count and explain why allocation should grow only when results arrive. The session closes by distinguishing reduced selection work from reduced scoring work. No benchmark is supplied, and no claim is made that a heap always improves a tiny browser demonstration.

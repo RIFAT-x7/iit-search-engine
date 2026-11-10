@@ -1,4 +1,4 @@
-# Compile first. Runs both fixed collections on port 8080 and stops only its own servers.
+# Compile first. Runs all three fixed collections on port 8080 and stops only its own servers.
 $ErrorActionPreference = 'Stop'
 Set-StrictMode -Version 2.0
 $javaPath = 'C:\Program Files\Eclipse Adoptium\jdk-25.0.3.9-hotspot\bin\java.exe'
@@ -43,7 +43,7 @@ function Stop-OwnedProcess($Process) {
 }
 
 Assert-FreePort
-foreach ($unsupported in @('--unknown', 'data', '--phrase-demo --phrase-demo')) {
+foreach ($unsupported in @('--unknown', 'data', '--phrase-demo --phrase-demo', '--showcase --showcase', '--phrase-demo --showcase', '--showcase data/showcase')) {
     $process = Start-TestProcess $unsupported
     $stdout = $process.StandardOutput.ReadToEndAsync()
     $stderr = $process.StandardError.ReadToEndAsync()
@@ -51,7 +51,7 @@ foreach ($unsupported in @('--unknown', 'data', '--phrase-demo --phrase-demo')) 
         if (-not $process.WaitForExit(5000)) { throw 'Unsupported startup arguments did not exit promptly' }
         $output = $stdout.GetAwaiter().GetResult()
         $errorText = $stderr.GetAwaiter().GetResult()
-        if ($process.ExitCode -ne 1 -or -not $errorText.Contains('Usage: SearchServer [--phrase-demo]') -or $output.Contains('Listening')) {
+        if ($process.ExitCode -ne 1 -or -not $errorText.Contains('Usage: SearchServer [--phrase-demo | --showcase]') -or $output.Contains('Listening')) {
             throw "Unsupported arguments were not rejected clearly: $unsupported"
         }
         Write-Host "PASS: Rejected startup arguments: $unsupported"
@@ -62,9 +62,9 @@ foreach ($unsupported in @('--unknown', 'data', '--phrase-demo --phrase-demo')) 
     Assert-FreePort
 }
 
-foreach ($collection in @('default', 'phrase-demo')) {
+foreach ($collection in @('default', 'phrase-demo', 'showcase')) {
     Assert-FreePort
-    $arguments = if ($collection -eq 'phrase-demo') { '--phrase-demo' } else { '' }
+    $arguments = switch ($collection) { 'phrase-demo' { '--phrase-demo' } 'showcase' { '--showcase' } default { '' } }
     $process = Start-TestProcess $arguments
     $stdout = $process.StandardOutput.ReadToEndAsync()
     $stderr = $process.StandardError.ReadToEndAsync()
@@ -91,16 +91,20 @@ foreach ($collection in @('default', 'phrase-demo')) {
             & powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\tests\HttpSmokeTests.ps1
             if ($LASTEXITCODE -ne 0) { throw 'Original HTTP suite failed' }
         }
-        & powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\tests\PhraseHttpTests.ps1 -Collection $collection
-        if ($LASTEXITCODE -ne 0) { throw "Phrase HTTP tests failed for $collection" }
-        & powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\tests\BooleanHttpTests.ps1 -Collection $collection
-        if ($LASTEXITCODE -ne 0) { throw "Boolean HTTP tests failed for $collection" }
-        & powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\tests\TopKHttpTests.ps1 -Collection $collection
-        if ($LASTEXITCODE -ne 0) { throw "Top-K HTTP tests failed for $collection" }
-        & powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\tests\DocumentHttpTests.ps1 -Collection $collection
-        if ($LASTEXITCODE -ne 0) { throw "Document HTTP tests failed for $collection" }
-        & powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\tests\ReaderHttpTests.ps1 -Collection $collection
-        if ($LASTEXITCODE -ne 0) { throw "Reader HTTP tests failed for $collection" }
+        if ($collection -ne 'showcase') {
+            & powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\tests\PhraseHttpTests.ps1 -Collection $collection
+            if ($LASTEXITCODE -ne 0) { throw "Phrase HTTP tests failed for $collection" }
+            & powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\tests\BooleanHttpTests.ps1 -Collection $collection
+            if ($LASTEXITCODE -ne 0) { throw "Boolean HTTP tests failed for $collection" }
+            & powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\tests\TopKHttpTests.ps1 -Collection $collection
+            if ($LASTEXITCODE -ne 0) { throw "Top-K HTTP tests failed for $collection" }
+            & powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\tests\DocumentHttpTests.ps1 -Collection $collection
+            if ($LASTEXITCODE -ne 0) { throw "Document HTTP tests failed for $collection" }
+            & powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\tests\ReaderHttpTests.ps1 -Collection $collection
+            if ($LASTEXITCODE -ne 0) { throw "Reader HTTP tests failed for $collection" }
+        }
+        & powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\tests\ShowcaseHttpTests.ps1 -Collection $collection
+        if ($LASTEXITCODE -ne 0) { throw "Showcase HTTP tests failed for $collection" }
     } finally {
         Stop-OwnedProcess $process
         $output = $stdout.GetAwaiter().GetResult()
@@ -109,12 +113,12 @@ foreach ($collection in @('default', 'phrase-demo')) {
         Write-Host $output
         if ($errorText) { Write-Host $errorText }
     }
-    $folder = if ($collection -eq 'phrase-demo') { 'data/phrase_samples' } else { 'data' }
-    $count = if ($collection -eq 'phrase-demo') { 9 } else { 6 }
+    $folder = switch ($collection) { 'phrase-demo' { 'data/phrase_samples' } 'showcase' { 'data/showcase' } default { 'data' } }
+    $count = switch ($collection) { 'phrase-demo' { 9 } 'showcase' { 25 } default { 6 } }
     if (-not $output.Contains("Collection: $folder`r`n") -or -not $output.Contains("Indexed $count documents.")) {
         throw 'Startup log does not identify the expected collection and document count'
     }
     Write-Host "PASS: $collection collection startup log and document count"
     Assert-FreePort
 }
-Write-Host 'PASS: Both server collections tested; owned processes stopped; port 8080 is free.'
+Write-Host 'PASS: All three server collections tested; owned processes stopped; port 8080 is free.'

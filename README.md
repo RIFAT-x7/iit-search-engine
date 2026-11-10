@@ -16,8 +16,8 @@ them to public or supervisor-authorized IIT documents.
 
 The current browser and HTTP JSON API support ranked keyword search with optional
 optimized Top-K selection, exact phrase retrieval, and explicit Boolean AND/OR
-retrieval. The server indexes either six original fictional demonstration files
-or a separate nine-document fictional collection. A separate CLI retains its
+retrieval. Startup selects six original fictional files, a separate nine-document
+phrase collection, or an optional 25-document fictional showcase. A separate CLI retains its
 original keyword-search menu.
 The browser uses plain HTML, JavaScript and CSS for query composition and
 presentation; Java owns indexing, authoritative HTTP query validation, retrieval
@@ -26,28 +26,34 @@ and keyword ranking.
 ## Midterm demonstration
 
 Phases through **3.5C are implemented and fast-forward integrated**. The frozen
-application baseline is `ab6eacc43b9b8424f332304f18729255ef45d3a0`.
-Phase 3.5D Part 1 is active stabilization/documentation, awaiting independent
-review; it is not final midterm acceptance. No further features or UI redesign
-are planned before the **November 12, 2026** examination.
+application baseline, including the approved Premium Midnight Scholar UI, is
+`143ab553095b95b572ae55016de3850180054fef`. The six-file Phase 3.5D Part 1
+documentation was reviewed and integrated at `cdc3b504f231d9fc961648970318f103c6543b59`.
+Presentation/rehearsal/viva preparation is still pending; integration did not
+complete those activities. No retrieval changes or UI redesign are part of the
+November 10 final audit. Its optional showcase is isolated from the standard demo
+and remains uncommitted pending review before the **November 12, 2026** examination.
 
-Fresh Codex-run regression on November 9 passed **547 named checks, 0 failed**:
-100 Java, 320 HTTP, 94 browser-model and 33 highlighting/reader checks. One
+Fresh Codex-run original regression on November 10 passed **562 checks, 0 failed**,
+both before and after the showcase change: 100 Java, 320 HTTP, 107 browser-model
+and 35 highlighting/reader checks. The showcase adds 18 Java and 70 HTTP checks,
+reported separately: **650 passed, 0 failed overall**. One
 Windows symlink fixture was skipped because creation requires an unavailable
 privilege. See the [verification record](#testing-and-verification-record).
-The earlier Phase 3.4 total of 287 is retained below as historical evidence.
+The earlier Phase 3.5D total of 547 and Phase 3.4 total of 287 remain historical evidence.
 
 The student explicitly reported successful **manual Microsoft Edge verification**
 of Basic Keyword Search/Top-K, exact phrases, grouped Advanced Search, document
 opening/downloading, snippets, keyword/phrase/Boolean highlights, the highlighted
 reader and raw-text access, on both collections. Codex did not independently
-perform those browser checks. This report does not establish a comprehensive
+perform those student-reported browser checks. Premium UI and adaptive Advanced
+Search acceptance was also explicitly student-reported. This report does not establish a comprehensive
 keyboard, screen-reader, zoom/reflow or browser/device matrix audit.
 
 Use the [midterm demo runbook](docs/MIDTERM_DEMO_RUNBOOK_2026-11.md) for Windows
 commands and source-checked query/results. Fourteen historical learning manuals
 are preserved, with one new [consolidated Phase 3.5 manual](learnings/03-08-phase-35-midterm-features.md)
-prepared for review. November 10 is for slides/speech; November 11 is for
+integrated at `cdc3b50`. November 10 is for slides/speech; November 11 is for
 rehearsal, code explanation and viva preparation. Those tasks are still pending.
 
 ## Midterm Supervisor Feedback and Phase 3.5 Plan
@@ -66,7 +72,8 @@ The [supervisor plan](docs/MIDTERM_SUPERVISOR_PLAN_2026-11.md) now records:
 | 3.5A | Advanced Search and browser score hiding integrated at `35482fa` |
 | 3.5B | Indexed text viewing/downloading integrated at `e1f433c` |
 | 3.5C | Snippets and safe reader highlighting integrated at `ab6eacc` |
-| 3.5D | Active stabilization; documentation review, preparation and acceptance pending |
+| 3.5D | Part 1 documentation integrated (`cdc3b50`); presentation, rehearsal and viva preparation remain open |
+| Premium UI | Midnight Scholar and adaptive word layout integrated (`143ab55`); retrieval unchanged |
 
 Basic Keyword Search remains OR-like ranked retrieval: any searchable query term
 may make a document eligible. It is not strict AND or identical to unranked
@@ -99,7 +106,7 @@ flowchart TD
     Core["SearchEngine: keyword / Top-K / phrase / Boolean"]
     Index["Frequency and positional postings"]
     Snapshot["Private filename-to-original-byte snapshots"]
-    Data["One fictional UTF-8 .txt collection: 6 or 9 files"]
+    Data["One fictional UTF-8 .txt collection: 6, 9 or optional 25 files"]
     CLI["Separate Main CLI process"]
     Search -->|"GET /search: JSON, numerical scores retained"| Server
     Search -->|"GET /document/view: preview source"| Server
@@ -186,7 +193,8 @@ not a production authorization or general-purpose file server.
 - Unsupported methods on any known path return 405 with `Allow: GET`;
   unknown paths return 404. Path validation precedes method validation.
 - Six dependency-free Java suites (100 passes, one skipped fixture), HTTP suites
-  on both fixed collections (320), and Node browser/presentation models (94 + 33).
+  on the original collections (320), and Node browser/presentation models (107 + 35).
+  Dedicated showcase coverage adds 18 Java and 70 HTTP checks.
 - An accessible native GET form with three labeled radio modes, keyword selected
   by default, Boolean help and a required query. Without JavaScript, it can
   navigate to the selected mode's raw JSON response.
@@ -205,6 +213,11 @@ not a production authorization or general-purpose file server.
 - Advanced Search has labeled single-word inputs, AND words within OR groups,
   add/remove controls, validation and an exact expression preview. It retains
   the existing Boolean backend, at least one group/word, and native GET fallback.
+- Premium Midnight Scholar styling uses local system fonts, native radio cards,
+  result cards and a coherent reader. Advanced words wrap to at most three per
+  wide row, two at intermediate container widths and one on narrow containers;
+  flex growth fills incomplete rows. Values and Boolean order are independent
+  of layout. Focus, compact accessible remove actions and reduced motion remain.
 - Every result links to `/reader.html` with encoded filename/query/mode, and has
   a separate original Download action. New-tab links use noopener/noreferrer.
 - `/document/view` returns indexed original bytes as UTF-8 plain text;
@@ -230,13 +243,20 @@ returns numeric values without that formatting. Browser results display no score
 | --- | --- | --- |
 | `SearchServer` | Immediate `.txt` files in `data/` | 6 original fictional documents |
 | `SearchServer --phrase-demo` | `data/phrase_samples/` | 9 separate fictional IIT-themed samples |
+| `SearchServer --showcase` | `data/showcase/` | 25 optional original fictional academic notes |
 
 The loader is not recursive, so the nested samples never silently join the
 default corpus. The [sample README](data/phrase_samples/README.md) describes the
-nine-file collection. Both collections are fictional, not official IIT records.
+nine-file collection. All three collections are fictional, not official IIT records.
 Startup selects the corpus; the browser's radio control selects an algorithm
 over that corpus, and its keyword selector optionally limits ranked results.
 The server accepts no arbitrary document-path option.
+
+The standard midterm route remains the original six/nine-file demonstration.
+For optional variety, see the [showcase inventory, measured queries and commands](data/showcase/README.md).
+It has 25 documents, 1,336 searchable terms and 3,808 processed tokens. Selection
+is startup-only: stop your own server and restart without arguments to return
+to the default. No HTTP/browser collection switch or new retrieval algorithm exists.
 
 The three modes keep separate semantics. AND/OR are operators only in Boolean
 mode. In keyword mode they remain filtered stop words, and quotes do not enable
@@ -459,6 +479,8 @@ Completed milestones:
 | Phase 3.5A | Grouped Advanced Search and hidden browser scores; `35482fa` |
 | Phase 3.5B | Indexed original-byte viewing/downloading; `e1f433c` |
 | Phase 3.5C | Contextual snippets, shared highlights and reader; `ab6eacc` |
+| Phase 3.5D Part 1 | Reviewed stabilization documentation and Manual #15; `cdc3b50` |
+| Premium UI | Midnight Scholar and adaptive Advanced Search; `143ab55` |
 
 The Phase 2 integration used `git merge --ff-only feat/browser-client`; later
 reviewed feature branches were also integrated with fast-forward-only merges
@@ -470,7 +492,7 @@ pending capabilities and unconfirmed supervisor decisions.
 Current stabilization and future work:
 
 - Phase 3.5D is active: fresh regressions, documentation, one consolidated manual
-  and a demonstration runbook. These documentation changes await review; slides,
+  and a demonstration runbook. Part 1 documentation is integrated; slides,
   speech, rehearsal and student viva practice are not completed by this task.
 - November 9 freezes features; November 10 is for slides and speech; November 11
   is for rehearsal, code explanation and viva preparation.
@@ -518,13 +540,16 @@ tests/
   PhraseHttpTests.ps1    Thirteen default / twenty-two demo HTTP checks
   BooleanHttpTests.ps1   Twenty-two checks per collection
   TopKHttpTests.ps1      Thirty-two checks per collection
-  RunHttpIntegrationTests.ps1  Owned-server test runner for both collections
+  RunHttpIntegrationTests.ps1  Owned-server test runner for all three fixed collections
   DocumentHttpTests.ps1  55 default / 61 demo indexed-document checks
   ReaderHttpTests.ps1    21 default / 24 demo reader compatibility checks
-  BrowserClientTests.js  94 DOM/fetch client model checks
-  HighlightPresentationTests.js  33 matcher/reader checks
+  ShowcaseCorpusTests.java  18 dedicated corpus checks
+  ShowcaseHttpTests.ps1  2 default / 2 demo / 66 showcase checks
+  BrowserClientTests.js  107 DOM/fetch client model checks
+  HighlightPresentationTests.js  35 matcher/reader checks
 data/                    Six fictional demonstration text documents
   phrase_samples/       Nine separate fictional samples and collection README
+  showcase/             Optional 25 fictional notes, provenance and measured examples
 web/
   index.html            Semantic search form and result containers
   app.js                GET API requests and safe DOM result rendering
@@ -536,6 +561,7 @@ documents/               Original proposal form and proposal presentation
 docs/
   MIDTERM_SUPERVISOR_PLAN_2026-11.md  Reported feedback, implementation/evidence status
   MIDTERM_DEMO_RUNBOOK_2026-11.md    Windows startup, verified queries and safe cleanup
+  FINAL_REPOSITORY_AUDIT_2026-11.md  Final audit findings and separate regression counts
 learnings/               Learning journal and viva preparation
   README.md             Learning index and reading sequence
   01-phase1-foundations.md
@@ -562,7 +588,7 @@ README.md
 The proposal, slides, and prototype archive preserve earlier project stages.
 Their proposed algorithms and schedules are not a record of current features.
 The fourteen published learning manuals keep their historical checkpoints and
-test evidence. Manual #15 consolidates current Phase 3.5 behavior for review.
+test evidence. Manual #15 was integrated in Part 1; its dated checkpoint remains historical.
 
 ## Build, run, and test
 
@@ -576,7 +602,7 @@ project's verified toolchain is JDK 25; no dependency installation is needed.
 $projectJdk = 'C:\Program Files\Eclipse Adoptium\jdk-25.0.3.9-hotspot'
 & "$projectJdk\bin\javac.exe" -version
 & "$projectJdk\bin\java.exe" -version
-& "$projectJdk\bin\javac.exe" -encoding UTF-8 -d out\app src\*.java tests\BaselineTests.java tests\PositionalIndexTests.java tests\PhraseSearchTests.java tests\BooleanSearchTests.java tests\TopKSearchTests.java tests\IndexedDocumentTests.java
+& "$projectJdk\bin\javac.exe" -encoding UTF-8 -d out\app src\*.java tests\*.java
 if ($LASTEXITCODE -ne 0) { throw 'Compilation failed' }
 ```
 
@@ -614,6 +640,8 @@ Expected passes are 7, 13, 18, 22, 26 and 14 respectively: **100 Java passes**,
 The skipped fixture is not a pass. Checks use explicit `AssertionError`s, so `-ea`
 is unnecessary. Temporary fixtures are separate from data and cleaned up by the
 harnesses; corpus-specific tests read the existing six- and nine-file collections.
+Run the additional showcase suite separately with
+`& "$projectJdk\bin\java.exe" -cp out\app ShowcaseCorpusTests` (18 checks).
 
 ### HTTP server
 
@@ -706,7 +734,8 @@ the port.
 ### Complete HTTP and browser-client regressions
 
 After compiling, stop any server you launched before running the managed HTTP
-runner from the repository root:
+runner from the repository root. It now also runs the dedicated showcase HTTP
+suite, while retaining every original six/nine-file test:
 
 ```powershell
 powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\tests\RunHttpIntegrationTests.ps1
@@ -733,12 +762,16 @@ ownership, and stops only its own verified servers. CIM permissions must be
 available; if denied, stop and request authorization for those safety checks.
 Never remove the ownership checks, elevate automatically or kill an unknown PID.
 
-Current HTTP checks: 16 original default-only, phrase 13/22, Boolean 22/22,
+Original HTTP checks: 16 default-only, phrase 13/22, Boolean 22/22,
 Top-K 32/32, documents 55/61 and reader 21/24 = **320**. Startup-argument and
 collection-log checks are additional supporting checks, excluded from that count.
-The two Node models contribute **94 + 33** named checks. Together with **100**
-Java passes, the repeatable total is **547**, with one separately skipped fixture.
+The two Node models contribute **107 + 35** named checks. Together with **100**
+Java and **320** original HTTP passes, the original regression is **562**, with
+one separately skipped fixture. Showcase coverage adds **18 Java + 70 HTTP**
+(2 default isolation, 2 demo isolation, 66 showcase), for **650 passes** overall.
 These models do not substitute for a real browser.
+
+<a id="http-integration-smoke-tests-phase-25a"></a>
 
 ### Original HTTP integration smoke tests (Phase 2.5A)
 
@@ -765,7 +798,29 @@ These are HTTP integration checks, not browser interaction or accessibility test
 
 ## Testing and verification record
 
-### Fresh stabilization verification: November 9, 2026
+### Current final-audit verification: November 10, 2026
+
+Starting clean local/fetched main: `143ab553095b95b572ae55016de3850180054fef`.
+The complete original suite passed before any changes (562/0/1 skipped), and
+again after adding the optional corpus. Temurin 25.0.3+9 compilation passed.
+
+| Final suite | Passed | Failed | Skipped |
+| --- | ---: | ---: | ---: |
+| Original six Java suites | 100 | 0 | 1 |
+| Original HTTP: default / phrase-demo | 159 + 161 | 0 | 0 |
+| Browser model / highlighting-reader | 107 + 35 | 0 | 0 |
+| **Original subtotal** | **562** | **0** | **1** |
+| Showcase Java | 18 | 0 | 0 |
+| Showcase HTTP: default / phrase-demo / showcase | 2 + 2 + 66 | 0 | 0 |
+| **Combined repeatable suite** | **650** | **0** | **1** |
+
+Five JS syntax checks and eight PowerShell parses passed. The managed runner
+retains executable, command-line, PID, loopback and cleanup checks for all three
+collections. Startup rejection/log guards are supporting checks, not extra named
+passes in the table. No benchmark or full production-security audit is claimed.
+See the [final audit](docs/FINAL_REPOSITORY_AUDIT_2026-11.md) for evidence and limitations.
+
+### Historical stabilization verification: November 9, 2026
 
 Codex compiled the integrated application baseline `ab6eacc43b9b8424f332304f18729255ef45d3a0`
 with Temurin 25.0.3+9 and freshly executed all suites during Phase 3.5D Part 1:
@@ -793,8 +848,8 @@ The student separately reported successful manual Edge acceptance of Phases
 open/download, snippets, mode-appropriate highlights, reader and raw access.
 This is **student-reported manual verification**, not Codex-run browser automation.
 No additional keyboard-only, screen-reader, responsive/zoom matrix or slow-network
-manual coverage is inferred. Documentation changes are awaiting independent
-review; slides, speech, rehearsal and viva practice remain pending.
+manual coverage is inferred. This was the Part 1 record before documentation
+review/integration at `cdc3b50`; slides, speech, rehearsal and viva practice remain pending.
 
 The seven Phase 3.5A temporary truth-table checks were earlier evidence and are
 not included in the persistent 547-check suite. The historical records below
@@ -981,11 +1036,13 @@ verification evidence and limits, viva preparation, and self-practice prompts.
 Earlier manuals retain their historical milestone context. The new
 [consolidated Phase 3.5 manual](learnings/03-08-phase-35-midterm-features.md),
 Manual #15, covers the integrated pipeline, document access, highlights, tradeoffs
-and 25 viva questions. It is a review draft; student study/practice is not implied.
+and 25 viva questions. It retains its November 9 record; student study/practice is not implied.
+The [showcase learning note](data/showcase/README.md#learning-note-collection-selection-and-adaptive-fields)
+explains collection selection and the later adaptive Premium UI without rewriting older manuals.
 
 ## Current limitations
 
-- Only the six default or nine separate fictional `.txt` documents are supported
+- Only the six default, nine phrase-demo or optional 25 showcase fictional `.txt` documents are supported
   for this midterm demonstration; no real IIT private-document access is authorized.
 - Loopback-only `127.0.0.1:8080`; no network deployment, TLS, login or per-document
   authorization system. Exact snapshot allowlisting is a prototype boundary,
@@ -1015,6 +1072,8 @@ and 25 viva questions. It is a review draft; student study/practice is not impli
   Comprehensive accessibility, browser/device coverage, retrieval quality,
   scalability and production security have not been established.
 
-Feature development is frozen for the midterm. Phase 3.5D documentation review,
-November 10 slides/speech and November 11 rehearsal/viva preparation remain the
-next work; post-midterm proposals require further agreement.
+Retrieval and UI development are frozen for midterm. This explicitly authorized
+final audit adds only a fixed optional fictional collection; its branch still
+needs independent review and student Edge acceptance. Part 1 documentation is
+integrated. Slides/speech and November 11 rehearsal/viva preparation remain
+separate work; post-midterm proposals require further agreement.

@@ -1,0 +1,8 @@
+Student Workshop on Accessible Interfaces
+Fictional study material; not an official university document.
+
+An imagined workshop reviews the browser interface of a software search prototype. Participants move through native radio controls, labeled fields, and ordinary buttons using the keyboard. They explain why an icon-only remove action still needs a meaningful accessible name, and why the last remaining word should not disappear from a logical group.
+
+The Java backend remains unchanged while the page reorganizes one-word inputs. Wide containers can hold three equal fields, intermediate containers two, and narrow containers one. Incomplete rows expand to use available width. The logical arrays preserve word order independently of CSS layout, so reflow cannot introduce a Boolean operator or discard an operand.
+
+Pairs inspect focus after adding and removing fields, invalid-state messages, and reduced-motion preferences. Subtle entrance animation must never delay editing or imply that a request has finished. They also discuss readable contrast on a classroom projector. These notes offer fictional practice activities, not proof of an accessibility certification or a completed device matrix. A real browser and assistive technology still provide evidence that a DOM model alone cannot supply.

@@ -1,0 +1,8 @@
+Original Document Access Review
+Fictional study material; not an official university document.
+
+A prototype review follows a search result from its filename to the corresponding original text. The Java engine retains the bytes accepted during indexing, allowing search and reading to refer to the same loaded content. If a source file changes later, the current snapshot remains available until an intentional rebuild or restart. This predictable behavior is useful during a short demonstration.
+
+The software team compares three actions. A highlighted reader adds safe visual marks around verified tokens. A raw view returns plain text without presentation markup. A download adds an attachment instruction while keeping the original bytes exactly intact. The reviewer checks these distinctions instead of treating every link as the same operation.
+
+Only an exact indexed filename can return content. Unknown names receive a small not-found response, and invalid path syntax receives a validation error. Neither response should disclose a local directory. Participants discuss defensive copies and failed rebuild preservation, then list the permissions a real shared service would need. The exercise contains no confidential material and does not represent a production authorization design.

@@ -1,0 +1,8 @@
+Research Seminar on Reproducible Retrieval
+Fictional study material; not an official university document.
+
+A seminar considers what makes a search demonstration reproducible. Participants record the exact collection, query mode, normalized input, and returned filename order. An assertion that a result looks plausible is weaker than a saved expectation checked against the actual engine. The group distinguishes functional regression from evaluating how well results answer human information needs.
+
+The software discussion introduces relevance judgments as future work rather than pretending the fictional collection supplies a research benchmark. Participants compare keyword ranking, exact phrases, and explicit Boolean conditions. Each has useful properties and limits. A larger vocabulary can reveal more varied matches without establishing a better algorithm or a statistically meaningful evaluation.
+
+In the reading room, the speakers inspect complete source documents after viewing short excerpts. They verify that a highlight refers to actual normalized tokens and that an OR alternative need not occur in every result. The final questions concern transparent reporting, corpus provenance, and permission before deployment. No real seminar booking, institutional announcement, experimental timing, or supervisor decision is represented by this invented educational note.

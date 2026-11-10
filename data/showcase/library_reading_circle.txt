@@ -1,0 +1,8 @@
+Library Reading Circle
+Fictional study material; not an official university document.
+
+An imaginary reading circle gathers in the reading room to compare introductory books about algorithms and software design. Each participant selects one paragraph and explains its assumptions in plain language. The activity values a careful explanation more than the number of pages covered. An invented catalogue supplies titles so no genuine borrowing history is needed.
+
+The group discusses Java examples alongside language-independent ideas such as invariants, abstraction, and testing. A library search may find both a narrowly relevant tutorial and a broad overview. Participants note that frequent technical words can improve a simple ranking score without guaranteeing that the document answers a particular question. Human judgment remains necessary.
+
+At the end, the circle records three reproducible questions and returns to the full source whenever a short preview is ambiguous. They distinguish an excerpt from a generated summary and check that highlighting preserves punctuation. A separate volunteer prepares a reading list for another fictional meeting. No room booking, lending rule, official announcement, or access permission is created by this practice document.

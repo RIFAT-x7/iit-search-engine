@@ -1,0 +1,8 @@
+Research Ethics and Document Permissions
+Fictional study material; not an official university document.
+
+A research discussion asks when a useful search prototype may begin collecting real documents. Technical availability alone is not sufficient. A publicly reachable file can still have copyright, consent, or redistribution restrictions. Participants distinguish permission to read a source from permission to index it, expose a snippet, or provide an original download to another person.
+
+The software planning worksheet separates authentication from authorization. Knowing who a reader is does not automatically permit every document. Filenames and even the existence of a matching result can reveal sensitive information, so controls must cover more than the download link. Network membership is also insufficient as a permission rule.
+
+The group chooses invented text for the demonstration and records that no official policy is being issued. Future ingestion would require an agreed source list, a rights review, a document lifecycle, and tests for denied requests. Students explain why hiding a browser button cannot replace a server decision. The final reflection emphasizes honest reporting of limitations and distinguishes supervisor discussion from explicit approval of deployment or private records.

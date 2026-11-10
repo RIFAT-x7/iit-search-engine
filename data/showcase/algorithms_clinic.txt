@@ -1,0 +1,8 @@
+Algorithms Clinic: Choosing a Search Strategy
+Fictional study material; not an official university document.
+
+A small study circle compares linear search and binary search using a catalogue of invented equipment names. The first worksheet deliberately leaves its entries unsorted. A participant explains why repeatedly dividing that worksheet cannot guarantee a correct answer. The group sorts a copy before attempting the second strategy, keeping the preparation cost visible instead of reporting only the final lookup.
+
+The software exercise uses Java arrays and a handwritten comparison table. Students count inspected entries for a successful query near the beginning, another near the end, and an absent item. They discuss why one tiny example cannot establish a general complexity claim. Binary search needs an ordering assumption, while a linear scan can inspect any ordinary list.
+
+The final discussion separates correctness from speed. Each pair writes a loop invariant, checks the empty array, and explains the termination condition. A short reflection connects these habits to testing larger software systems. No timing numbers or assessment grades are supplied; the purpose is to practice reasoning that another reader can reproduce.

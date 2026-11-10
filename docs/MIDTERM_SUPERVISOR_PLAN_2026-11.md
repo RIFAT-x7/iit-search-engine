@@ -12,11 +12,34 @@
 
 This record began as the November supervisor replanning checkpoint and now
 tracks implementation and acceptance. The original rationale and requirements
-are retained below. Phases 3.5A-3.5C are integrated; 3.5D Part 1 is active and
-awaits independent review. Application features are frozen for midterm.
+are retained below. Phases 3.5A-3.5C and the reviewed 3.5D Part 1 documentation
+are integrated. Presentation/rehearsal/viva preparation remains open.
+Retrieval and UI features are frozen for midterm.
 The student supervises, ChatGPT plans and audits, and Codex implements and reports
 within the authorized milestone. Independent student
 review is required before a subsequent implementation instruction.
+
+## CURRENT checkpoint: November 10, 2026
+
+Verified clean main/origin main: `143ab553095b95b572ae55016de3850180054fef`
+(Premium Midnight Scholar and adaptive Advanced Search). Part 1 documentation
+integrated at `cdc3b504f231d9fc961648970318f103c6543b59`. Original regression
+rerun before and after the optional corpus: **562 passed, 0 failed, 1 skipped**:
+100 Java, 320 HTTP, 107 browser-model, 35 highlighting/reader. The Windows
+symlink fixture remains unexecuted because creation privileges are unavailable.
+
+The student explicitly authorized a final audit and isolated optional showcase:
+25 original fictional documents selected only by `SearchServer --showcase`.
+No changes to algorithms, UI, raw-document contracts or the original collections.
+Dedicated checks add 18 Java + 70 HTTP passes (650 overall, zero failures,
+one skip). The branch remains uncommitted pending review and student Edge
+acceptance of the optional collection. See the [audit](FINAL_REPOSITORY_AUDIT_2026-11.md).
+This later bounded instruction is not a claimed supervisor approval or a new
+phase of retrieval work. Earlier dated evidence and planning rationale remain below.
+
+Existing functional and Premium UI Edge acceptance is **student-reported**.
+It does not establish a comprehensive accessibility/device matrix or acceptance
+of the new corpus. Slides, speech, timed rehearsal and viva practice are pending.
 
 ## A. Supervisor feedback
 
@@ -62,12 +85,12 @@ indexes six immediate text files in `data/`; `--phrase-demo` instead indexes nin
 files in `data/phrase_samples/`. Both collections are fictional. Fourteen
 historical [learning manuals](../learnings/README.md) are retained, plus one new
 [consolidated Phase 3.5 manual](../learnings/03-08-phase-35-midterm-features.md)
-prepared for review. See the [README](../README.md) for
+reviewed and integrated with Part 1 at `cdc3b50`. See the [README](../README.md) for
 architecture, build/run commands, limitations and historical checkpoints.
 
 The previous Codex-reported integration evidence is **287/287 checks: 86 Java,
 159 HTTP and 42 JavaScript client-model checks**. These are historical results,
-not the current stabilization run. Fresh November 9 evidence is **547 passed,
+not the current stabilization run. Historical November 9 evidence is **547 passed,
 0 failed, 1 skipped**: 100 Java, 320 HTTP, 94 browser-model and 33 presentation/
 reader passes, with one skipped Windows symlink fixture. Temurin 25.0.3 compilation,
 five JavaScript checks and seven PowerShell parses passed. Both HTTP collections
@@ -114,9 +137,9 @@ Its two commits were `9543bc0` (reported feedback and revised scope) and
 `13ea98f` (grouped Advanced Search semantics). The original acceptance required
 source/link/Git/whitespace audits, correctly attributed feedback, retained
 historical records and no application implementation in that checkpoint.
-Those historical three-file workflow instructions do not authorize publication
-of the six-file Phase 3.5D draft. Part 1 authoring stopped before commit/push;
-branch publication is a separate, explicitly authorized review step.
+Those historical three-file workflow instructions did not authorize publication
+of the six-file Phase 3.5D draft. Later separate publication and integration
+instructions completed its review/main integration at `cdc3b50`.
 
 ## D. Phase 3.5A: Advanced Search and result presentation
 
@@ -312,13 +335,13 @@ Acceptance criteria, limitations and test expectations:
 
 ## G. Phase 3.5D: Midterm stabilization
 
-**Status: active Part 1; fresh regression complete, documentation awaiting review.**
+**Status: Part 1 documentation reviewed and integrated; final preparation remains active.**
 
-Application features are frozen. The six-file documentation draft includes
+Retrieval/UI features are frozen. The integrated six-file documentation includes
 current README/roadmap/plan/index, one consolidated manual and the
-[demo runbook](MIDTERM_DEMO_RUNBOOK_2026-11.md). Part 1 prepared the draft without
-publication. Separately authorized branch publication enables independent review;
-it does not integrate main or complete acceptance. Slides/speech are planned
+[demo runbook](MIDTERM_DEMO_RUNBOOK_2026-11.md). Part 1 initially prepared a draft;
+later explicit review/publication/integration completed it at `cdc3b50`.
+That does not complete presentation readiness. Slides/speech are planned
 November 10; rehearsal, code
 comprehension and student viva practice November 11. Phase 3.5D remains open
 until accepted; automated success is not presentation readiness.
@@ -343,7 +366,8 @@ until accepted; automated success is not presentation readiness.
   Use the owned-server runner; never stop an unidentified port-8080 listener.
 - Finish relevant learning documentation and viva study notes. The student should
   explain request flow, Boolean precedence, scoring, Top-K and safe document access.
-- Integrate reviewed work into main only under the next authorized workflow.
+- The reviewed Part 1 documents are already integrated into main. Integrate any
+  later reviewed branch only under a separately authorized workflow.
   Prepare reproducible startup, queries, expected documents and cleanup steps for
   a fictional-data supervisor demonstration. Preserve known-working checkpoints.
 - Protect November 10 for slides/speech and November 11 for rehearsal/viva. No network
@@ -365,13 +389,15 @@ exhaustive testing. Publication/preparation items remain unchecked.
 - [x] Contextual source snippets and neutral unavailable/empty fallback.
 - [x] Shared safe snippet/reader highlights under documented matching rules.
 - [x] Existing keyword, phrase and Boolean retrieval regression passes.
-- [x] Fresh complete regression and syntax checks, both collections: 547 passed,
+- [x] Fresh original regression and syntax checks, both collections: 562 passed,
       0 failed; one symlink fixture skipped (not a pass).
 - [x] Student-reported manual functional Microsoft Edge acceptance recorded above.
 - [x] Phase 3.5A-3.5C reviewed implementation integrated into main.
-- [ ] This six-file documentation/manual/runbook draft independently accepted
-      and integrated into main under a later explicit instruction. Branch
-      publication for review does not complete this item.
+- [x] Six-file documentation/manual/runbook independently reviewed and integrated
+      into main at `cdc3b50`; preserved as a historical milestone.
+- [x] Premium UI/adaptive Advanced Search integrated at `143ab55`; student-reported Edge acceptance.
+- [ ] Optional showcase branch independently reviewed, accepted in Edge by the
+      student and integrated only under a later explicit instruction.
 - [ ] Runbook sequence rehearsed end-to-end by the student with timing confirmed.
 - [ ] Presentation slides and speech prepared (planned November 10).
 - [ ] Student code explanation, rehearsal and viva practice completed (November 11).

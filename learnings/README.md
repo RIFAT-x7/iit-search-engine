@@ -54,19 +54,26 @@ assistance and should be read alongside the source code.
 15. [Phase 3.5: Midterm features and complete pipeline](03-08-phase-35-midterm-features.md) —
     One consolidated manual for grouped Advanced Search, ranking/Top-K, phrases,
     indexed original-byte access, source snippets, shared safe highlights and
-    25 viva questions. Prepared for Phase 3.5D review; student practice is pending.
+    25 viva questions. Reviewed and integrated with Part 1; student practice is pending.
 
-Phases through 3.5C are integrated at `ab6eacc43b9b8424f332304f18729255ef45d3a0`.
-The application feature set is frozen. Fresh November 9 stabilization checks
-passed 547 named checks: 100 Java, 320 HTTP, 94 browser-model and 33 presentation/
-reader checks; 0 failed and 1 Windows symlink fixture skipped. The student
+**CURRENT, November 10:** Premium UI main checkpoint
+`143ab553095b95b572ae55016de3850180054fef`; Part 1 documentation integrated at
+`cdc3b504f231d9fc961648970318f103c6543b59`. The original regression freshly
+passed 562 checks before and after the optional showcase: 100 Java, 320 HTTP,
+107 browser-model, 35 highlighting/reader; zero failures, one Windows symlink
+fixture skipped. Showcase checks add 18 Java and 70 HTTP passes (650 overall).
+The optional branch is not yet published/accepted. The student
 separately reported successful manual Edge acceptance of 3.5A-3.5C on both
 collections; Codex did not independently perform those browser checks.
 See the [project README](../README.md) for current commands and evidence, and the
 [demo runbook](../docs/MIDTERM_DEMO_RUNBOOK_2026-11.md) for a reproducible presentation.
-The earlier seven Java/16 HTTP and 287-check records remain historical baselines.
+The earlier seven Java/16 HTTP, 287-check and November 9 547-check records remain historical baselines.
 Each manual keeps the historical checkpoint it explains, so an older description
 of a planned feature may refer to work completed in a later milestone.
+
+Supplement: [collection selection and adaptive Advanced Search](../data/showcase/README.md#learning-note-collection-selection-and-adaptive-fields).
+This concise note explains the new startup option and the integrated Premium
+UI layout without rewriting any of the 15 dated manuals or adding a new algorithm.
 
 ## How to use the notes
 

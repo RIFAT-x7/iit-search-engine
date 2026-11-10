@@ -1,0 +1,8 @@
+Heap Ranking Notes for Keyword Results
+Fictional study material; not an official university document.
+
+A study notebook traces ranked software search without changing its scoring formula. Term frequency measures occurrences inside a document. Smoothed inverse document frequency gives rarer terms a larger contribution across the selected collection. The sum orders matching candidates, while equal values use filename order. Repeating the query word does not multiply its weight.
+
+The Java exercise retains only a requested prefix using a bounded heap. The weakest retained candidate sits at the root. A stronger arrival replaces it, followed by a local repair. After all candidates have been considered, extraction and reversal produce the same order as unrestricted ranking. The notebook explicitly includes candidate scoring costs instead of describing the whole query as logarithmic time.
+
+Students compare All results, Top 3, Top 5, and Top 10 on an invented collection with enough software documents to make the difference visible. They verify every limited response against the unrestricted prefix, including score values. Browser score hiding is discussed as a presentation choice only. No relevance percentage, measured speedup, or alternate ranking model is invented for the notebook.

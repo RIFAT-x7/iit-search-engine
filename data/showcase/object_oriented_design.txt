@@ -1,0 +1,8 @@
+Object Oriented Design Review
+Fictional study material; not an official university document.
+
+A design review studies a fictional document catalogue with Java classes for metadata, results, and indexing. Each object has a small responsibility. Metadata identifies a record, a search result associates that record with a score, and an engine coordinates retrieval. Keeping these roles distinct makes changes easier to explain during a code walkthrough.
+
+The software group considers whether original content belongs in every result object. They instead discuss one private snapshot owned by the engine, with defensive copies at its boundary. Exposing a mutable byte array would let a caller change served content without a deliberate rebuild. Encapsulation therefore protects behavior as well as making a diagram tidy.
+
+Students trace constructors, final fields, accessors, and collection ownership. They compare a failed build with a successful replacement and ask which state remains usable. The review also warns against unnecessary inheritance and abstractions that hide a simple operation. A final exercise asks each pair to explain one design tradeoff in ordinary language. No new framework, persistence layer, or retrieval algorithm is required for this invented review.

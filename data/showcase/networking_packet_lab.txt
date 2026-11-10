@@ -1,0 +1,8 @@
+Computer Networking Packet Laboratory
+Fictional study material; not an official university document.
+
+A computer networking exercise follows invented packets through a small simulated topology. Students compare addresses, routing decisions, and queue length without capturing real network traffic. One worksheet introduces a delayed packet and asks whether the delay comes from transmission, processing, or waiting. Another explains why a successful local request says little about a remote deployment.
+
+The prototype uses Java for recording observations, while a separate search worksheet locates descriptions of packet loss. The words are intentionally separated in that explanation: a broad keyword request can match them without establishing an adjacent phrase. Participants contrast document-wide Boolean conditions with ordered positional matching and inspect the source before claiming a phrase occurrence.
+
+The software report includes topology assumptions, synthetic inputs, and clear error cases. It avoids invented performance measurements and does not connect to university equipment. Students explain loopback binding and why changing to a shared network would require explicit permission and security review. The laboratory concludes with a readable diagram and a comparison table, not a production router configuration or official network policy.

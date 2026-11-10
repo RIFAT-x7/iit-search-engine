@@ -1,0 +1,8 @@
+Software Project Planning Board
+Fictional study material; not an official university document.
+
+A fictional software team prepares a small milestone board for a research prototype. Tasks are divided into implementation, automated verification, independent review, and manual acceptance. Finishing one column does not silently complete the others. The board reserves time for explanation and rehearsal because a working feature is not automatically a clear academic presentation.
+
+The Java prototype already supports several retrieval modes, so the group freezes algorithms and focuses on predictable demonstration steps. An optional dataset is kept separate from the standard examples. If the larger collection introduces trouble, the presenter can restart the original six-document collection without changing any files or search rules.
+
+The planning discussion records risks rather than optimistic promises: an occupied port, a wrong working directory, stale compiled classes, and unverified expected results. Each risk has a simple check or fallback. Students agree to report blocked tests and distinguish current executions from historical totals. This invented board assigns no real person a task and asserts no supervisor approval. Its purpose is to illustrate small reviewable increments and protection of preparation time.

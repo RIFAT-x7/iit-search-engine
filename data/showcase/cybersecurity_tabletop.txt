@@ -1,0 +1,8 @@
+Cybersecurity Tabletop for a Local Prototype
+Fictional study material; not an official university document.
+
+A fictional software team examines how a harmless filename link might become dangerous if a server treated it as an unrestricted filesystem path. Reviewers sketch requests containing directory separators, encoded traversal, and absolute path syntax. They propose exact lookup against documents already accepted into the current index. A browser parameter should identify an allowed record, never choose a new directory to read.
+
+The Java discussion also covers strict decoding and safe attachment headers. An original text download must preserve bytes while preventing a supplied name from introducing extra response headers. The reader must display angle brackets as characters instead of executing them as markup. These are separate boundaries; protecting one does not establish complete security.
+
+The tabletop concludes with a list of missing production requirements: identity, document permissions, transport protection, operational monitoring, and rights to ingest real material. Running on localhost with fictional content reduces demonstration scope but does not supply authorization. Students practice explaining these limitations plainly. No attack is performed against another machine, and no real account information appears in the exercise.

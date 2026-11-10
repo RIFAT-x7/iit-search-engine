@@ -8,6 +8,28 @@ The original November planning checkpoint was `bfb28f676a73443a9cc383cb9ccad52b4
 Phase 3.4B was integrated earlier at `39f835359860866b504a487eef929a273c41c614`.
 Listing a future feature here does not establish approval or implementation.
 
+## CURRENT checkpoint: November 10, 2026
+
+Clean local main and fetched origin/main were verified at the approved Premium UI
+commit `143ab553095b95b572ae55016de3850180054fef`. Phase 3.5D Part 1 documentation
+was already reviewed and integrated at `cdc3b504f231d9fc961648970318f103c6543b59`.
+The Midnight Scholar UI and adaptive Advanced Search are integrated and have
+student-reported manual Edge acceptance. No UI/retrieval redesign is part of this audit.
+
+The original regression passed freshly before and after this change: **562 passed,
+0 failed, 1 Windows symlink fixture skipped** (100 Java, 320 HTTP, 107 browser-model,
+35 highlighting/reader). The explicitly authorized optional showcase adds 25
+original fictional text files, the fixed startup flag `--showcase`, 18 Java and
+70 HTTP checks: **650 passed overall**, 0 failed, 1 skipped. This branch is
+uncommitted pending independent review; optional-collection student Edge acceptance
+is pending. See the [audit](docs/FINAL_REPOSITORY_AUDIT_2026-11.md) and
+[showcase guide](data/showcase/README.md). It is not supervisor approval of
+real-document ingestion, deployment or additional algorithms.
+
+Earlier dated records below retain their original checkpoints. Where they say
+547, that is the November 9 historical suite, not the current total. Slides,
+timed rehearsal and viva practice remain open preparation items.
+
 ## Supervisor-feedback checkpoint: November 2026
 
 The student reports that the supervisor considers the existing algorithmic work
@@ -35,7 +57,7 @@ not strict AND or identical to score-free Boolean OR. Hide only browser numerica
 scores; preserve ranking, Top-K and the HTTP numeric score contract. The detailed
 plan retains the matching table; expansion and retrieval behavior have been tested.
 The seven temporary Phase 3.5A truth-table checks are historical evidence, not
-part of the persistent 547-check suite.
+part of the persistent original regression (now 562 checks).
 
 The [detailed Phase 3.5 plan](docs/MIDTERM_SUPERVISOR_PLAN_2026-11.md) defines
 acceptance criteria, tests, boundaries and risks. Phase 3.5R is integrated;
@@ -93,9 +115,11 @@ algorithms. Current capabilities include:
   unrestricted because the select begins disabled and has no form name. Mode or limit changes
   clear results and cancel/invalidate stale requests; safe textContent renders
   output in server order, without client-side sorting or truncation.
-- Two separate fixed fictional corpora: default startup loads the six immediate
+- Three separate fixed fictional corpora: default startup loads the six immediate
   `.txt` files in `data/`; `--phrase-demo` loads only the nine samples in
-  `data/phrase_samples/`. Neither is an official IIT document collection.
+  `data/phrase_samples/`; the optional `--showcase` loads 25 files only from
+  `data/showcase/`. None is an official IIT document collection. There is no
+  browser/API collection switch or recursive merging.
 - Grouped Advanced Search, browser-only hiding of numerical keyword scores,
   exact filename links and separate original downloads. Basic Keyword Search
   still ranks OR-like candidates; Advanced Search remains filename-ordered Boolean
@@ -107,7 +131,7 @@ algorithms. Current capabilities include:
 - Shared safe source-offset highlights and contextual previews; a complete reader
   preserves text/whitespace and links to unchanged raw text/download endpoints.
   Failed previews do not remove results; query/group edits invalidate stale work.
-- Fresh November 9 Phase 3.5D regression: **100 Java passed, 1 Windows symlink
+- Historical November 9 Phase 3.5D regression: **100 Java passed, 1 Windows symlink
   fixture skipped; 320 HTTP passed; 94 browser-model and 33 highlighting/reader
   passed; 547 passed, 0 failed overall**. Temurin JDK 25.0.3 compilation, five
   JavaScript syntax checks and seven PowerShell parses passed. Both collections
@@ -128,9 +152,9 @@ algorithms. Current capabilities include:
   and [Top-K HTTP/browser integration](learnings/03-07-top-k-http-browser.md).
   Earlier manuals retain their historical milestone context. One new
   [consolidated Phase 3.5 manual](learnings/03-08-phase-35-midterm-features.md)
-  and a [midterm demo runbook](docs/MIDTERM_DEMO_RUNBOOK_2026-11.md) are prepared
-  in this documentation branch for independent review; main integration and
-  final stabilization acceptance remain pending.
+  and a [midterm demo runbook](docs/MIDTERM_DEMO_RUNBOOK_2026-11.md) were reviewed
+  and integrated at `cdc3b50`. Their dated records are preserved. Presentation,
+  timed rehearsal and viva preparation are separate from documentation acceptance.
 
 Browser results show filename links, downloads and authentic previews without
 numerical scores. Keyword JSON retains its original numeric scores and schema.
@@ -228,7 +252,9 @@ not blanket supervisor approvals.
 | 3.5A | Completed and integrated (`35482fa`) | Advanced Search AND words within OR groups, add/remove controls, validation and preview; existing evaluator and mode=boolean compatibility; hide browser scores, preserve ranked keyword retrieval/HTTP scores/Top-K. |
 | 3.5B | Completed and integrated (`e1f433c`) | Exact indexed-filename snapshots; raw view and exact original download; collection isolation. |
 | 3.5C | Completed and integrated (`ab6eacc`) | Source excerpts, shared safe highlighting, reader and unchanged raw/download routes. |
-| 3.5D | Active; awaiting review and acceptance | Fresh regression and documentation Part 1; student-reported Edge acceptance recorded; manual/runbook draft; later slides, rehearsal and viva practice pending. |
+| 3.5D | Part 1 documentation integrated (`cdc3b50`); preparation active | Manual/runbook accepted; final audit refreshes evidence; slides, rehearsal and viva practice pending. |
+| Premium UI | Completed and integrated (`143ab55`) | Midnight Scholar, adaptive three/two/one-field wrapping, compact accessible controls and reduced motion; student-reported Edge acceptance. |
+| Optional showcase | Implemented locally; pending review | 25 isolated fictional documents, fixed `--showcase` startup only; original collections preserved. No new retrieval/UI features. |
 | 4 | Deferred; proposed after midterm | Document metadata and date filters; metadata model and date meaning need agreement. |
 | 5 | Deferred; proposed after midterm | Authorized document ingestion and text-based PDF extraction; rights and permitted collection need agreement. |
 | 6 | Deferred; proposed after midterm | Bangla/Unicode-aware text processing and multilingual retrieval; image/OCR work separately scoped and evaluated. |
@@ -243,9 +269,9 @@ exposure.
 Reported functional Edge acceptance is recorded above. Broader keyboard-only,
 zoom/reflow, screen-reader and device-matrix checks remain unverified; they are
 not a claim that the student must repeat already accepted functional scenarios.
-Documentation branch publication is separately authorized for GitHub review;
-main integration and final stabilization acceptance still require the next
-authorized review workflow.
+Part 1 documentation publication/review/main integration is complete. The optional
+showcase branch remains unpublished for independent review. Final preparation
+acceptance is not inferred from either documentation or automated test success.
 
 ## Questions for the supervisor: November 1, 2026
 

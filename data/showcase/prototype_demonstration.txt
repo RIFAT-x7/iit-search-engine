@@ -1,0 +1,8 @@
+Prototype Demonstration Rehearsal Notes
+Fictional study material; not an official university document.
+
+An invented rehearsal begins with a software presenter stating the boundaries of a localhost search prototype. The collection contains fictional text only. The presenter first enters a broad keyword, then narrows the visible ranked prefix using a result limit. Numerical scores remain available in JSON but are hidden in the browser so filenames and source passages receive attention.
+
+Next, the presenter builds an explicit AND group and adds an OR alternative. The preview is read aloud before submitting. A phrase example demonstrates ordered normalized tokens, followed by opening the complete highlighted reader. Raw viewing and original downloading are shown as separate actions. A failed preview should not remove an otherwise usable result.
+
+The Java discussion is brief: preprocessing creates tokens, postings support retrieval, and a selected mode chooses the existing algorithm. The browser adds presentation rather than recomputing relevance. The rehearsal ends with an unknown query and an honest account of skipped or pending checks. These notes describe a possible practice sequence, not evidence that any actual timed rehearsal, manual browser test, or examination has already taken place.

@@ -1,0 +1,8 @@
+Software Testing Workshop
+Fictional study material; not an official university document.
+
+A software testing workshop reviews how small assertions protect an academic search prototype. Unit checks exercise preprocessing, posting counts, phrase positions, Boolean precedence, and ranking ties. HTTP checks then inspect status codes, JSON fields, numeric scores, and exact download bytes. Browser models cover cancellation and safe rendering but do not establish real pixel layout or keyboard behavior by themselves.
+
+The Java exercise uses temporary files to show that changing source bytes after indexing does not alter a retained snapshot. Another case forces malformed UTF-8 during rebuilding and verifies that the previous usable state survives. The workshop emphasizes failure paths because a successful ordinary query cannot establish these properties.
+
+Participants review a report with a deliberately skipped environment-dependent fixture. They keep its count separate from passing checks and explain the missing evidence. They also distinguish an old result from a fresh run. The final activity asks pairs to preserve meaningful assertions while adapting harmless presentation changes. No test is removed merely to make a total green, and no performance benchmark or complete security audit is claimed for this fictional session.

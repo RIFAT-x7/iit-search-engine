@@ -1,0 +1,8 @@
+Java Programming Practice Session
+Fictional study material; not an official university document.
+
+A Java programming group develops a small console catalogue before connecting it to a browser. The first exercise reads UTF-8 text and rejects malformed input rather than silently replacing bytes. The second exercise separates immutable document metadata from index structures. Students explain how a filename and a document identifier serve different roles.
+
+The Java tutor demonstrates loops, arrays, maps, and exceptions with short examples. Each pair traces a Java search request and records which method validates the query, which method retrieves matches, and which method serializes JSON. The software remains dependency-free so the students can explain each major step without a framework hiding the request flow.
+
+Practice tasks include an empty query, repeated query terms, a missing document, and a successful request after an error. The team checks that changing the visual result card cannot change a numerical backend score. A final Java discussion reviews readable naming and small helper methods. This note describes an invented learning session, not a timetable, assessment instruction, or official laboratory requirement.

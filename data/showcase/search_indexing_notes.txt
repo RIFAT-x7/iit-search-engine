@@ -1,0 +1,8 @@
+Search Indexing and Rebuild Notes
+Fictional study material; not an official university document.
+
+A Java indexing notebook starts with sorted immediate text files in one selected directory. The loader reads original bytes, decodes them strictly, and scans lowercase ASCII letters and digits. Searchable frequency postings exclude configured stop words, while positional postings retain complete normalized sequences. Document identifiers follow sorted filenames within that build rather than serving as permanent global identities.
+
+The software exercise constructs fresh structures before replacing a usable index. A decoding failure in a later file must not expose half a new collection or discard earlier snapshots. Students compare this failed-build preservation with stronger concurrent publication guarantees, which the small prototype does not claim. They also verify that nested demonstration folders are not recursively merged.
+
+The notebook includes a Java search example and asks which operations happen at startup versus per query. Retrieval should use postings without reopening source files. Reading and downloading use retained original bytes through exact filename lookup. A final checklist covers document count, vocabulary, processed tokens, and collection isolation. No persistent index, background refresh, arbitrary path selector, or additional ranking method is added.

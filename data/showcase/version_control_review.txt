@@ -1,0 +1,8 @@
+Version Control Review Checklist
+Fictional study material; not an official university document.
+
+A fictional software group reviews a feature branch before publication. They verify the current repository, fetch the remote baseline, inspect the working tree, and identify exactly which files belong to the task. Staging is a deliberate selection, while committing records a local snapshot and pushing publishes it. These steps have different consequences and need separate checks.
+
+The Java prototype uses small milestones so an independent reviewer can compare a bounded diff with its tests. A clean working tree does not prove that remote main matches the local branch. Reviewers therefore compare complete commit identifiers and ancestry rather than relying only on a branch label or a short status message.
+
+The final worksheet describes a fast-forward integration that preserves the reviewed commit without creating a merge commit. It also lists actions to avoid when checkpoints differ: discarding work, rewriting history, or forcing a push. A pending test must remain visible in the report. The exercise creates no actual commit and grants no permission to publish; it explains how evidence and explicit authorization protect an academic project from accidental scope expansion.

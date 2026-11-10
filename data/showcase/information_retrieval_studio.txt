@@ -1,0 +1,8 @@
+Information Retrieval Studio
+Fictional study material; not an official university document.
+
+An information retrieval studio builds a miniature search index over invented academic notes. Students tokenize original text, count searchable words, and map each term to the documents containing it. Complete normalized positions are retained separately so an exact phrase can be verified later. The class compares this preparation with repeatedly scanning every file for every request.
+
+During the Java search demonstration, a query containing several ordinary words admits documents matching any searchable term. Relevance scores then determine ordering. An explicit Boolean expression instead intersects and unions document sets. A phrase request requires its complete token sequence in order. These operations answer different questions even when they happen to return the same filename.
+
+The software review checks case normalization, punctuation, repeated terms, and unknown words. A contextual preview is sliced from original source text rather than reconstructed from index tokens. Participants open the full reader to verify that highlights refer to actual content. The studio ends with a discussion of retrieval evaluation and the absence of judged relevance labels. A larger fictional corpus adds variety, not proof of research quality.

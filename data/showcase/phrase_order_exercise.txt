@@ -1,0 +1,8 @@
+Phrase Order and Adjacency Exercise
+Fictional study material; not an official university document.
+
+A worksheet asks learners to search Java examples by reading short source passages. That reversed order is deliberate. Finding both words somewhere in a document does not establish the opposite ordered phrase. Students write normalized token positions beneath each passage and compare a consecutive sequence with one interrupted by another word.
+
+The software exercise includes the sentence Java and programming can describe separate study topics. The connecting stop word occupies a position even though ranked keyword processing normally removes it. A phrase query must preserve that gap. Punctuation behaves differently: it separates normalized tokens without becoming a token itself, so a comma can occur between consecutive words in original text.
+
+Pairs test complete sequences, partial sequences, reversed sequences, and repeated tokens. They inspect highlights only after confirming a full occurrence. Isolated matching words should not be marked as if they form the requested phrase. The final reflection explains why character offsets used for browser marks are different from token positions used by the Java index. No approximate matching or new query grammar is introduced.

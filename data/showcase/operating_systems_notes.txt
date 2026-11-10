@@ -1,0 +1,8 @@
+Operating Systems: Processes and Files
+Fictional study material; not an official university document.
+
+A tutorial explores the difference between a program on disk and a running process. Several processes can execute the same Java launcher with different arguments, so an executable name alone is insufficient for safe cleanup. Participants inspect a fictional process table containing identifiers, command lines, and listener ownership. They decide which instance belongs to their test session.
+
+The software exercise then follows a file from disk bytes into memory. A snapshot can remain available after the source file is edited or removed, because a later read is served from memory rather than reopening the path. Students distinguish that behavior from automatic synchronization and discuss why a restart intentionally refreshes the demonstration state.
+
+Another worksheet covers permission errors and symbolic links. A denied operation should be reported accurately, and a skipped link fixture cannot establish a successful security test. The tutorial closes with resource lifetime, stream closing, and failure cleanup. All examples are invented and local. No operating system setting is changed, no unrelated process is stopped, and no privileged access is implied by these notes.

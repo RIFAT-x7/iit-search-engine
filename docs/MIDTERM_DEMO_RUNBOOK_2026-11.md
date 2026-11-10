@@ -4,9 +4,9 @@
 
 **Midterm:** November 12, 2026
 
-**Frozen application:** `ab6eacc43b9b8424f332304f18729255ef45d3a0`
+**Approved integrated application:** `143ab553095b95b572ae55016de3850180054fef`
 
-**Record:** November 9; Phase 3.5D Part 1 draft, awaiting independent review
+**Record:** November 9 Part 1, reviewed/integrated at `cdc3b50`; current audit addendum November 10
 
 Use fictional data only, on localhost. No feature development or redesign is
 part of this runbook. Slides/speech are planned November 10; rehearsal, code
@@ -15,7 +15,12 @@ by writing this document.
 
 ## 1. Evidence and remaining manual work
 
-- **Fresh Codex automated checks, November 9:** 100 Java, 320 HTTP, 94 browser-model
+- **CURRENT fresh Codex checks, November 10:** original regression 100 Java,
+  320 HTTP, 107 browser-model and 35 highlighting/reader = **562 passed, 0 failed,
+  1 Windows symlink fixture skipped**, before and after the optional corpus.
+  Dedicated showcase checks add 18 Java + 70 HTTP passes: **650 overall**, zero
+  failures, one skip. The optional corpus branch remains uncommitted for review.
+- **Historical Codex automated checks, November 9:** 100 Java, 320 HTTP, 94 browser-model
   and 33 highlighting/reader passes = **547 passed, 0 failed**, plus **1 skipped**
   Windows symlink fixture. Five JavaScript syntax checks, seven PowerShell parses
   and Temurin JDK 25.0.3 compilation passed. Both collections were tested.
@@ -23,12 +28,15 @@ by writing this document.
   Top-K, exact phrases, grouped Advanced Search, opening/downloading, previews,
   keyword/phrase/Boolean highlights, reader and raw access worked on both collections.
   Codex did not independently perform those manual browser checks.
+- **Premium UI acceptance:** explicitly student-reported, including adaptive
+  Advanced Search. This does not automatically accept the new optional corpus;
+  student Edge verification of that collection remains pending.
 - Sample query results below were also freshly inspected through the existing
   Java engine on both permanent corpora; that inspection is not another named
   regression suite or an independently performed Edge demonstration.
 - **Still pending:** student rehearsal of this timed runbook, slides/speech,
-  code/viva practice, independent GitHub documentation acceptance and main
-  integration. Branch publication for review does not complete those items. Comprehensive
+  code/viva practice, and optional-corpus independent review/student acceptance.
+  Part 1 documentation review and main integration are complete. Comprehensive
   keyboard-only, screen-reader, zoom/reflow, slow-network and device-matrix manual
   coverage is unverified; it is not inferred from functional Edge acceptance.
 - Symlink creation was denied by Windows privilege policy. Do not report that
@@ -47,7 +55,7 @@ git status --short --branch
 $projectJdk = 'C:\Program Files\Eclipse Adoptium\jdk-25.0.3.9-hotspot'
 & "$projectJdk\bin\javac.exe" -version
 & "$projectJdk\bin\java.exe" -version
-& "$projectJdk\bin\javac.exe" -encoding UTF-8 -d out\app src\*.java tests\BaselineTests.java tests\PositionalIndexTests.java tests\PhraseSearchTests.java tests\BooleanSearchTests.java tests\TopKSearchTests.java tests\IndexedDocumentTests.java
+& "$projectJdk\bin\javac.exe" -encoding UTF-8 -d out\app src\*.java tests\*.java
 if ($LASTEXITCODE -ne 0) { throw 'Compilation failed; do not demonstrate stale classes' }
 ```
 
@@ -121,7 +129,7 @@ Compile/test beforehand; begin with the default server and Edge page ready.
 | 2:45–3:35 | Exact Phrase Search: java search. Open one result to show verified complete-phrase token highlights. | information_retrieval_workshop.txt then java_programming_lab.txt. networking_lab.txt is absent because its words are separated; reverse_order_exercise.txt is absent because order is reversed. |
 | 3:35–4:10 | Change phrase to search java, then optionally error error or in the seminar room. | Reverse order gives reverse_order_exercise.txt; repeated/stop-word examples use the table below. |
 | 4:10–4:35 | Advanced Search: add an empty AND word or type java python into one field, then correct it. | Clear validation; no malformed Boolean request. Optionally use zzzznomatchingterm in Basic mode for No results found. |
-| 4:35–4:55 | Conclude with the regression/evidence boundary and future scope. | 547 automated passes, 1 skipped fixture; Edge functional acceptance is student-reported. PDF/Bangla/date/deployment remain deferred. |
+| 4:35–4:55 | Conclude with the regression/evidence boundary and future scope. | Original suite: 562 automated passes, 1 skipped fixture. Showcase adds 88 passes separately. Edge functional acceptance is student-reported. PDF/Bangla/date/deployment remain deferred. |
 
 If time is short, omit optional phrase variations and explain them from the table.
 Keep working search, reader and original access ahead of visual polish. Do not
@@ -172,6 +180,29 @@ error occurrences in software_engineering_coursework.txt do not satisfy the
 consecutive phrase error error. Phrase normalization retains stop words and
 allows punctuation between consecutive normalized words.
 
+### Optional showcase: keep separate from the standard timed sequence
+
+The six/nine-file sequence above remains the standard path. After review of
+this branch, the optional [showcase guide](../data/showcase/README.md) supplies
+25 original fictional notes and measured broader examples. Stop your own server,
+check port 8080 as in section 3, then run:
+
+```powershell
+& "$projectJdk\bin\java.exe" -cp out\app SearchServer --showcase
+```
+
+Startup must say `Collection: data/showcase` and `Indexed 25 documents.`.
+Basic `java` gives 23 matches; Top 3/5/10 show exact ranking prefixes. Phrase
+`java search` gives information_retrieval_studio.txt, java_programming_practice.txt,
+search_indexing_notes.txt; `search java` gives phrase_order_exercise.txt.
+The full inventory and other measured queries are in the guide, not guessed
+from themes. Refresh Edge and close old reader tabs when switching.
+
+To return to the standard demo, stop that owned server, check the port, and run
+`SearchServer` without arguments (six files) or with `--phrase-demo` (nine).
+There is no browser selector or mixed collection. Optional collection Edge
+acceptance is pending; do not claim the student's prior acceptance covers it.
+
 ## 6. Direct API and original-file examples
 
 Use terminal B while the **default** server is running. These commands inspect
@@ -219,6 +250,8 @@ foreach ($suite in @('BaselineTests','PositionalIndexTests','PhraseSearchTests',
     & "$projectJdk\bin\java.exe" "-Djava.io.tmpdir=$verificationTemp" -cp out\app $suite
     if ($LASTEXITCODE -ne 0) { throw "Java suite failed: $suite" }
 }
+& "$projectJdk\bin\java.exe" -cp out\app ShowcaseCorpusTests
+if ($LASTEXITCODE -ne 0) { throw 'Showcase Java failed' }
 powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\tests\RunHttpIntegrationTests.ps1
 if ($LASTEXITCODE -ne 0) { throw 'HTTP suite failed; inspect output and ownership safely' }
 foreach ($file in @('web/app.js','web/highlight.js','web/reader.js','tests/BrowserClientTests.js','tests/HighlightPresentationTests.js')) {
@@ -237,7 +270,7 @@ Get-ChildItem -LiteralPath tests -Filter *.ps1 | ForEach-Object {
 git diff --check
 ```
 
-| Suite | Fresh November 9 result |
+| Suite | Historical November 9 result |
 | --- | ---: |
 | Java: baseline / positional / phrase / Boolean / Top-K | 7 / 13 / 18 / 22 / 26 passed |
 | Indexed-document Java | 14 passed; 1 symlink fixture skipped |
@@ -251,6 +284,14 @@ owned cleanup; it confirmed port 8080 free after both servers. Startup-argument
 and collection-log checks support the run but are excluded from 547. The temporary
 seven-case Phase 3.5A Boolean truth table is historical and not double-counted.
 No optional synthetic benchmark is required or rerun for this stabilization task.
+
+**Current November 10 rerun:** the original 100 Java, 320 HTTP, 107 browser-model
+and 35 highlighting/reader checks passed before/after changes (562/0/1 skip).
+The added Java suite passed 18; added HTTP suite passed 2 on default, 2 on demo,
+66 on showcase. The managed runner now owns and verifies three successive servers;
+original HTTP assertions remain intact. Total 650 passed, zero failed, one skip.
+Counts exclude supporting startup/log checks and any browser spot checks. All
+five JS syntax checks and eight PowerShell parses passed.
 
 If CIM/process identity access is denied, stop and request explicit authorization
 for the existing safety checks. Do not remove checks, elevate automatically,
@@ -276,7 +317,8 @@ stop and diagnose; source/test fixes require new approval in this frozen scope.
 - [ ] Student rehearses the exact sequence and confirms a 3–5 minute duration.
 - [ ] Student can explain ranking, AND precedence, positions, snapshots and safe marks.
 - [ ] Slides/speech are prepared November 10; code/viva rehearsal November 11.
-- [ ] Published documentation branch is independently reviewed before main integration.
+- [x] Part 1 documentation reviewed and integrated at `cdc3b50`.
+- [ ] Optional showcase branch independently reviewed and manually accepted in Edge.
 
 Functional Edge acceptance is already student-reported in section 1. The unchecked
 items above are future preparation, not a claim that those accepted feature checks

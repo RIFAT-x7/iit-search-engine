@@ -1,0 +1,8 @@
+Database Catalogue Design Studio
+Fictional study material; not an official university document.
+
+A design studio builds a tiny catalogue of invented laboratory books. Participants separate book descriptions, shelf locations, and lending events into different tables. They explain how duplicate descriptions can drift when stored in every transaction. The exercise introduces keys and relationships through concrete examples before discussing normalization terminology.
+
+The software prototype uses Java objects to represent a few records in memory. Students compare an exact identifier lookup with a textual search over descriptions. An index for database equality is not automatically a ranked document retrieval system. The group records that distinction so a diagram does not imply features absent from the implementation.
+
+One worksheet asks for books about both networking and security; another permits either topic. Participants express the difference using explicit Boolean conditions and compare the resulting sets. They also discuss what a future date field would mean: publication, acquisition, or last revision. No date filter is added during this exercise. The final deliverable is a readable schema and a small set of test cases, not a claim of a deployed library service or access to genuine borrowing histories.

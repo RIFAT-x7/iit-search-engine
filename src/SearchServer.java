@@ -18,8 +18,10 @@ public class SearchServer {
             collection = "data";
         } else if (args.length == 1 && "--phrase-demo".equals(args[0])) {
             collection = "data/phrase_samples";
+        } else if (args.length == 1 && "--showcase".equals(args[0])) {
+            collection = "data/showcase";
         } else {
-            System.err.println("Unsupported arguments. Usage: SearchServer [--phrase-demo]");
+            System.err.println("Unsupported arguments. Usage: SearchServer [--phrase-demo | --showcase]");
             System.exit(1);
             return;
         }

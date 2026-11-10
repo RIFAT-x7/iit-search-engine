@@ -1,0 +1,8 @@
+Practice Laboratory Guidelines
+Fictional study material; not an official university document.
+
+An invented laboratory guide helps pairs prepare a reproducible software demonstration. Each pair records its compiler version, working directory, startup option, and selected fictional collection. They compile before launching so old class files do not disguise a source error. The guide recommends keeping a small known-working example ready when the main demonstration needs troubleshooting.
+
+The Java server occupies one loopback port. Students stop their own console process before starting another instance and identify an unexpected listener instead of terminating every Java process. A managed test runner should verify executable, command line, and listener ownership before cleanup. Permission errors must be reported rather than bypassed by removing checks.
+
+The final section covers browser refresh, source snapshots, and honest evidence. A page loaded successfully once does not prove keyboard accessibility or every responsive layout. A skipped fixture is not a pass. Participants retain original downloaded bytes and distinguish manual observations from automated assertions. These are educational suggestions for the fictional exercise; they do not establish any actual institutional laboratory policy or permission to modify a shared computer.

@@ -1,0 +1,8 @@
+Boolean Query Workshop
+Fictional study material; not an official university document.
+
+Participants arrange topic cards to explore explicit logical search. One table contains Java programming notes, another covers computer networking, and a third mixes unrelated laboratory activities. An AND condition requires both chosen words in the same document. An OR condition accepts a complete alternative. These rules decide membership rather than assigning a relevance score.
+
+The software demonstration uses two groups: java AND programming, OR computer AND networking. Each group is evaluated completely before its matches join the union. Shared conditions must appear again in each alternative when the intended meaning requires them everywhere. Students compare a correct expanded expression with a shortened expression that accidentally accepts documents missing the shared condition.
+
+Each input holds one searchable word. The worksheet excludes parentheses, NOT, wildcards, and metadata fields because those features are outside the prototype grammar. A reviewer tests an empty word, an unknown valid word, and a forbidden stop word. The group checks the generated expression before submission and keeps filename ordering separate from ranked keyword retrieval. This is a composition exercise around an existing Boolean evaluator.

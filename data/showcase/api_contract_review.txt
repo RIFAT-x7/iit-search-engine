@@ -1,0 +1,8 @@
+API Contract Review for a Fictional Catalogue
+Fictional study material; not an official university document.
+
+A prototype catalogue team reviews the contract between its Java server and browser client. The server returns a JSON object containing the accepted query and an ordered result array. Reviewers distinguish a successful empty array from an invalid request, since these outcomes require different messages. They also inspect quotation marks and line breaks in sample filenames to ensure serialization remains valid.
+
+The software testing worksheet asks whether a browser can change the order of authoritative results without misleading its user. Participants keep ranking in the backend and let the page present that order. Numerical scores remain available to API clients even when the visual interface hides them. An explicit contract helps prevent a presentation change from becoming an accidental retrieval change.
+
+Pairs then submit a missing query, a malformed limit, and an unsupported method. They record status codes rather than assuming every response is successful. The exercise ends with a compatibility checklist covering field names, numeric values, error bodies, and original document bytes. All requests use an invented local dataset, with no remote service or private records.
