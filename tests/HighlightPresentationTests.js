@@ -181,6 +181,27 @@ async function main() {
         for (const file of ["web/app.js", "web/reader.js", "web/highlight.js"]) { assert.doesNotMatch(fs.readFileSync(file, "utf8"), /innerHTML|outerHTML|insertAdjacentHTML|document\.write/); }
         assert.match(fs.readFileSync("web/styles.css", "utf8"), /#document-text[\s\S]*?white-space: pre-wrap/);
     });
+    await test("Reader visual states distinguish original text, empty documents and failures", async () => {
+        for (const [text, response, state] of [["Java", { ok: true }, "ready"], ["", { ok: true }, "empty"], ["", { ok: false, status: 404 }, "error"], ["", { error: true }, "error"]]) {
+            const page = await reader("?name=a.txt&q=java&mode=keyword", text, response);
+            assert.equal(page.elements["reader-status"].attributes["data-state"], state);
+        }
+        const invalid = await reader("?name=../a.txt");
+        assert.equal(invalid.elements["reader-status"].attributes["data-state"], "error");
+    });
+    await test("Shared design preserves skip links, local assets and reduced-motion support", () => {
+        for (const [file, target] of [["web/index.html", "main-content"], ["web/reader.html", "document-text"]]) {
+            const html = fs.readFileSync(file, "utf8");
+            assert.ok(html.includes('class="skip-link" href="#' + target + '"'));
+            assert.ok(html.includes('id="' + target + '"'));
+            assert.doesNotMatch(html, /(?:src|href)="https?:/);
+        }
+        const css = fs.readFileSync("web/styles.css", "utf8");
+        assert.match(css, /@media \(prefers-reduced-motion: reduce\)/);
+        assert.match(css, /animation: none !important/);
+        assert.match(css, /transition: none !important/);
+        assert.match(css, /a:focus-visible/);
+    });
     console.log("Total passed: " + passed + "; total failed: 0");
 }
 main().catch(error => { console.error(error); process.exitCode = 1; });

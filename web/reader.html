@@ -3,24 +3,32 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="theme-color" content="#101a33">
     <title>Text Document Reader — IIT Search Engine</title>
     <link rel="stylesheet" href="/styles.css">
     <script src="/highlight.js" defer></script>
     <script src="/reader.js" defer></script>
 </head>
-<body>
-    <main>
-        <h1 id="document-name">Text Document Reader</h1>
-        <p>Highlights show verified matching tokens. Advanced Search conditions apply across the whole
-            document; highlighted words need not occur together in one passage.</p>
-        <nav aria-label="Document actions">
-            <a id="download-original" hidden>Download Original</a>
-            <a id="view-raw" hidden>View Raw Text</a>
-            <a href="/">Back to Search</a>
-        </nav>
-        <p id="reader-status" role="status" aria-live="polite">Loading document…</p>
-        <pre id="document-text" aria-label="Original document text" aria-busy="true"></pre>
-        <noscript>This highlighted reader requires JavaScript. Use the raw view or download routes for plain text.</noscript>
+<body class="reader-page">
+    <a class="skip-link" href="#document-text">Skip to document text</a>
+    <div class="masthead">
+        <header class="site-header shell">
+            <a class="brand" href="/" aria-label="IIT Search Engine home"><span class="brand-emblem" aria-hidden="true"><svg viewBox="0 0 32 32" fill="none"><path d="M8 5h11l5 5v10M8 5v22h9M19 5v6h6M12 15h6M12 19h3"/><circle cx="22" cy="23" r="5"/><path d="m26 27 3 3"/></svg></span><span><strong>IIT Search Engine</strong><span class="brand-subtitle">Academic Document Discovery</span></span></a>
+            <span class="prototype-badge">SPL-1 <span aria-hidden="true">/</span> Document reader</span>
+        </header>
+        <div class="reader-heading shell"><p class="eyebrow">The original, in focus</p><h1 id="document-name">Text Document Reader</h1><p class="hero-description">Read the source. Follow the matching words. Keep the context.</p></div>
+    </div>
+    <main class="reader-workspace shell">
+        <nav class="reader-actions" aria-label="Document actions"><a href="/" class="back-link">← Back to Search</a><div class="reader-file-actions"><a id="view-raw" hidden>View Raw Text</a><a id="download-original" hidden>Download Original</a></div></nav>
+        <section class="document-sheet" aria-label="Indexed document">
+            <div class="document-toolbar"><span class="collection-badge">Indexed text document</span><p id="reader-status" role="status" aria-live="polite" data-state="loading">Loading document…</p></div>
+            <pre id="document-text" aria-label="Original document text" aria-busy="true" tabindex="-1"></pre>
+        </section>
+        <aside class="reader-note"><span class="note-dot" aria-hidden="true"></span><p>Highlights show verified matching tokens. Advanced Search conditions apply across the whole
+            document; highlighted words need not occur together in one passage. Raw text and downloads preserve the original indexed file.</p></aside>
+        <noscript><p class="noscript-note">This highlighted reader requires JavaScript. Return to Search for the native form;
+            the existing raw-view and download endpoints still serve plain text.</p></noscript>
     </main>
+    <footer class="site-footer shell"><span>IIT Search Engine <span aria-hidden="true">·</span> Academic prototype</span><span>Fictional documents. Localhost only.</span></footer>
 </body>
 </html>

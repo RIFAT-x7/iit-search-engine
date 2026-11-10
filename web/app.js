@@ -23,6 +23,11 @@ function selectedMode() {
     return form.querySelector('input[name="mode"]:checked').value;
 }
 
+function showStatus(message, state) {
+    statusMessage.textContent = message;
+    statusMessage.setAttribute("data-state", state);
+}
+
 async function loadPreview(container, filename, query, mode, requestId, signal) {
     try {
         const response = await fetch("/document/view?" + new URLSearchParams({ name: filename }), { signal });
@@ -32,11 +37,16 @@ async function loadPreview(container, filename, query, mode, requestId, signal) 
         const excerpt = HighlightPresentation.snippet(text, HighlightPresentation.ranges(text, query, mode));
         if (!excerpt) {
             container.textContent = text.length ? "Preview unavailable." : "Empty document.";
+            container.setAttribute("data-state", text.length ? "unavailable" : "empty");
             return;
         }
         HighlightPresentation.render(container, excerpt.text, excerpt.ranges, excerpt.leading, excerpt.trailing);
+        container.setAttribute("data-state", "ready");
     } catch (error) {
-        if (requestId === latestRequestId && !signal.aborted) { container.textContent = "Preview unavailable."; }
+        if (requestId === latestRequestId && !signal.aborted) {
+            container.textContent = "Preview unavailable.";
+            container.setAttribute("data-state", "unavailable");
+        }
     }
 }
 
@@ -76,13 +86,14 @@ function actionButton(text, label, disabled, action) {
     const button = document.createElement("button");
     button.type = "button";
     button.textContent = text;
+    button.className = text.startsWith("Remove") ? "button-remove" : "button-secondary";
     button.setAttribute("aria-label", label);
     button.disabled = disabled;
     button.addEventListener("click", action);
     return button;
 }
 
-function renderGroups() {
+function renderGroups(addedField = null) {
     groupList.replaceChildren();
     wordInputs = [];
     for (let g = 0; g < groups.length; g++) {
@@ -94,19 +105,34 @@ function renderGroups() {
         }
         const group = document.createElement("fieldset");
         group.className = "advanced-group";
+        if (addedField && addedField.group === g && addedField.word === 0) {
+            group.className += " is-entering";
+        }
         const legend = document.createElement("legend");
-        legend.textContent = "Group " + (g + 1) + " (all words must match)";
+        legend.textContent = "Group " + (g + 1);
         group.appendChild(legend);
+        const heading = document.createElement("div");
+        heading.className = "group-heading";
+        const explanation = document.createElement("p");
+        explanation.textContent = "All words must match";
+        heading.appendChild(explanation);
+        const removeGroup = actionButton("Remove Group", "Remove group " + (g + 1), groups.length === 1, () => {
+            if (groups.length === 1) { return; }
+            groups = groups.filter((words, index) => index !== g);
+            builderChanged(Math.min(g, groups.length - 1), 0);
+        });
+        removeGroup.setAttribute("title", groups.length === 1 ? "Keep at least one group." : "Remove group " + (g + 1));
+        heading.appendChild(removeGroup);
+        group.appendChild(heading);
+        const words = document.createElement("div");
+        words.className = "advanced-words";
         wordInputs.push([]);
         for (let w = 0; w < groups[g].length; w++) {
-            if (w > 0) {
-                const and = document.createElement("p");
-                and.className = "logical-operator";
-                and.textContent = "AND";
-                group.appendChild(and);
-            }
             const row = document.createElement("div");
             row.className = "advanced-word";
+            if (addedField && addedField.group === g && addedField.word === w && w > 0) {
+                row.className += " is-entering";
+            }
             const label = document.createElement("label");
             const input = document.createElement("input");
             input.type = "text";
@@ -123,37 +149,48 @@ function renderGroups() {
             row.appendChild(label);
             row.appendChild(input);
             wordInputs[g].push(input);
-            row.appendChild(actionButton("Remove Word", "Remove word " + (w + 1) + " from group " + (g + 1),
+            const removeLabel = "Remove word " + (w + 1) + " from group " + (g + 1);
+            const removeWord = actionButton("×", removeLabel,
                 groups[g].length === 1, () => {
                     if (groups[g].length === 1) { return; }
                     groups[g] = groups[g].filter((word, index) => index !== w);
                     builderChanged(g, Math.min(w, groups[g].length - 1));
-                }));
-            group.appendChild(row);
+                });
+            removeWord.className = "button-remove word-remove";
+            removeWord.setAttribute("title", groups[g].length === 1 ? "Keep at least one word in each group." : removeLabel);
+            row.appendChild(removeWord);
+            if (w > 0) {
+                const and = document.createElement("span");
+                and.className = "word-operator";
+                and.textContent = "AND";
+                and.setAttribute("aria-hidden", "true");
+                row.appendChild(and);
+            }
+            words.appendChild(row);
         }
-        group.appendChild(actionButton("Add AND Word", "Add AND Word to group " + (g + 1), false, () => {
+        group.appendChild(words);
+        const footer = document.createElement("div");
+        footer.className = "group-footer";
+        footer.appendChild(actionButton("Add AND Word", "Add AND Word to group " + (g + 1), false, () => {
             groups[g].push("");
-            builderChanged(g, groups[g].length - 1);
+            builderChanged(g, groups[g].length - 1, true);
         }));
-        group.appendChild(actionButton("Remove Group", "Remove group " + (g + 1), groups.length === 1, () => {
-            if (groups.length === 1) { return; }
-            groups = groups.filter((words, index) => index !== g);
-            builderChanged(Math.min(g, groups.length - 1), 0);
-        }));
+        group.appendChild(footer);
         groupList.appendChild(group);
     }
     updatePreview();
 }
 
-function builderChanged(group, word) {
+function builderChanged(group, word, addition = false) {
     clearSearch();
-    renderGroups();
+    // Only the new field/group enters; existing fields never replay an entrance animation.
+    renderGroups(addition ? { group, word } : null);
     wordInputs[group][word].focus();
 }
 
 addOrGroup.addEventListener("click", () => {
     groups.push([""]);
-    builderChanged(groups.length - 1, 0);
+    builderChanged(groups.length - 1, 0, true);
 });
 
 function updateMode() {
@@ -174,7 +211,7 @@ function clearSearch() {
         activeRequest = null;
     }
     resultList.replaceChildren();
-    statusMessage.textContent = "";
+    showStatus("", "initial");
     resultList.setAttribute("aria-busy", "false");
     submitButton.disabled = false;
     keywordLimit.disabled = selectedMode() !== "keyword";
@@ -206,7 +243,7 @@ form.addEventListener("submit", async (event) => {
     }
     // Also abort previews from the preceding completed search.
     clearSearch();
-    statusMessage.textContent = "Searching...";
+    showStatus("Searching...", "loading");
     resultList.setAttribute("aria-busy", "true");
     submitButton.disabled = true;
 
@@ -225,12 +262,12 @@ form.addEventListener("submit", async (event) => {
             return;
         }
         if (!response.ok) {
-            statusMessage.textContent = data.error || "Search failed. Please try again.";
+            showStatus(data.error || "Search failed. Please try again.", "error");
             return;
         }
 
         if (data.results.length === 0) {
-            statusMessage.textContent = "No results found.";
+            showStatus("No results found.", "empty");
             return;
         }
 
@@ -249,7 +286,7 @@ form.addEventListener("submit", async (event) => {
             open.setAttribute("rel", "noopener noreferrer");
             open.setAttribute("aria-label", "Open " + result.filename + " in a new tab");
             const download = document.createElement("a");
-            download.textContent = "Download";
+            download.textContent = "Download Original";
             download.setAttribute("href", "/document/download?" + parameters.toString());
             download.setAttribute("aria-label", "Download " + result.filename);
             download.className = "document-download";
@@ -261,21 +298,26 @@ form.addEventListener("submit", async (event) => {
             label.textContent = "Preview: ";
             const excerpt = document.createElement("span");
             excerpt.textContent = "Loading...";
+            excerpt.setAttribute("data-state", "loading");
             preview.appendChild(label);
             preview.appendChild(excerpt);
             item.appendChild(preview);
+            const type = document.createElement("span");
+            type.className = "result-type";
+            type.textContent = "Indexed text document";
+            item.appendChild(type);
             resultList.appendChild(item);
             void loadPreview(excerpt, result.filename, query, mode, requestId, controller.signal);
         }
-        statusMessage.textContent = limit !== ""
+        showStatus(limit !== ""
             ? "Showing " + data.results.length + " ranked result(s) (Top " + limit + " limit)."
             : data.results.length + (mode === "keyword" ? " result(s) found."
-                : mode === "phrase" ? " phrase match(es) found." : " Boolean match(es) found.");
+                : mode === "phrase" ? " phrase match(es) found." : " Boolean match(es) found."), "ready");
     } catch (error) {
         if (requestId === latestRequestId) {
             controller.abort();
             resultList.replaceChildren();
-            statusMessage.textContent = "Unable to load search results. Check your connection and try again.";
+            showStatus("Unable to load search results. Check your connection and try again.", "error");
         }
     } finally {
         if (requestId === latestRequestId) {

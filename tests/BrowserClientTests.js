@@ -83,9 +83,10 @@ function client() {
     };
     vm.runInNewContext(source, context);
     const groups = () => groupList.children.filter(node => node.tagName === "fieldset");
-    const rows = g => groups()[g].children.filter(node => node.tagName === "div");
+    const rows = g => groups()[g].children.find(node => node.className === "advanced-words").children;
     const input = (g, w) => rows(g)[w].children.find(node => node.tagName === "input");
-    const groupButton = (g, text) => groups()[g].children.find(node => node.tagName === "button" && node.textContent === text);
+    const groupButton = (g, text) => groups()[g].children.flatMap(node => node.children)
+        .find(node => node.tagName === "button" && node.textContent === text);
     function edit(g, w, value) {
         input(g, w).value = value;
         input(g, w).listeners.input();
@@ -267,8 +268,8 @@ async function main() {
         const html = fs.readFileSync("web/index.html", "utf8");
         assert.match(html, /<form[^>]*action="\/search"[^>]*method="get"/);
         assert.match(html, /<fieldset[^>]*>[\s\S]*<legend>Search mode<\/legend>/);
-        assert.match(html, /<label><input type="radio" name="mode" value="keyword" checked> Basic Keyword Search<\/label>/);
-        assert.match(html, /<label><input type="radio" name="mode" value="phrase"> Exact Phrase Search<\/label>/);
+        assert.match(html, /<label class="mode-option"><input type="radio" name="mode" value="keyword" checked><span class="mode-copy"><span class="mode-title">Basic Keyword Search<\/span>/);
+        assert.match(html, /<label class="mode-option"><input type="radio" name="mode" value="phrase"><span class="mode-copy"><span class="mode-title">Exact Phrase Search<\/span>/);
         assert.match(html, /<label for="query">Search text<\/label>/);
         assert.match(html, /<input type="search"[^>]*name="q"[^>]*required>/);
         assert.doesNotMatch(source, /innerHTML|insertAdjacentHTML/);
@@ -276,7 +277,7 @@ async function main() {
     await test("Third native radio and help describe Boolean syntax without changing GET fallback", async () => {
         const html = fs.readFileSync("web/index.html", "utf8");
         assert.equal([...html.matchAll(/type="radio" name="mode"/g)].length, 3);
-        assert.match(html, /<label><input type="radio" name="mode" value="boolean"> Advanced Search<\/label>/);
+        assert.match(html, /<label class="mode-option"><input type="radio" name="mode" value="boolean"><span class="mode-copy"><span class="mode-title">Advanced Search<\/span>/);
         assert.match(html, /AND before OR/);
         assert.match(html, /parentheses and NOT are not supported/);
         assert.match(html, /aria-describedby="search-help"/);
@@ -736,7 +737,8 @@ async function main() {
         assert.equal(page.input(0, 0).value, "java");
         assert.equal(page.input(0, 1).value, "");
         assert.equal(page.document.activeElement, page.input(0, 1));
-        assert.ok(page.groups()[0].children.some(node => node.textContent === "AND"));
+        assert.equal(page.rows(0)[1].children[3].textContent, "AND");
+        assert.equal(page.rows(0)[1].children[3].className, "word-operator");
         assert.match(page.preview.textContent, /Incomplete or invalid/);
         assert.equal(page.requests.length, 0);
     });
@@ -961,7 +963,7 @@ async function main() {
                 ids.add(input.id);
                 assert.equal(input.attributes["aria-describedby"], "advanced-help advanced-validation");
             }
-            for (const button of [...page.groups()[g].children.filter(node => node.tagName === "button"),
+            for (const button of [page.groupButton(g, "Add AND Word"), page.groupButton(g, "Remove Group"),
                 ...page.rows(g).map(row => row.children[2])]) {
                 assert.equal(button.type, "button");
                 assert.match(button.attributes["aria-label"], /group \d/);
@@ -1007,12 +1009,12 @@ async function main() {
             assert.deepEqual(page.texts(), names);
             for (let i = 0; i < names.length; i++) {
                 const item = page.list.children[i];
-                assert.equal(item.children.length, 3);
+                assert.equal(item.children.length, 4);
                 const [open, download] = item.children;
                 assert.equal(open.tagName, "a");
                 assert.equal(download.tagName, "a");
                 assert.equal(open.textContent, names[i]);
-                assert.equal(download.textContent, "Download");
+                assert.equal(download.textContent, "Download Original");
                 assert.equal(open.attributes.href, "/reader.html?" + new URLSearchParams({ name: names[i], q: "java", mode }));
                 assert.equal(download.attributes.href, "/document/download?name=" + names[i]);
                 assert.equal(open.attributes.target, "_blank");
@@ -1021,7 +1023,8 @@ async function main() {
                 assert.equal(download.attributes["aria-label"], "Download " + names[i]);
                 assert.equal(download.attributes.download, undefined, "Server attachment header controls downloads");
                 assert.equal(open.attributes.tabindex, undefined, "Native href links remain keyboard-focusable");
-                assert.equal(item.textContent, names[i] + "DownloadPreview: Loading...");
+                assert.equal(item.children[3].textContent, "Indexed text document");
+                assert.equal(item.textContent, names[i] + "Download OriginalPreview: Loading...Indexed text document");
                 assert.doesNotMatch(item.textContent, /Score|12345/);
             }
         });
@@ -1076,7 +1079,7 @@ async function main() {
         await pending;
         assert.deepEqual(page.texts(), ["z.txt", "a.txt"]);
         assert.equal(page.list.children.length, 2);
-        assert.equal(page.list.textContent, "z.txtDownloadPreview: Loading...a.txtDownloadPreview: Loading...");
+        assert.equal(page.list.textContent, "z.txtDownload OriginalPreview: Loading...Indexed text documenta.txtDownload OriginalPreview: Loading...Indexed text document");
     });
     await test("Document links are progressively enhanced while the unchanged native GET still submits raw queries", async () => {
         const html = fs.readFileSync("web/index.html", "utf8");
@@ -1152,6 +1155,140 @@ async function main() {
         page.editQuery("python"); finish("JAVA");
         await new Promise(resolve => setImmediate(resolve));
         assert.equal(detached.textContent, "Loading..."); assert.deepEqual(page.texts(), []);
+    });
+    await test("Visual search states follow real requests and reset on query edits", async () => {
+        const page = client();
+        assert.equal(page.status.attributes["data-state"], "initial");
+        const pending = page.submit("java");
+        assert.equal(page.status.attributes["data-state"], "loading");
+        assert.equal(page.button.disabled, true);
+        page.respond(0, { results: [{ filename: "java.txt", score: 2 }] });
+        await pending;
+        assert.equal(page.status.attributes["data-state"], "ready");
+        assert.equal(page.button.disabled, false);
+        page.editQuery("python");
+        assert.equal(page.status.attributes["data-state"], "initial");
+        assert.deepEqual(page.texts(), []);
+    });
+    await test("Empty and failed searches have distinct states and remain retryable", async () => {
+        const page = client();
+        let pending = page.submit("unknown");
+        page.respond(0, { results: [] }); await pending;
+        assert.equal(page.status.attributes["data-state"], "empty");
+        pending = page.submit("java");
+        page.respond(1, { error: "<invalid query>" }, false); await pending;
+        assert.equal(page.status.attributes["data-state"], "error");
+        assert.equal(page.status.textContent, "<invalid query>");
+        assert.equal(page.button.disabled, false);
+    });
+    await test("Preview visual states describe only the corresponding original-text request", async () => {
+        const page = client(); const pending = page.submit("java");
+        page.respond(0, { results: ["a.txt", "b.txt", "c.txt"].map(filename => ({ filename, score: 1 })) });
+        await pending;
+        assert.equal(page.excerpt(0).attributes["data-state"], "loading");
+        await page.previewResponse(0, "Original Java.");
+        await page.previewResponse(1, "ignored", false);
+        await page.previewResponse(2, "");
+        assert.equal(page.excerpt(0).attributes["data-state"], "ready");
+        assert.equal(page.excerpt(1).attributes["data-state"], "unavailable");
+        assert.equal(page.excerpt(2).attributes["data-state"], "empty");
+        assert.equal(page.status.attributes["data-state"], "ready");
+        assert.deepEqual(page.texts(), ["a.txt", "b.txt", "c.txt"]);
+    });
+    // This DOM model checks composition and structure; actual wrapping is checked in rendered Edge.
+    for (const count of [2, 3, 4, 5, 6]) {
+        await test(count + " AND words retain their values in one wrapping field container", async () => {
+            const page = client(); page.mode("boolean");
+            const words = ["java", "programming", "computer", "search", "algorithms", "data"].slice(0, count);
+            page.setGroups([words]);
+            const container = page.groups()[0].children.find(node => node.className === "advanced-words");
+            assert.equal(container.children.length, count);
+            assert.equal(page.groups().length, 1);
+            assert.deepEqual(page.rows(0).map(row => row.children[1].value), words);
+            assert.equal(page.preview.textContent, words.join(" AND "));
+            for (let w = 0; w < count; w++) {
+                assert.equal(page.input(0, w).id, "group-1-word-" + (w + 1));
+                const chips = page.rows(0)[w].children.filter(node => node.className === "word-operator");
+                assert.equal(chips.length, w === 0 ? 0 : 1);
+                if (w > 0) { assert.equal(chips[0].textContent, "AND"); assert.equal(chips[0].attributes["aria-hidden"], "true"); }
+            }
+            assert.equal(page.requests.length, 0);
+        });
+    }
+    await test("Four AND words OR two AND words submit the exact preview without parentheses or k", async () => {
+        const page = client(); page.mode("boolean");
+        page.setGroups([["java", "programming", "computer", "search"], ["computer", "networking"]]);
+        const expected = "java AND programming AND computer AND search OR computer AND networking";
+        assert.equal(page.preview.textContent, expected);
+        const pending = page.submit();
+        const parameters = new URL(page.requests[0].url, "http://localhost").searchParams;
+        assert.equal(parameters.get("q"), expected);
+        assert.equal(parameters.get("mode"), "boolean");
+        assert.equal(parameters.has("k"), false);
+        page.respond(0, { results: [] }); await pending;
+    });
+    await test("Removing a middle word and OR group preserves order, labels, minimum structure and focus", async () => {
+        const page = client(); page.mode("boolean");
+        page.setGroups([["java", "programming", "computer", "search"], ["computer", "networking"]]);
+        page.removeWord(0, 1);
+        assert.equal(page.preview.textContent, "java AND computer AND search OR computer AND networking");
+        assert.equal(page.input(0, 1).value, "computer");
+        assert.equal(page.document.activeElement, page.input(0, 1));
+        page.removeGroup(0);
+        assert.equal(page.preview.textContent, "computer AND networking");
+        assert.equal(page.rows(0)[0].children[0].textContent, "Group 1, word 1");
+        assert.equal(page.document.activeElement, page.input(0, 0));
+        assert.equal(page.groupButton(0, "Remove Group").disabled, true);
+        page.removeWord(0, 0);
+        assert.equal(page.preview.textContent, "networking");
+        assert.equal(page.rows(0)[0].children[2].disabled, true);
+    });
+    await test("Compact remove controls have exact accessible names and group actions have their own regions", async () => {
+        const page = client(); page.mode("boolean");
+        page.setGroups([["java", "search"], ["computer"]]);
+        for (let g = 0; g < page.groups().length; g++) {
+            const group = page.groups()[g];
+            assert.equal(group.children[0].textContent, "Group " + (g + 1));
+            assert.equal(group.children[1].className, "group-heading");
+            assert.equal(group.children[1].children[0].textContent, "All words must match");
+            assert.equal(group.children[3].className, "group-footer");
+            for (let w = 0; w < page.rows(g).length; w++) {
+                const remove = page.rows(g)[w].children[2];
+                assert.equal(remove.textContent, "×");
+                assert.equal(remove.type, "button");
+                assert.equal(remove.attributes["aria-label"], "Remove word " + (w + 1) + " from group " + (g + 1));
+                assert.equal(remove.disabled, page.rows(g).length === 1);
+                assert.ok(remove.attributes.title.length > 0);
+            }
+        }
+    });
+    await test("Entrance cues apply only to newly added fields or groups without delaying focus or editing", async () => {
+        const page = client(); page.mode("boolean"); page.edit(0, 0, "java");
+        page.addWord(0);
+        assert.equal(page.rows(0)[0].className, "advanced-word");
+        assert.equal(page.rows(0)[1].className, "advanced-word is-entering");
+        const input = page.input(0, 1); page.edit(0, 1, "search");
+        assert.equal(page.input(0, 1), input);
+        assert.equal(page.document.activeElement, input);
+        page.removeWord(0, 1);
+        assert.equal(page.rows(0)[0].className, "advanced-word");
+        page.addGroup();
+        assert.equal(page.groups()[0].className, "advanced-group");
+        assert.equal(page.groups()[1].className, "advanced-group is-entering");
+        assert.equal(page.rows(1).length, 1);
+        assert.equal(page.input(1, 0).value, "");
+        assert.equal(page.input(0, 0).value, "java");
+        assert.equal(page.document.activeElement, page.input(1, 0));
+    });
+    await test("Styles declare width-based three/two/one wrapping and reduced-motion policy", async () => {
+        const css = fs.readFileSync("web/styles.css", "utf8");
+        assert.match(css, /\.advanced-words\s*\{[^}]*display: flex;[^}]*flex-wrap: wrap/);
+        assert.match(css, /flex: 1 1 calc\(\(100% - 28px\) \/ 3\)/);
+        assert.match(css, /@container advanced-composer \(max-width: 47rem\)[\s\S]*?flex-basis: calc\(\(100% - 14px\) \/ 2\)/);
+        assert.match(css, /@container advanced-composer \(max-width: 30rem\)[\s\S]*?flex-basis: 100%/);
+        assert.match(css, /\.is-entering\s*\{ animation: field-in 180ms ease-out/);
+        assert.match(css, /@media \(prefers-reduced-motion: reduce\)[\s\S]*?animation: none !important; transition: none !important/);
+        assert.match(css, /@media \(prefers-reduced-motion: reduce\)[\s\S]*?#result-list > li[^}]*transform: none !important/);
     });
     console.log("Total passed: " + passed + "; total failed: 0");
 }

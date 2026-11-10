@@ -3,62 +3,94 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="theme-color" content="#101a33">
     <title>IIT Search Engine</title>
     <link rel="stylesheet" href="/styles.css">
     <script src="/highlight.js" defer></script>
     <script src="/app.js" defer></script>
 </head>
 <body>
-    <main>
-        <h1>IIT Search Engine</h1>
-        <form id="search-form" action="/search" method="get" accept-charset="UTF-8">
-            <fieldset class="search-modes">
-                <legend>Search mode</legend>
-                <label><input type="radio" name="mode" value="keyword" checked> Basic Keyword Search</label>
-                <label><input type="radio" name="mode" value="phrase"> Exact Phrase Search</label>
-                <label><input type="radio" name="mode" value="boolean"> Advanced Search</label>
-            </fieldset>
-            <label for="keyword-limit">Keyword result limit</label>
-            <select id="keyword-limit" aria-describedby="keyword-limit-help" disabled>
-                <option value="" selected>All results</option>
-                <option value="1">Top 1</option>
-                <option value="3">Top 3</option>
-                <option value="5">Top 5</option>
-                <option value="10">Top 10</option>
-            </select>
-            <p id="keyword-limit-help">Keyword limits require JavaScript. Without it, searches remain unrestricted.
-                This limit does not apply to phrase or Advanced Search.</p>
-            <div id="raw-query">
-                <label for="query">Search text</label>
-                <p id="search-help">Basic Keyword Search accepts ordinary multiword queries: any searchable term
-                    may match, with results ordered by relevance. Exact Phrase Search matches consecutive words
-                    under normalization, including stop words. Advanced Search uses explicit Boolean conditions
-                    and returns matches in filename order, without relevance ranking.
-                    Without JavaScript, enter a manual AND/OR expression here: AND before OR. Use single searchable words;
-                    stop-word operands, parentheses and NOT are not supported.</p>
-                <input type="search" id="query" name="q" aria-describedby="search-help" required>
+    <a class="skip-link" href="#main-content">Skip to search</a>
+    <div class="masthead">
+        <header class="site-header shell">
+            <a class="brand" href="/" aria-label="IIT Search Engine home">
+                <span class="brand-emblem" aria-hidden="true"><svg viewBox="0 0 32 32" fill="none"><path d="M8 5h11l5 5v10M8 5v22h9M19 5v6h6M12 15h6M12 19h3"/><circle cx="22" cy="23" r="5"/><path d="m26 27 3 3"/></svg></span>
+                <span><strong>IIT Search Engine</strong><span class="brand-subtitle">Academic Document Discovery</span></span>
+            </a>
+            <span class="prototype-badge">SPL-1 <span aria-hidden="true">/</span> Academic prototype</span>
+        </header>
+        <div class="hero shell">
+            <div>
+                <p class="eyebrow">A focused space for discovery</p>
+                <h1>Discover knowledge, <em>precisely.</em></h1>
+                <p class="hero-description">From a keyword to a precise expression. Explore fictional text<br class="desktop-break"> collections with clear results and the original source always in reach.</p>
             </div>
-            <fieldset id="advanced-search" hidden disabled aria-describedby="advanced-help">
-                <legend>Advanced Search groups</legend>
-                <p id="advanced-help">Every AND word in a group must match the same document, without needing
-                    to be adjacent. OR separates alternative complete groups. Results are in filename order.
-                    Use one word of ASCII letters or digits per input, without punctuation or stop words.
-                    Repeat shared conditions in each group. For computer with either java or python, use
-                    computer AND java OR computer AND python. AND is evaluated before OR; no parentheses,
-                    NOT, wildcards or metadata fields are supported.</p>
-                <div id="advanced-groups"></div>
-                <button type="button" id="add-or-group">Add OR Group</button>
-                <h2>Generated Expression Preview</h2>
-                <p id="advanced-preview"></p>
-                <p id="advanced-validation" role="status" aria-live="polite" aria-atomic="true"></p>
-            </fieldset>
-            <button type="submit">Search</button>
-        </form>
-        <section aria-labelledby="results-heading">
-            <h2 id="results-heading">Search results</h2>
-            <p id="search-status" role="status"></p>
+            <div class="hero-note"><span class="note-line" aria-hidden="true"></span><p>Built to explore.<br><strong>Designed to understand.</strong></p></div>
+        </div>
+    </div>
+    <main id="main-content" class="shell" tabindex="-1">
+        <section class="search-workspace" aria-labelledby="workspace-heading">
+            <div class="section-heading">
+                <div><p class="eyebrow">01 <span aria-hidden="true">/</span> Search workspace</p><h2 id="workspace-heading">What are you looking for?</h2></div>
+                <span class="collection-badge">Fictional text collection</span>
+            </div>
+            <form id="search-form" action="/search" method="get" accept-charset="UTF-8">
+                <fieldset class="search-modes">
+                    <legend>Search mode</legend>
+                    <label class="mode-option"><input type="radio" name="mode" value="keyword" checked><span class="mode-copy"><span class="mode-title">Basic Keyword Search</span><span class="mode-description">Any term. Ordered by relevance.</span></span></label>
+                    <label class="mode-option"><input type="radio" name="mode" value="phrase"><span class="mode-copy"><span class="mode-title">Exact Phrase Search</span><span class="mode-description">Consecutive normalized words.</span></span></label>
+                    <label class="mode-option"><input type="radio" name="mode" value="boolean"><span class="mode-copy"><span class="mode-title">Advanced Search</span><span class="mode-description">AND conditions. OR alternatives.</span></span></label>
+                </fieldset>
+                <fieldset id="advanced-search" hidden disabled aria-describedby="advanced-help">
+                    <legend>Advanced Search groups</legend>
+                    <p id="advanced-help">Every AND word in a group must match the same document; words need not be adjacent.
+                        OR separates complete alternatives. Use one ASCII letter/digit word per field, without punctuation or stop words.
+                        Results are in filename order, without relevance ranking.</p>
+                    <div id="advanced-groups"></div>
+                    <button type="button" id="add-or-group">Add OR Group</button>
+                    <div class="expression-box"><h3>Generated Expression Preview</h3><p id="advanced-preview"></p></div>
+                    <p id="advanced-validation" role="status" aria-live="polite" aria-atomic="true"></p>
+                    <details class="syntax-help"><summary>Understanding AND / OR</summary><p>Repeat shared conditions in each group:
+                        computer AND java OR computer AND python means computer with either java or python.
+                        AND is evaluated before OR; parentheses and NOT are not supported. No wildcards or metadata fields.</p></details>
+                </fieldset>
+                <div class="search-controls">
+                    <div id="raw-query">
+                        <label for="query">Search text</label>
+                        <div class="query-field"><svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m16 16 4.5 4.5"/></svg><input type="search" id="query" name="q" aria-describedby="search-help" placeholder="Enter a word or phrase…" required></div>
+                    </div>
+                    <div class="keyword-limit-control"><label for="keyword-limit">Keyword result limit</label>
+                        <select id="keyword-limit" aria-describedby="keyword-limit-help" disabled>
+                            <option value="" selected>All results</option>
+                            <option value="1">Top 1</option>
+                            <option value="3">Top 3</option>
+                            <option value="5">Top 5</option>
+                            <option value="10">Top 10</option>
+                        </select>
+                    </div>
+                    <button type="submit" class="button-primary"><span>Search</span><svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M5 12h14m-6-6 6 6-6 6"/></svg></button>
+                </div>
+                <p id="search-help" class="search-help">Basic mode matches any searchable term. Phrase mode requires consecutive words after normalization.</p>
+                <details class="syntax-help"><summary>About search modes and result limits</summary>
+                    <p id="keyword-limit-help">Keyword limits require JavaScript. Without it, searches remain unrestricted.
+                        This limit does not apply to phrase or Advanced Search. Basic results are relevance-ordered;
+                        phrase and Advanced Search matches are filename-ordered.</p>
+                </details>
+                <noscript><p class="noscript-note">Without JavaScript, enter a manual AND/OR expression in Search text for Advanced Search:
+                    AND before OR. Use single searchable words; stop-word operands, parentheses and NOT are not supported.
+                    Submission opens JSON. Interactive previews and highlighting require JavaScript.</p></noscript>
+            </form>
+        </section>
+        <section class="results-section" aria-labelledby="results-heading">
+            <div class="section-heading results-heading"><div><p class="eyebrow">02 <span aria-hidden="true">/</span> Discoveries</p><h2 id="results-heading">Search results</h2></div><span class="results-note">Source passages. Original documents.</span></div>
+            <div class="results-feedback">
+                <p id="search-status" role="status" aria-live="polite" aria-atomic="true" data-state="initial"></p>
+                <div class="initial-state"><span class="empty-emblem" aria-hidden="true"><svg viewBox="0 0 32 32" fill="none"><path d="M7 4h12l6 6v18H7zM19 4v7h6M12 16h8M12 21h6"/></svg></span><h3>A good question starts a discovery.</h3><p>Choose a search mode and enter your query.<br>Your results will connect you to the original text.</p><span class="example-note">A place to start: <code>java</code> works in both collections.</span></div>
+                <p class="empty-guidance">Try fewer conditions, another searchable word, or a different search mode.</p>
+            </div>
             <ol id="result-list" aria-busy="false"></ol>
         </section>
     </main>
+    <footer class="site-footer shell"><span>IIT Search Engine <span aria-hidden="true">·</span> Rifat Al Maruf, BSSE1705</span><span>Fictional documents. Localhost only.</span></footer>
 </body>
 </html>
