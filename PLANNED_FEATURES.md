@@ -10,8 +10,11 @@ Listing a future feature here does not establish approval or implementation.
 
 ## CURRENT checkpoint: November 10, 2026
 
-Clean local main and fetched origin/main were verified at the approved Premium UI
-commit `143ab553095b95b572ae55016de3850180054fef`. Phase 3.5D Part 1 documentation
+The final audit started from clean local/fetched main at Premium UI
+commit `143ab553095b95b572ae55016de3850180054fef`. The approved showcase application
+commit `28a26ab986351b5d99d29aba26e873e30793c931` has since been independently
+source-reviewed on GitHub and fast-forward integrated into local main.
+Phase 3.5D Part 1 documentation
 was already reviewed and integrated at `cdc3b504f231d9fc961648970318f103c6543b59`.
 The Midnight Scholar UI and adaptive Advanced Search are integrated and have
 student-reported manual Edge acceptance. No UI/retrieval redesign is part of this audit.
@@ -20,9 +23,10 @@ The original regression passed freshly before and after this change: **562 passe
 0 failed, 1 Windows symlink fixture skipped** (100 Java, 320 HTTP, 107 browser-model,
 35 highlighting/reader). The explicitly authorized optional showcase adds 25
 original fictional text files, the fixed startup flag `--showcase`, 18 Java and
-70 HTTP checks: **650 passed overall**, 0 failed, 1 skipped. This branch is
-uncommitted pending independent review; optional-collection student Edge acceptance
-is pending. See the [audit](docs/FINAL_REPOSITORY_AUDIT_2026-11.md) and
+70 HTTP checks: **650 passed overall**, 0 failed, 1 skipped. On November 10, 2026,
+the student confirmed successful manual Edge acceptance of all six showcase
+scenarios; these are student-reported, not Codex-run browser tests.
+See the [audit](docs/FINAL_REPOSITORY_AUDIT_2026-11.md) and
 [showcase guide](data/showcase/README.md). It is not supervisor approval of
 real-document ingestion, deployment or additional algorithms.
 
@@ -254,7 +258,7 @@ not blanket supervisor approvals.
 | 3.5C | Completed and integrated (`ab6eacc`) | Source excerpts, shared safe highlighting, reader and unchanged raw/download routes. |
 | 3.5D | Part 1 documentation integrated (`cdc3b50`); preparation active | Manual/runbook accepted; final audit refreshes evidence; slides, rehearsal and viva practice pending. |
 | Premium UI | Completed and integrated (`143ab55`) | Midnight Scholar, adaptive three/two/one-field wrapping, compact accessible controls and reduced motion; student-reported Edge acceptance. |
-| Optional showcase | Implemented locally; pending review | 25 isolated fictional documents, fixed `--showcase` startup only; original collections preserved. No new retrieval/UI features. |
+| Optional showcase | Reviewed and fast-forward integrated (`28a26ab`); student-reported Edge acceptance November 10 | 25 isolated fictional documents, fixed `--showcase` startup only; original collections preserved. Optional for midterm; no new retrieval/UI features. |
 | 4 | Deferred; proposed after midterm | Document metadata and date filters; metadata model and date meaning need agreement. |
 | 5 | Deferred; proposed after midterm | Authorized document ingestion and text-based PDF extraction; rights and permitted collection need agreement. |
 | 6 | Deferred; proposed after midterm | Bangla/Unicode-aware text processing and multilingual retrieval; image/OCR work separately scoped and evaluated. |
@@ -269,8 +273,8 @@ exposure.
 Reported functional Edge acceptance is recorded above. Broader keyboard-only,
 zoom/reflow, screen-reader and device-matrix checks remain unverified; they are
 not a claim that the student must repeat already accepted functional scenarios.
-Part 1 documentation publication/review/main integration is complete. The optional
-showcase branch remains unpublished for independent review. Final preparation
+Part 1 documentation and the reviewed optional showcase are integrated into main.
+The application is frozen for midterm. Final preparation
 acceptance is not inferred from either documentation or automated test success.
 
 ## Questions for the supervisor: November 1, 2026

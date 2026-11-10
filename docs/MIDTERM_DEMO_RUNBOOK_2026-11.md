@@ -4,7 +4,7 @@
 
 **Midterm:** November 12, 2026
 
-**Approved integrated application:** `143ab553095b95b572ae55016de3850180054fef`
+**Approved integrated application:** `28a26ab986351b5d99d29aba26e873e30793c931`
 
 **Record:** November 9 Part 1, reviewed/integrated at `cdc3b50`; current audit addendum November 10
 
@@ -19,7 +19,9 @@ by writing this document.
   320 HTTP, 107 browser-model and 35 highlighting/reader = **562 passed, 0 failed,
   1 Windows symlink fixture skipped**, before and after the optional corpus.
   Dedicated showcase checks add 18 Java + 70 HTTP passes: **650 overall**, zero
-  failures, one skip. The optional corpus branch remains uncommitted for review.
+  failures, one skip. The approved showcase was independently source-reviewed
+  on GitHub and fast-forward integrated into local main; Java/HTTP evidence is
+  retained, not freshly rerun during this documentation closure.
 - **Historical Codex automated checks, November 9:** 100 Java, 320 HTTP, 94 browser-model
   and 33 highlighting/reader passes = **547 passed, 0 failed**, plus **1 skipped**
   Windows symlink fixture. Five JavaScript syntax checks, seven PowerShell parses
@@ -28,15 +30,19 @@ by writing this document.
   Top-K, exact phrases, grouped Advanced Search, opening/downloading, previews,
   keyword/phrase/Boolean highlights, reader and raw access worked on both collections.
   Codex did not independently perform those manual browser checks.
-- **Premium UI acceptance:** explicitly student-reported, including adaptive
-  Advanced Search. This does not automatically accept the new optional corpus;
-  student Edge verification of that collection remains pending.
+- **Premium UI acceptance:** explicitly student-reported, including adaptive Advanced Search.
+- **Showcase Edge acceptance, student-reported November 10, 2026:** all six passed:
+  (1) keyword java returned 23; (2) keyword java search Top 3 matched the ranked
+  prefix; (3) phrase java search returned three; (4) phrase search java returned
+  only phrase_order_exercise.txt; (5) java AND programming OR computer AND
+  networking returned four; (6) reader, highlighting and original download worked.
+  Codex did not independently perform these manual browser checks.
 - Sample query results below were also freshly inspected through the existing
   Java engine on both permanent corpora; that inspection is not another named
   regression suite or an independently performed Edge demonstration.
 - **Still pending:** student rehearsal of this timed runbook, slides/speech,
-  code/viva practice, and optional-corpus independent review/student acceptance.
-  Part 1 documentation review and main integration are complete. Comprehensive
+  code/viva practice. Part 1 documentation and showcase source review, student
+  acceptance and local main integration are complete. Comprehensive
   keyboard-only, screen-reader, zoom/reflow, slow-network and device-matrix manual
   coverage is unverified; it is not inferred from functional Edge acceptance.
 - Symlink creation was denied by Windows privilege policy. Do not report that
@@ -182,8 +188,8 @@ allows punctuation between consecutive normalized words.
 
 ### Optional showcase: keep separate from the standard timed sequence
 
-The six/nine-file sequence above remains the standard path. After review of
-this branch, the optional [showcase guide](../data/showcase/README.md) supplies
+The six/nine-file sequence above remains the standard path. The reviewed and
+integrated optional [showcase guide](../data/showcase/README.md) supplies
 25 original fictional notes and measured broader examples. Stop your own server,
 check port 8080 as in section 3, then run:
 
@@ -200,8 +206,8 @@ from themes. Refresh Edge and close old reader tabs when switching.
 
 To return to the standard demo, stop that owned server, check the port, and run
 `SearchServer` without arguments (six files) or with `--phrase-demo` (nine).
-There is no browser selector or mixed collection. Optional collection Edge
-acceptance is pending; do not claim the student's prior acceptance covers it.
+There is no browser selector or mixed collection. The student's November 10
+showcase Edge acceptance is recorded in section 1; using it during midterm is optional.
 
 ## 6. Direct API and original-file examples
 
@@ -318,7 +324,8 @@ stop and diagnose; source/test fixes require new approval in this frozen scope.
 - [ ] Student can explain ranking, AND precedence, positions, snapshots and safe marks.
 - [ ] Slides/speech are prepared November 10; code/viva rehearsal November 11.
 - [x] Part 1 documentation reviewed and integrated at `cdc3b50`.
-- [ ] Optional showcase branch independently reviewed and manually accepted in Edge.
+- [x] Optional showcase independently source-reviewed, fast-forward integrated
+      at `28a26ab` and manually accepted in Edge by the student on November 10.
 
 Functional Edge acceptance is already student-reported in section 1. The unchecked
 items above are future preparation, not a claim that those accepted feature checks

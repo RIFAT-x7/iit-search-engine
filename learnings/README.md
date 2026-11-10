@@ -56,15 +56,19 @@ assistance and should be read alongside the source code.
     indexed original-byte access, source snippets, shared safe highlights and
     25 viva questions. Reviewed and integrated with Part 1; student practice is pending.
 
-**CURRENT, November 10:** Premium UI main checkpoint
-`143ab553095b95b572ae55016de3850180054fef`; Part 1 documentation integrated at
+**CURRENT, November 10:** approved showcase application checkpoint
+`28a26ab986351b5d99d29aba26e873e30793c931`, independently source-reviewed and
+fast-forward integrated into local main; Premium UI remains the earlier
+`143ab55` checkpoint. Part 1 documentation integrated at
 `cdc3b504f231d9fc961648970318f103c6543b59`. The original regression freshly
 passed 562 checks before and after the optional showcase: 100 Java, 320 HTTP,
 107 browser-model, 35 highlighting/reader; zero failures, one Windows symlink
 fixture skipped. Showcase checks add 18 Java and 70 HTTP passes (650 overall).
-The optional branch is not yet published/accepted. The student
-separately reported successful manual Edge acceptance of 3.5A-3.5C on both
-collections; Codex did not independently perform those browser checks.
+The student confirmed all six showcase Edge scenarios on November 10, 2026,
+in addition to earlier 3.5A-3.5C/Premium UI acceptance. These are student-reported
+manual checks, not independently performed Codex browser tests. The three fixed
+collections remain isolated, with showcase optional and original datasets unchanged.
+The application is frozen; slides, timed rehearsal and viva practice remain pending.
 See the [project README](../README.md) for current commands and evidence, and the
 [demo runbook](../docs/MIDTERM_DEMO_RUNBOOK_2026-11.md) for a reproducible presentation.
 The earlier seven Java/16 HTTP, 287-check and November 9 547-check records remain historical baselines.

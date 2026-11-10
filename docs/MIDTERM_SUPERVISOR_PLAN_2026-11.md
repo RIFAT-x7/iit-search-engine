@@ -21,8 +21,11 @@ review is required before a subsequent implementation instruction.
 
 ## CURRENT checkpoint: November 10, 2026
 
-Verified clean main/origin main: `143ab553095b95b572ae55016de3850180054fef`
-(Premium Midnight Scholar and adaptive Advanced Search). Part 1 documentation
+The final audit started from verified clean main/origin main at
+`143ab553095b95b572ae55016de3850180054fef` (Premium Midnight Scholar and adaptive
+Advanced Search). The approved showcase application checkpoint is now
+`28a26ab986351b5d99d29aba26e873e30793c931`, independently source-reviewed on
+GitHub and fast-forward integrated into local main. Part 1 documentation
 integrated at `cdc3b504f231d9fc961648970318f103c6543b59`. Original regression
 rerun before and after the optional corpus: **562 passed, 0 failed, 1 skipped**:
 100 Java, 320 HTTP, 107 browser-model, 35 highlighting/reader. The Windows
@@ -32,14 +35,17 @@ The student explicitly authorized a final audit and isolated optional showcase:
 25 original fictional documents selected only by `SearchServer --showcase`.
 No changes to algorithms, UI, raw-document contracts or the original collections.
 Dedicated checks add 18 Java + 70 HTTP passes (650 overall, zero failures,
-one skip). The branch remains uncommitted pending review and student Edge
-acceptance of the optional collection. See the [audit](FINAL_REPOSITORY_AUDIT_2026-11.md).
+one skip). On November 10, 2026, the student confirmed all six showcase Edge
+acceptance scenarios; this is student-reported manual verification, not Codex
+browser automation. All three fixed collections are available; the showcase
+remains optional and the original six/nine-file collections are unchanged.
+See the [audit](FINAL_REPOSITORY_AUDIT_2026-11.md).
 This later bounded instruction is not a claimed supervisor approval or a new
 phase of retrieval work. Earlier dated evidence and planning rationale remain below.
 
-Existing functional and Premium UI Edge acceptance is **student-reported**.
-It does not establish a comprehensive accessibility/device matrix or acceptance
-of the new corpus. Slides, speech, timed rehearsal and viva practice are pending.
+Existing functional, Premium UI and showcase Edge acceptance is **student-reported**.
+It does not establish a comprehensive accessibility/device matrix. The application
+is frozen. Slides, speech, timed rehearsal and viva practice are pending.
 
 ## A. Supervisor feedback
 
@@ -396,8 +402,8 @@ exhaustive testing. Publication/preparation items remain unchecked.
 - [x] Six-file documentation/manual/runbook independently reviewed and integrated
       into main at `cdc3b50`; preserved as a historical milestone.
 - [x] Premium UI/adaptive Advanced Search integrated at `143ab55`; student-reported Edge acceptance.
-- [ ] Optional showcase branch independently reviewed, accepted in Edge by the
-      student and integrated only under a later explicit instruction.
+- [x] Optional showcase independently source-reviewed, accepted in Edge by the
+      student on November 10, 2026, and fast-forward integrated at `28a26ab`.
 - [ ] Runbook sequence rehearsed end-to-end by the student with timing confirmed.
 - [ ] Presentation slides and speech prepared (planned November 10).
 - [ ] Student code explanation, rehearsal and viva practice completed (November 11).

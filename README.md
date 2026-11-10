@@ -26,13 +26,14 @@ and keyword ranking.
 ## Midterm demonstration
 
 Phases through **3.5C are implemented and fast-forward integrated**. The frozen
-application baseline, including the approved Premium Midnight Scholar UI, is
-`143ab553095b95b572ae55016de3850180054fef`. The six-file Phase 3.5D Part 1
+application checkpoint, including Premium Midnight Scholar and the optional showcase, is
+`28a26ab986351b5d99d29aba26e873e30793c931`. The six-file Phase 3.5D Part 1
 documentation was reviewed and integrated at `cdc3b504f231d9fc961648970318f103c6543b59`.
 Presentation/rehearsal/viva preparation is still pending; integration did not
 complete those activities. No retrieval changes or UI redesign are part of the
-November 10 final audit. Its optional showcase is isolated from the standard demo
-and remains uncommitted pending review before the **November 12, 2026** examination.
+November 10 final audit. The showcase was independently source-reviewed on GitHub
+and fast-forward integrated into local main. It remains optional and isolated
+from the unchanged six/nine-file standard demo before the **November 12, 2026** examination.
 
 Fresh Codex-run original regression on November 10 passed **562 checks, 0 failed**,
 both before and after the showcase change: 100 Java, 320 HTTP, 107 browser-model
@@ -49,6 +50,11 @@ reader and raw-text access, on both collections. Codex did not independently
 perform those student-reported browser checks. Premium UI and adaptive Advanced
 Search acceptance was also explicitly student-reported. This report does not establish a comprehensive
 keyboard, screen-reader, zoom/reflow or browser/device matrix audit.
+
+On **November 10, 2026**, the student also confirmed all six showcase Edge
+scenarios: java (23 results), java search Top 3, both phrase orders, the mixed
+AND/OR query (four results), and reader/highlighting/original download. These
+are student-reported manual checks, not independently automated browser tests.
 
 Use the [midterm demo runbook](docs/MIDTERM_DEMO_RUNBOOK_2026-11.md) for Windows
 commands and source-checked query/results. Fourteen historical learning manuals
@@ -1072,8 +1078,7 @@ explains collection selection and the later adaptive Premium UI without rewritin
   Comprehensive accessibility, browser/device coverage, retrieval quality,
   scalability and production security have not been established.
 
-Retrieval and UI development are frozen for midterm. This explicitly authorized
-final audit adds only a fixed optional fictional collection; its branch still
-needs independent review and student Edge acceptance. Part 1 documentation is
-integrated. Slides/speech and November 11 rehearsal/viva preparation remain
+The application is frozen for midterm. The reviewed optional showcase is integrated
+and has student-reported Edge acceptance; Part 1 documentation is also integrated.
+Slides/speech and November 11 rehearsal/viva preparation remain
 separate work; post-midterm proposals require further agreement.

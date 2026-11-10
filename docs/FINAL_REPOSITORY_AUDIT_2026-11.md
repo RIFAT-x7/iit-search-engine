@@ -181,3 +181,28 @@ checked. Current checkpoints/counts are distinct
 from dated historical evidence. `git diff --check` passes. The working tree is
 intentionally dirty on the feature branch with an empty staging area; main and
 origin/main remain at the approved starting SHA. **No commit, push or merge.**
+
+## Integration and acceptance addendum — November 10, 2026
+
+The observations above record the original audit before publication; its pending
+statuses, branch state and test executions are historical. The approved showcase
+commit `28a26ab986351b5d99d29aba26e873e30793c931` was subsequently published,
+independently source-reviewed on GitHub and fast-forward integrated into local
+main from `143ab553095b95b572ae55016de3850180054fef`, without a merge commit.
+
+The student personally reported that all six showcase Edge scenarios passed on
+November 10: java returned 23; java search Top 3 matched the ranked prefix;
+phrase java search returned three; phrase search java returned only
+phrase_order_exercise.txt; the mixed AND/OR query returned four; and reader,
+highlighting and original download worked. These are student-reported manual
+checks, not independently automated browser tests.
+
+The complete regression evidence remains 650 passed, 0 failed, 1 Windows symlink
+fixture skipped; Java/HTTP were not rerun for this documentation-only closure.
+Fresh integration checks passed five JavaScript syntax checks, 107 browser-model
+and 35 highlighting/reader checks. The symlink privilege limitation remains.
+All three fixed collections are available; showcase stays optional and the
+original six/nine-file collections and 15 historical manuals are unchanged.
+The application is frozen. Slides, actual rehearsal and viva preparation remain
+separate pending work. This addendum records the application commit, not the
+separate documentation-only commit that follows it.

@@ -175,8 +175,14 @@ regression is separately **562/562**, with one skipped Windows symlink fixture.
 The combined count is **650 passed, zero failed, one skipped**, not a relevance
 benchmark. Supporting startup-argument/log guards are excluded from these counts.
 
-Student Edge acceptance of this optional collection is pending independent review.
-Prior acceptance of the Premium UI does not prove acceptance of these new examples.
+The approved showcase application commit is
+`28a26ab986351b5d99d29aba26e873e30793c931`, independently source-reviewed on GitHub
+and fast-forward integrated into local main. On November 10, 2026, the student
+confirmed all six showcase Edge scenarios: java (23), java search Top 3, both
+phrase orders, the mixed AND/OR query (four), and reader/highlighting/original
+download. This is student-reported manual acceptance, not Codex browser automation.
+The showcase remains optional; original six/nine-file datasets are unchanged.
+The application is frozen; slides, rehearsal and viva preparation remain separate.
 
 ## Learning note: collection selection and adaptive fields
 
