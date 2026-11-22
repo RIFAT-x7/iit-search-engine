@@ -21,11 +21,27 @@ import java.util.Set;
 
 public class SearchEngine {
     private final TextProcessor processor = new TextProcessor();
-    private List<Document> documents = new ArrayList<>();
-    private InvertedIndex index = new InvertedIndex();
-    private Map<String, byte[]> indexedDocuments = new HashMap<>();
+    private volatile EngineState state = new EngineState(List.of(), new InvertedIndex(), Map.of());
 
-    public void buildIndex(String folderPath) throws IOException {
+    // A generation owns its index and byte arrays exclusively. Only the builder
+    // mutates them, before publication; readers never receive mutable internals.
+    private static final class EngineState {
+        private final List<Document> documents;
+        private final InvertedIndex index;
+        private final Map<String, byte[]> indexedDocuments;
+
+        private EngineState(List<Document> documents, InvertedIndex index,
+                            Map<String, byte[]> indexedDocuments) {
+            this.documents = List.copyOf(documents);
+            this.index = index;
+            // Preserve the existing null-name lookup behavior (a missing document).
+            this.indexedDocuments = Collections.unmodifiableMap(new HashMap<>(indexedDocuments));
+        }
+    }
+
+    // Serialize builders, not readers. An older scan cannot finish after a newer
+    // scan and overwrite it; any failure leaves the published generation intact.
+    public synchronized void buildIndex(String folderPath) throws IOException {
         File folder = new File(folderPath);
         if (Files.isSymbolicLink(folder.toPath())) {
             throw new IOException("Symbolic-link collections are not allowed.");
@@ -62,18 +78,20 @@ public class SearchEngine {
             newIndex.addDocumentWithPositions(document, processor.tokenize(text));
             newIndexedDocuments.put(document.getFilename(), bytes);
         }
-        documents = newDocuments;
-        index = newIndex;
-        indexedDocuments = newIndexedDocuments;
+        state = new EngineState(newDocuments, newIndex, newIndexedDocuments);
     }
 
     // Exact indexed-name lookup only. No paths are resolved and callers cannot modify stored bytes.
     public byte[] getIndexedDocumentBytes(String filename) {
-        byte[] bytes = indexedDocuments.get(filename);
+        EngineState snapshot = state;
+        byte[] bytes = snapshot.indexedDocuments.get(filename);
         return bytes == null ? null : bytes.clone();
     }
 
     public List<SearchResult> search(String query) {
+        EngineState snapshot = state;
+        List<Document> documents = snapshot.documents;
+        InvertedIndex index = snapshot.index;
         // Count each distinct query term once; repetition does not inflate its weight.
         Set<String> queryTerms = new LinkedHashSet<>(processor.process(query));
         double[] scores = new double[documents.size() + 1];
@@ -119,6 +137,9 @@ public class SearchEngine {
      * @throws IllegalArgumentException when k is less than one
      */
     public List<SearchResult> searchTopK(String query, int k) {
+        EngineState snapshot = state;
+        List<Document> documents = snapshot.documents;
+        InvertedIndex index = snapshot.index;
         if (k < 1) {
             throw new IllegalArgumentException("Top-K limit must be at least 1.");
         }
@@ -234,6 +255,9 @@ public class SearchEngine {
      * The input is phrase text; quotation marks have no query-language meaning.
      */
     public List<Document> searchPhrase(String phrase) {
+        EngineState snapshot = state;
+        List<Document> documents = snapshot.documents;
+        InvertedIndex index = snapshot.index;
         List<String> terms = processor.tokenize(phrase);
         List<Document> matches = new ArrayList<>();
         if (terms.isEmpty()) {
@@ -277,12 +301,15 @@ public class SearchEngine {
      * @throws IllegalArgumentException for null, blank or malformed expressions
      */
     public List<Document> searchBoolean(String expression) {
+        EngineState snapshot = state;
+        List<Document> documents = snapshot.documents;
+        InvertedIndex index = snapshot.index;
         if (expression == null || expression.isBlank()) {
             throw new IllegalArgumentException("Boolean expression must not be null or blank.");
         }
         String[] parts = expression.strip().split("\\s+");
         Set<Integer> matches = new HashSet<>();
-        Set<Integer> group = booleanOperandDocuments(parts[0]);
+        Set<Integer> group = booleanOperandDocuments(parts[0], index);
 
         // Finish each AND group before including it in the OR union. Never
         // short-circuit parsing: even an unknown term must not hide invalid input.
@@ -294,7 +321,7 @@ public class SearchEngine {
             if (i + 1 == parts.length) {
                 throw new IllegalArgumentException("Missing operand after " + operator + ".");
             }
-            Set<Integer> next = booleanOperandDocuments(parts[i + 1]);
+            Set<Integer> next = booleanOperandDocuments(parts[i + 1], index);
             if (operator.equalsIgnoreCase("AND")) {
                 group = intersectDocuments(group, next);
             } else {
@@ -315,7 +342,7 @@ public class SearchEngine {
         return results;
     }
 
-    private Set<Integer> booleanOperandDocuments(String operand) {
+    private Set<Integer> booleanOperandDocuments(String operand, InvertedIndex index) {
         if (operand.equalsIgnoreCase("AND") || operand.equalsIgnoreCase("OR")) {
             throw new IllegalArgumentException("Expected an operand, found operator: " + operand);
         }
@@ -386,12 +413,24 @@ public class SearchEngine {
         return retained;
     }
 
-    public int getDocumentCount() { return documents.size(); }
+    // Each call captures one generation. Separate calls may observe a rebuild
+    // between them; these getters do not promise a cross-call transaction.
+    public int getDocumentCount() {
+        EngineState snapshot = state;
+        return snapshot.documents.size();
+    }
     /** Read-only positional snapshot, keyed by document ID, for a normalized term. */
     public Map<Integer, List<Integer>> getPositionalPostings(String term) {
-        return index.getPositionalPostings(term);
+        EngineState snapshot = state;
+        return snapshot.index.getPositionalPostings(term);
     }
 
-    public int getUniqueTermCount() { return index.getUniqueTermCount(); }
-    public int getTotalTokens() { return index.getTotalTokens(); }
+    public int getUniqueTermCount() {
+        EngineState snapshot = state;
+        return snapshot.index.getUniqueTermCount();
+    }
+    public int getTotalTokens() {
+        EngineState snapshot = state;
+        return snapshot.index.getTotalTokens();
+    }
 }

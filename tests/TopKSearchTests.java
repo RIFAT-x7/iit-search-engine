@@ -268,13 +268,16 @@ public class TopKSearchTests {
         texts[297] = "java java";
         try (Fixture fixture = new Fixture(texts)) {
             List<SearchResult> expected = fixture.engine.search("java");
-            Field field = SearchEngine.class.getDeclaredField("documents");
+            Field stateField = SearchEngine.class.getDeclaredField("state");
+            stateField.setAccessible(true);
+            Object snapshot = stateField.get(fixture.engine);
+            Field field = snapshot.getClass().getDeclaredField("documents");
             field.setAccessible(true);
             @SuppressWarnings("unchecked")
-            List<Document> original = (List<Document>) field.get(fixture.engine);
+            List<Document> original = (List<Document>) field.get(snapshot);
             int[] lookups = {0};
             // This test-only metadata wrapper rejects an all-document iteration.
-            field.set(fixture.engine, new AbstractList<Document>() {
+            field.set(snapshot, new AbstractList<Document>() {
                 public Document get(int i) { lookups[0]++; return original.get(i); }
                 public int size() { return original.size(); }
                 public Iterator<Document> iterator() { throw new AssertionError("Full document scan"); }
