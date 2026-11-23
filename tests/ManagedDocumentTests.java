@@ -115,6 +115,9 @@ public class ManagedDocumentTests {
     private static void multiple() throws Exception {
         try (Fixture f = populated()) {
             f.store.add("c.txt", utf8("delta alpha"));
+            List<String> inventory = f.store.listDocumentNames();
+            check(inventory.equals(List.of("a.txt", "b.txt", "c.txt")), "Sorted published inventory");
+            expect(UnsupportedOperationException.class, () -> inventory.add("other.txt"));
             check(f.engine().getDocumentCount() == 3 && f.engine().getUniqueTermCount() == 4
                     && f.engine().getTotalTokens() == 7, "Collection statistics");
             check(names(f.engine().searchBoolean("alpha")).equals(List.of("a.txt", "b.txt", "c.txt")), "Earlier documents lost");
@@ -275,6 +278,7 @@ public class ManagedDocumentTests {
 
     private static void oversized() throws Exception {
         try (Fixture f = new Fixture(true, 16)) {
+            check(f.store.getMaxDocumentBytes() == 16, "Configured limit access");
             f.store.add("a.txt", utf8("alpha"));
             var before = fingerprint(f.engine());
             expect(IllegalArgumentException.class, () -> f.store.add("new.txt", new byte[17]));
@@ -551,6 +555,7 @@ public class ManagedDocumentTests {
             expect(IOException.class, () -> f.store.replace("a.txt", utf8("fresh")));
             expect(IOException.class, () -> f.store.delete("a.txt"));
             expect(IOException.class, f.store::reload);
+            expect(IOException.class, f.store::listDocumentNames);
             f.store = new DocumentStore(f.root);
             check(f.engine().getDocumentCount() == 2, "Closed collection lost data");
         }

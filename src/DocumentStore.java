@@ -97,6 +97,14 @@ public final class DocumentStore implements AutoCloseable {
     /** Retrieval access only. Rebuild this owned engine through reload(). */
     public SearchEngine getSearchEngine() { return engine; }
 
+    /** Published inventory only; offline changes require reload(). */
+    public synchronized List<String> listDocumentNames() throws IOException {
+        ensureUsable();
+        return indexedNames.stream().sorted().toList();
+    }
+
+    public int getMaxDocumentBytes() { return maxDocumentBytes; }
+
     public synchronized void add(String filename, byte[] content) throws IOException {
         add(filename, byteInput(content));
     }

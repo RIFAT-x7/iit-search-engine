@@ -51,7 +51,7 @@ foreach ($unsupported in @('--unknown', 'data', '--phrase-demo --phrase-demo', '
         if (-not $process.WaitForExit(5000)) { throw 'Unsupported startup arguments did not exit promptly' }
         $output = $stdout.GetAwaiter().GetResult()
         $errorText = $stderr.GetAwaiter().GetResult()
-        if ($process.ExitCode -ne 1 -or -not $errorText.Contains('Usage: SearchServer [--phrase-demo | --showcase]') -or $output.Contains('Listening')) {
+        if ($process.ExitCode -ne 1 -or -not $errorText.Contains('Usage: SearchServer [--phrase-demo | --showcase | --managed]') -or $output.Contains('Listening')) {
             throw "Unsupported arguments were not rejected clearly: $unsupported"
         }
         Write-Host "PASS: Rejected startup arguments: $unsupported"

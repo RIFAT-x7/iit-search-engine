@@ -10,9 +10,26 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
+import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 public class SearchServer {
-    public static void main(String[] args) throws IOException {
+    private static final String USAGE = "Usage: SearchServer [--phrase-demo | --showcase | --managed]";
+
+    public static void main(String[] args) {
+        try { start(args); }
+        catch (IOException | RuntimeException failure) {
+            // Startup diagnostics must not disclose tokens or storage paths.
+            System.err.println("Server startup failed. Check arguments, managed token/storage, web assets and port 8080.");
+            System.err.println(USAGE);
+            System.exit(1);
+        }
+    }
+
+    // Package access also permits owned integration tests to close the actual server.
+    static RunningServer start(String[] args) throws IOException {
         String collection;
         if (args.length == 0) {
             collection = "data";
@@ -20,100 +37,176 @@ public class SearchServer {
             collection = "data/phrase_samples";
         } else if (args.length == 1 && "--showcase".equals(args[0])) {
             collection = "data/showcase";
+        } else if (args.length == 1 && "--managed".equals(args[0])) {
+            collection = "data/managed";
         } else {
-            System.err.println("Unsupported arguments. Usage: SearchServer [--phrase-demo | --showcase]");
-            System.exit(1);
-            return;
+            throw new IllegalArgumentException(USAGE);
         }
-        // Run from the repository root so data and the fixed web files resolve correctly.
-        SearchEngine engine = new SearchEngine();
-        engine.buildIndex(collection);
-        System.out.println("Collection: " + collection);
-        System.out.println("Indexed " + engine.getDocumentCount() + " documents.");
-        String indexHtml = Files.readString(Path.of("web", "index.html"), StandardCharsets.UTF_8);
-        String appJs = Files.readString(Path.of("web", "app.js"), StandardCharsets.UTF_8);
-        String stylesCss = Files.readString(Path.of("web", "styles.css"), StandardCharsets.UTF_8);
-        String readerHtml = Files.readString(Path.of("web", "reader.html"), StandardCharsets.UTF_8);
-        String readerJs = Files.readString(Path.of("web", "reader.js"), StandardCharsets.UTF_8);
-        String highlightJs = Files.readString(Path.of("web", "highlight.js"), StandardCharsets.UTF_8);
-
-        HttpServer server = HttpServer.create(new InetSocketAddress("127.0.0.1", 8080), 0);
-        server.createContext("/", exchange -> {
-            try {
-                String path = exchange.getRequestURI().getRawPath();
-                boolean documentRoute = "/document/view".equals(path) || "/document/download".equals(path);
-                // Context matching uses prefixes, so check each endpoint path exactly.
-                if (!"/".equals(path) && !"/app.js".equals(path) && !"/styles.css".equals(path)
-                        && !"/health".equals(path) && !"/search".equals(path) && !documentRoute
-                        && !"/reader.html".equals(path) && !"/reader.js".equals(path) && !"/highlight.js".equals(path)) {
-                    exchange.sendResponseHeaders(404, -1);
-                } else if (!"GET".equals(exchange.getRequestMethod())) {
-                    exchange.getResponseHeaders().set("Allow", "GET");
-                    exchange.sendResponseHeaders(405, -1);
-                } else if ("/".equals(path)) {
-                    sendResponse(exchange, 200, indexHtml, "text/html; charset=utf-8");
-                } else if ("/app.js".equals(path)) {
-                    sendResponse(exchange, 200, appJs, "text/javascript; charset=utf-8");
-                } else if ("/styles.css".equals(path)) {
-                    sendResponse(exchange, 200, stylesCss, "text/css; charset=utf-8");
-                } else if ("/reader.html".equals(path)) {
-                    sendResponse(exchange, 200, readerHtml, "text/html; charset=utf-8");
-                } else if ("/reader.js".equals(path)) {
-                    sendResponse(exchange, 200, readerJs, "text/javascript; charset=utf-8");
-                } else if ("/highlight.js".equals(path)) {
-                    sendResponse(exchange, 200, highlightJs, "text/javascript; charset=utf-8");
-                } else if ("/health".equals(path)) {
-                    sendText(exchange, 200, "OK");
-                } else if (documentRoute) {
-                    try {
-                        String name = parseDocumentName(exchange.getRequestURI().getRawQuery());
-                        byte[] bytes = engine.getIndexedDocumentBytes(name);
-                        if (bytes == null) {
-                            sendJson(exchange, 404, "{\"error\":\"Document not found.\"}");
-                        } else {
-                            exchange.getResponseHeaders().set("X-Content-Type-Options", "nosniff");
-                            if ("/document/download".equals(path)) {
-                                // Only an exact allowlist hit reaches header construction.
-                                exchange.getResponseHeaders().set("Content-Disposition", attachmentFilename(name));
-                            }
-                            sendBytes(exchange, bytes, "text/plain; charset=utf-8");
-                        }
-                    } catch (IllegalArgumentException invalidName) {
-                        sendJson(exchange, 400, "{\"error\":\"Bad request: Invalid document name.\"}");
-                    }
-                } else {
-                    try {
-                        SearchRequest request = parseQuery(exchange.getRequestURI().getRawQuery());
-                        if ("phrase".equals(request.mode())) {
-                            sendJson(exchange, 200, documentJson(request.query(), request.mode(),
-                                    engine.searchPhrase(request.query())));
-                        } else if ("boolean".equals(request.mode())) {
-                            sendJson(exchange, 200, documentJson(request.query(), request.mode(),
-                                    engine.searchBoolean(request.query())));
-                        } else {
-                            sendJson(exchange, 200, searchJson(request.query(),
-                                    request.k() == null ? engine.search(request.query())
-                                            : engine.searchTopK(request.query(), request.k())));
-                        }
-                    } catch (IllegalArgumentException invalidQuery) {
-                        sendJson(exchange, 400, "{\"error\":"
-                                + jsonString("Bad request: " + invalidQuery.getMessage()) + "}");
-                        return;
-                    }
-
-                }
-            } finally {
-                exchange.close();
+        boolean managed = "data/managed".equals(collection);
+        String token = managed ? System.getenv("IIT_SEARCH_ADMIN_TOKEN") : null;
+        if (managed) { AdminDocumentHandler.validateToken(token); }
+        // JDK 25 HTTP-server limits: close rejected bodies without draining them,
+        // and prevent stalled clients from retaining workers indefinitely.
+        System.setProperty("sun.net.httpserver.drainAmount", "0");
+        System.setProperty("sun.net.httpserver.maxReqTime", "15");
+        System.setProperty("sun.net.httpserver.maxRspTime", "30");
+        DocumentStore store = null;
+        HttpServer server = null;
+        ThreadPoolExecutor workers = null;
+        try {
+            // Run from the repository root so data and the fixed web files resolve correctly.
+            SearchEngine engine;
+            if (managed) {
+                store = new DocumentStore(Path.of(collection));
+                engine = store.getSearchEngine();
+            } else {
+                engine = new SearchEngine();
+                engine.buildIndex(collection);
             }
-        });
-        server.start();
-        System.out.println("Listening on http://127.0.0.1:8080");
+            System.out.println("Collection: " + collection);
+            System.out.println("Indexed " + engine.getDocumentCount() + " documents.");
+            String indexHtml = Files.readString(Path.of("web", "index.html"), StandardCharsets.UTF_8);
+            String appJs = Files.readString(Path.of("web", "app.js"), StandardCharsets.UTF_8);
+            String stylesCss = Files.readString(Path.of("web", "styles.css"), StandardCharsets.UTF_8);
+            String readerHtml = Files.readString(Path.of("web", "reader.html"), StandardCharsets.UTF_8);
+            String readerJs = Files.readString(Path.of("web", "reader.js"), StandardCharsets.UTF_8);
+            String highlightJs = Files.readString(Path.of("web", "highlight.js"), StandardCharsets.UTF_8);
+
+            server = HttpServer.create(new InetSocketAddress("127.0.0.1", 8080), 0);
+            workers = new ThreadPoolExecutor(4, 4, 0, TimeUnit.MILLISECONDS,
+                    new ArrayBlockingQueue<>(64), new ThreadPoolExecutor.AbortPolicy());
+            server.setExecutor(workers);
+            server.createContext("/", exchange -> {
+                try {
+                    String path = exchange.getRequestURI().getRawPath();
+                    boolean documentRoute = "/document/view".equals(path) || "/document/download".equals(path);
+                    // Context matching uses prefixes, so check each endpoint path exactly.
+                    if (!"/".equals(path) && !"/app.js".equals(path) && !"/styles.css".equals(path)
+                            && !"/health".equals(path) && !"/search".equals(path) && !documentRoute
+                            && !"/reader.html".equals(path) && !"/reader.js".equals(path) && !"/highlight.js".equals(path)) {
+                        exchange.sendResponseHeaders(404, -1);
+                    } else if (!"GET".equals(exchange.getRequestMethod())) {
+                        exchange.getResponseHeaders().set("Allow", "GET");
+                        exchange.sendResponseHeaders(405, -1);
+                    } else if ("/".equals(path)) {
+                        sendResponse(exchange, 200, indexHtml, "text/html; charset=utf-8");
+                    } else if ("/app.js".equals(path)) {
+                        sendResponse(exchange, 200, appJs, "text/javascript; charset=utf-8");
+                    } else if ("/styles.css".equals(path)) {
+                        sendResponse(exchange, 200, stylesCss, "text/css; charset=utf-8");
+                    } else if ("/reader.html".equals(path)) {
+                        sendResponse(exchange, 200, readerHtml, "text/html; charset=utf-8");
+                    } else if ("/reader.js".equals(path)) {
+                        sendResponse(exchange, 200, readerJs, "text/javascript; charset=utf-8");
+                    } else if ("/highlight.js".equals(path)) {
+                        sendResponse(exchange, 200, highlightJs, "text/javascript; charset=utf-8");
+                    } else if ("/health".equals(path)) {
+                        sendText(exchange, 200, "OK");
+                    } else if (documentRoute) {
+                        try {
+                            String name = parseDocumentName(exchange.getRequestURI().getRawQuery());
+                            byte[] bytes = engine.getIndexedDocumentBytes(name);
+                            if (bytes == null) {
+                                sendJson(exchange, 404, "{\"error\":\"Document not found.\"}");
+                            } else {
+                                exchange.getResponseHeaders().set("X-Content-Type-Options", "nosniff");
+                                if ("/document/download".equals(path)) {
+                                    // Only an exact allowlist hit reaches header construction.
+                                    exchange.getResponseHeaders().set("Content-Disposition", attachmentFilename(name));
+                                }
+                                sendBytes(exchange, bytes, "text/plain; charset=utf-8");
+                            }
+                        } catch (IllegalArgumentException invalidName) {
+                            sendJson(exchange, 400, "{\"error\":\"Bad request: Invalid document name.\"}");
+                        }
+                    } else {
+                        try {
+                            SearchRequest request = parseQuery(exchange.getRequestURI().getRawQuery());
+                            if ("phrase".equals(request.mode())) {
+                                sendJson(exchange, 200, documentJson(request.query(), request.mode(),
+                                        engine.searchPhrase(request.query())));
+                            } else if ("boolean".equals(request.mode())) {
+                                sendJson(exchange, 200, documentJson(request.query(), request.mode(),
+                                        engine.searchBoolean(request.query())));
+                            } else {
+                                sendJson(exchange, 200, searchJson(request.query(),
+                                        request.k() == null ? engine.search(request.query())
+                                                : engine.searchTopK(request.query(), request.k())));
+                            }
+                        } catch (IllegalArgumentException invalidQuery) {
+                            sendJson(exchange, 400, "{\"error\":"
+                                    + jsonString("Bad request: " + invalidQuery.getMessage()) + "}");
+                            return;
+                        }
+
+                    }
+                } finally {
+                    exchange.close();
+                }
+            });
+            if (store != null) {
+                server.createContext("/admin/", new AdminDocumentHandler(store, token));
+            }
+            RunningServer running = new RunningServer(server, workers, store);
+            server.start();
+            running.installShutdownHook();
+            System.out.println("Listening on http://127.0.0.1:8080");
+            return running;
+        } catch (IOException | RuntimeException | Error failure) {
+            if (server != null) { server.stop(0); }
+            if (workers != null) { workers.shutdownNow(); }
+            if (store != null) {
+                try { store.close(); } catch (IOException cleanup) { failure.addSuppressed(cleanup); }
+            }
+            throw failure;
+        }
+    }
+
+    static final class RunningServer implements AutoCloseable {
+        private final HttpServer server;
+        private final ThreadPoolExecutor workers;
+        private final DocumentStore store;
+        private final AtomicBoolean closed = new AtomicBoolean();
+        private Thread shutdownHook;
+
+        private RunningServer(HttpServer server, ThreadPoolExecutor workers, DocumentStore store) {
+            this.server = server;
+            this.workers = workers;
+            this.store = store;
+        }
+
+        private void installShutdownHook() {
+            shutdownHook = new Thread(() -> {
+                try { close(); } catch (IOException failure) { System.err.println("Managed storage shutdown failed."); }
+            }, "search-server-shutdown");
+            Runtime.getRuntime().addShutdownHook(shutdownHook);
+        }
+
+        public void close() throws IOException {
+            if (!closed.compareAndSet(false, true)) { return; }
+            server.stop(1);
+            workers.shutdown();
+            try {
+                if (!workers.awaitTermination(5, TimeUnit.SECONDS)) { workers.shutdownNow(); }
+            } catch (InterruptedException interrupted) {
+                workers.shutdownNow();
+                Thread.currentThread().interrupt();
+            } finally {
+                try { if (store != null) { store.close(); } }
+                finally {
+                    if (shutdownHook != null) {
+                        try { Runtime.getRuntime().removeShutdownHook(shutdownHook); }
+                        catch (IllegalStateException shuttingDown) { /* Already running shutdown hooks. */ }
+                    }
+                }
+            }
+        }
     }
 
     // A null limit preserves the existing full keyword search; no default Top-K.
     private record SearchRequest(String query, String mode, Integer k) { }
 
-    private static String parseDocumentName(String rawQuery) {
+    static String parseDocumentName(String rawQuery) {
         if (rawQuery == null) { throw new IllegalArgumentException(); }
         String name = null;
         for (String parameter : rawQuery.split("&", -1)) {
@@ -288,7 +381,7 @@ public class SearchServer {
         return response.append("]}").toString();
     }
 
-    private static String jsonString(String value) {
+    static String jsonString(String value) {
         StringBuilder escaped = new StringBuilder("\"");
         for (int i = 0; i < value.length(); i++) {
             char character = value.charAt(i);
@@ -314,7 +407,7 @@ public class SearchServer {
         return escaped.append('"').toString();
     }
 
-    private static void sendJson(HttpExchange exchange, int status, String json) throws IOException {
+    static void sendJson(HttpExchange exchange, int status, String json) throws IOException {
         sendResponse(exchange, status, json, "application/json; charset=utf-8");
     }
 
