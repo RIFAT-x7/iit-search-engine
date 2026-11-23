@@ -16,14 +16,31 @@ them to public or supervisor-authorized IIT documents.
 
 The current browser and HTTP JSON API support ranked keyword search with optional
 optimized Top-K selection, exact phrase retrieval, and explicit Boolean AND/OR
-retrieval. Startup selects six original fictional files, a separate nine-document
-phrase collection, or an optional 25-document fictional showcase. A separate CLI retains its
-original keyword-search menu.
+retrieval, original-byte viewing/downloading, snippets and safe highlighting.
+Startup selects one of three fictional demo collections or an opt-in managed
+collection. Managed mode adds authenticated HTTP administration and a browser
+Document Manager for live add, replace and delete operations. Each update rebuilds
+the full collection and atomically publishes one index snapshot; this is not
+posting-level incremental indexing. A separate CLI retains its keyword menu.
 The browser uses plain HTML, JavaScript and CSS for query composition and
 presentation; Java owns indexing, authoritative HTTP query validation, retrieval
 and keyword ranking.
 
-## Midterm demonstration
+**Current application checkpoint:** Phase 5B integrated at
+`0532b2b951286c724cce6ecbaf602da2d5370510`. Previously executed full regression:
+**790 passed, 0 failed, 2 skipped** Windows symlink fixtures. Later unchanged-code
+integration verification passed **613 focused checks**. Neither is a fresh run
+performed for this documentation update. See the [verification record](#testing-and-verification-record),
+[Phase 5 learning guide](learnings/04-phase5-live-document-management.md) and
+[current demonstration runbook](docs/PHASE_5B_DEMO_RUNBOOK_2026-11.md).
+
+<a id="midterm-demonstration"></a>
+
+## Midterm demonstration (historical November 2026 record)
+
+This section and the following supervisor-plan section preserve the pre-midterm
+checkpoint and preparation status recorded then. They do not describe today's
+feature freeze or establish that later student rehearsal took place.
 
 Phases through **3.5C are implemented and fast-forward integrated**. The frozen
 application checkpoint, including Premium Midnight Scholar and the optional showcase, is
@@ -99,48 +116,38 @@ is retained separately.
 
 ## Current architecture
 
-Java owns retrieval. The browser composes queries and presents JSON results,
-then fetches original indexed text for previews and the highlighted reader.
+Java owns validation, indexing and retrieval; browser code presents results.
 
-```mermaid
-flowchart TD
-    Search["Search page: index.html, app.js"]
-    Reader["Reader: reader.html, reader.js"]
-    Shared["Shared highlight.js and styles.css"]
-    Server["SearchServer: 127.0.0.1:8080"]
-    Assets["Six fixed web assets loaded at startup"]
-    Core["SearchEngine: keyword / Top-K / phrase / Boolean"]
-    Index["Frequency and positional postings"]
-    Snapshot["Private filename-to-original-byte snapshots"]
-    Data["One fictional UTF-8 .txt collection: 6, 9 or optional 25 files"]
-    CLI["Separate Main CLI process"]
-    Search -->|"GET /search: JSON, numerical scores retained"| Server
-    Search -->|"GET /document/view: preview source"| Server
-    Search -->|"Open /reader.html with encoded name, q, mode"| Reader
-    Reader -->|"GET /document/view or /document/download"| Server
-    Shared --> Search
-    Shared --> Reader
-    Assets -->|"Fixed routes only"| Server
-    Server --> Core
-    Core <--> Index
-    Data -->|"Strict UTF-8 indexing; original bytes retained"| Core
-    Core --> Snapshot
-    Server -->|"Exact indexed filename lookup; no request-derived paths"| Snapshot
-    CLI --> Core
+| Component | Responsibility |
+| --- | --- |
+| `TextProcessor` | Manual ASCII tokenization; filtered keyword terms and complete phrase positions |
+| `InvertedIndex` | Frequency and positional postings; existing manually implemented IR structures |
+| `SearchEngine` | Keyword/Top-K/phrase/Boolean retrieval; one volatile `EngineState` containing ordered metadata, postings, statistics and original bytes |
+| `DocumentStore` | Owns one managed directory and engine; bounded validation, serialized mutations, staging, rollback and reload |
+| `SearchServer` | Loopback HTTP routes, fixed assets, startup/shutdown and four workers with a bounded queue |
+| `AdminDocumentHandler` | Bearer/Host/Origin checks and bounded raw-body administration through the store |
+| Public browser client | `index.html`, `app.js`, `highlight.js`, `reader.html`, `reader.js`; search, original text and highlights |
+| Document Manager | Managed-only `admin.html`, `admin.js`, `admin.css`; in-memory token, inventory and lifecycle controls |
+
+```text
+Public Search/Reader -> SearchServer -> published SearchEngine generation
+Document Manager -> authenticated /admin/documents -> DocumentStore
+  -> validate and stage -> atomic disk move -> build complete candidate index
+  -> one EngineState publication -> successful HTTP response -> refresh inventory
 ```
 
 `Main` and `SearchServer` are separate entry points with separate engines. The
-CLI supports manual rebuilds; the HTTP server builds once before listening.
-A successful build replaces its structures after all reads succeed; failed
-builds preserve the prior index and bytes. This is failed-build preservation,
-not a guarantee of atomic publication to concurrent rebuild/search threads.
+managed server uses the store's owned engine for public reads. Rebuild writers
+are synchronized; readers take no rebuild lock and capture one generation per
+retrieval call. Failed builds preserve the previous published state. Separate
+calls may observe different generations. IDs remain contiguous within each build.
 
-The server selects one collection and reads six trusted fixed web assets at
-startup. Restart it after intended collection or web-file changes. Document
-requests read snapshots rather than reopening filenames from the browser;
-source changes/deletions do not alter served bytes until a successful rebuild
-or restart. No HTTP rebuild endpoint exists. This small in-memory prototype is
-not a production authorization or general-purpose file server.
+Demo modes index at startup and cannot expose administration. Managed mode loads
+`data/managed/` on startup and rebuilds after each store mutation. Public document
+routes use exact-name original-byte snapshots, never request-derived disk paths.
+Assets are loaded once; web-file edits still require a server restart. There is
+no HTTP reload endpoint or watcher. Disk changes and memory publication are not
+one crash-atomic transaction; see the learning guide for recovery details.
 
 ## Current implementation
 
@@ -196,11 +203,12 @@ not a production authorization or general-purpose file server.
   duplicate `k` are rejected. Phrase and Boolean modes reject any supplied `k`.
 - Application-handled query validation errors return HTTP 400 with a JSON
   `error` field. JSON strings escape quotes, backslashes, and low controls.
-- Unsupported methods on any known path return 405 with `Allow: GET`;
-  unknown paths return 404. Path validation precedes method validation.
-- Six dependency-free Java suites (100 passes, one skipped fixture), HTTP suites
-  on the original collections (320), and Node browser/presentation models (107 + 35).
-  Dedicated showcase coverage adds 18 Java and 70 HTTP checks.
+- Public known paths reject unsupported methods with 405 and `Allow: GET`;
+  unknown paths return 404. Administrative method/authentication rules are below.
+- Atomic rebuild publication, managed storage and authenticated raw-body document
+  administration; searches can read the old complete snapshot while rebuilding.
+- Dependency-free Java, HTTP and Node models cover retrieval, storage, concurrency
+  and browser behavior; current and historical counts are recorded separately.
 - An accessible native GET form with three labeled radio modes, keyword selected
   by default, Boolean help and a required query. Without JavaScript, it can
   navigate to the selected mode's raw JSON response.
@@ -243,20 +251,24 @@ and 120 processed tokens**. Searching `java` ranks `java_programming.txt` before
 `academic_notice.txt`. The CLI displays scores as 5.54 and 1.85; the JSON API
 returns numeric values without that formatting. Browser results display no scores.
 
-### Fixed demonstration collections
+<a id="fixed-demonstration-collections"></a>
+
+### Startup collections
 
 | Server startup | Indexed folder | Documents |
 | --- | --- | --- |
 | `SearchServer` | Immediate `.txt` files in `data/` | 6 original fictional documents |
 | `SearchServer --phrase-demo` | `data/phrase_samples/` | 9 separate fictional IIT-themed samples |
 | `SearchServer --showcase` | `data/showcase/` | 25 optional original fictional academic notes |
+| `SearchServer --managed` | `data/managed/` | Persistent managed collection; initially empty if absent |
 
 The loader is not recursive, so the nested samples never silently join the
 default corpus. The [sample README](data/phrase_samples/README.md) describes the
 nine-file collection. All three collections are fictional, not official IIT records.
 Startup selects the corpus; the browser's radio control selects an algorithm
 over that corpus, and its keyword selector optionally limits ranked results.
-The server accepts no arbitrary document-path option.
+The server accepts no arbitrary document-path option. Managed files and private
+staging are narrowly ignored by Git; the three demo collections remain unchanged.
 
 The standard midterm route remains the original six/nine-file demonstration.
 For optional variety, see the [showcase inventory, measured queries and commands](data/showcase/README.md).
@@ -415,10 +427,10 @@ application's JSON error handler runs.
 | `GET /health` | 200; `text/plain; charset=utf-8`; exact body `OK`, without newline |
 | Valid `GET /search?q=...&mode=...` with optional keyword `k` | 200; mode-specific JSON described above |
 | Invalid query on GET search | 400; JSON `error` for application-handled validation |
-| Unsupported method on any known path | 405; `Allow: GET`; empty body |
+| Unsupported method on a known public path | 405; `Allow: GET`; empty body |
 | Unknown or suffixed path, such as `/search/` | 404; empty body |
 
-Unknown-route 404 responses and unsupported-method 405 responses have empty bodies. Document-not-found 404 responses contain JSON. Unknown paths receive 404 even
+For public routes, unknown-route 404 and method-rejection 405 responses have empty bodies. Document-not-found 404 responses contain JSON. Unknown paths receive 404 even
 with an unsupported method. `/health` does not run a search or perform a new
 index diagnostic for each request.
 
@@ -487,28 +499,23 @@ Completed milestones:
 | Phase 3.5C | Contextual snippets, shared highlights and reader; `ab6eacc` |
 | Phase 3.5D Part 1 | Reviewed stabilization documentation and Manual #15; `cdc3b50` |
 | Premium UI | Midnight Scholar and adaptive Advanced Search; `143ab55` |
+| Phase 5A | Atomic index generations and safe runtime rebuilds; `88d5ebe` |
+| Phase 5B.1 | Managed document storage, validation, persistence and rollback; `ff8413e` |
+| Phase 5B.2A | Authenticated local HTTP document administration; `862e9e5` |
+| Phase 5B.2B | Browser Document Manager; `0532b2b` |
 
 The Phase 2 integration used `git merge --ff-only feat/browser-client`; later
 reviewed feature branches were also integrated with fast-forward-only merges
 and normal pushes. Phase 3.3B advanced main to `2a228fc`; Phase 3.4A to `498de05`
 and Phase 3.4B to `39f8353`, each without a merge commit.
-The [planning document](PLANNED_FEATURES.md) separates completed phases from
-pending capabilities and unconfirmed supervisor decisions.
+The [planning document](PLANNED_FEATURES.md) preserves earlier supervisor questions
+and proposed phase numbering; this README records the implemented Phase 5 scope.
 
-Current stabilization and future work:
-
-- Phase 3.5D is active: fresh regressions, documentation, one consolidated manual
-  and a demonstration runbook. Part 1 documentation is integrated; slides,
-  speech, rehearsal and student viva practice are not completed by this task.
-- November 9 freezes features; November 10 is for slides and speech; November 11
-  is for rehearsal, code explanation and viva preparation.
-- Proposed post-midterm Phases 4-7 cover metadata/date filters, authorized ingestion
-  and text-based PDF extraction, Bangla/Unicode retrieval, separately scoped OCR,
-  permissions, persistence, evaluation and approved deployment architecture.
-- Fuzzy/semantic or other algorithms require explicit justification and agreement.
-
-Deferred capabilities are not implemented or approved for production deployment.
-The prototype remains localhost-only with fictional documents.
+Current closure work is consolidated documentation and final headed Edge
+acceptance/rehearsal. Genuine per-document indexing, PDF/DOCX extraction,
+Bangla processing, OCR, metadata filtering, watchers and deployment remain future
+work requiring separate scope. Fuzzy/semantic algorithms are also deferred.
+Managed ingestion does not authorize access to confidential institutional files.
 
 ## Technology and academic scope
 
@@ -535,6 +542,8 @@ src/
   SearchResult.java      Document and score
   Main.java              Original CLI entry point
   SearchServer.java      Fixed assets, health/search JSON and indexed-byte routes
+  DocumentStore.java     Persistent managed collection, validation and rebuild coordination
+  AdminDocumentHandler.java  Authenticated bounded administrative HTTP requests
 tests/
   BaselineTests.java     Seven automated regression tests
   PositionalIndexTests.java  Thirteen positional-index tests
@@ -542,6 +551,10 @@ tests/
   BooleanSearchTests.java Twenty-two core Boolean tests
   TopKSearchTests.java   Twenty-six optimized Top-K tests; optional synthetic benchmark
   IndexedDocumentTests.java  Fourteen passes plus conditional symlink fixture
+  RuntimeRebuildTests.java  19 snapshot/rebuild checks
+  ManagedDocumentTests.java  40 storage checks plus conditional symlink fixture
+  AdminHttpTests.java    38 administrative HTTP checks (use its isolated runner)
+  RunAdminHttpTests.ps1  Owned fixtures, HTTP suite and 4 startup configuration checks
   HttpSmokeTests.ps1     Sixteen original default-corpus HTTP checks
   PhraseHttpTests.ps1    Thirteen default / twenty-two demo HTTP checks
   BooleanHttpTests.ps1   Twenty-two checks per collection
@@ -553,9 +566,11 @@ tests/
   ShowcaseHttpTests.ps1  2 default / 2 demo / 66 showcase checks
   BrowserClientTests.js  107 DOM/fetch client model checks
   HighlightPresentationTests.js  35 matcher/reader checks
+  AdminBrowserTests.js   39 Document Manager DOM/fetch model checks
 data/                    Six fictional demonstration text documents
   phrase_samples/       Nine separate fictional samples and collection README
   showcase/             Optional 25 fictional notes, provenance and measured examples
+  managed/              Created at runtime; ignored documents and private .iit-store files
 web/
   index.html            Semantic search form and result containers
   app.js                GET API requests and safe DOM result rendering
@@ -563,11 +578,15 @@ web/
   highlight.js           Shared matching offsets, snippets and safe mark rendering
   reader.html            Fixed highlighted-document page
   reader.js              Validated raw-text fetch and reader actions
+  admin.html             Managed-only Document Manager page
+  admin.js               In-memory authentication and raw-file lifecycle requests
+  admin.css              Manager-specific responsive styling
 documents/               Original proposal form and proposal presentation
 docs/
   MIDTERM_SUPERVISOR_PLAN_2026-11.md  Reported feedback, implementation/evidence status
   MIDTERM_DEMO_RUNBOOK_2026-11.md    Windows startup, verified queries and safe cleanup
   FINAL_REPOSITORY_AUDIT_2026-11.md  Final audit findings and separate regression counts
+  PHASE_5B_DEMO_RUNBOOK_2026-11.md  Current startup, lifecycle demo and manual checklist
 learnings/               Learning journal and viva preparation
   README.md             Learning index and reading sequence
   01-phase1-foundations.md
@@ -585,6 +604,7 @@ learnings/               Learning journal and viva preparation
   03-06-optimized-top-k.md
   03-07-top-k-http-browser.md
   03-08-phase-35-midterm-features.md
+  04-phase5-live-document-management.md
 out/                     Ignored generated classes and local verification output
 iit-search-engine-prototype-v0.1.zip   Archived prototype
 PLANNED_FEATURES.md       Future work and supervisor questions
@@ -635,25 +655,27 @@ there is no CLI Top-K selector.
 # Keep temporary fixtures in the existing ignored output directory.
 New-Item -ItemType Directory -Force -Path out\verification-temp | Out-Null
 $verificationTemp = Join-Path (Get-Location).Path 'out\verification-temp'
-foreach ($suite in @('BaselineTests', 'PositionalIndexTests', 'PhraseSearchTests', 'BooleanSearchTests', 'TopKSearchTests', 'IndexedDocumentTests')) {
+foreach ($suite in @('BaselineTests', 'PositionalIndexTests', 'PhraseSearchTests', 'BooleanSearchTests', 'TopKSearchTests', 'IndexedDocumentTests', 'RuntimeRebuildTests', 'ManagedDocumentTests', 'ShowcaseCorpusTests')) {
     & "$projectJdk\bin\java.exe" "-Djava.io.tmpdir=$verificationTemp" -cp out\app $suite
     if ($LASTEXITCODE -ne 0) { throw "Java suite failed: $suite" }
 }
 ```
 
-Expected passes are 7, 13, 18, 22, 26 and 14 respectively: **100 Java passes**,
-0 failures and one separately skipped symlink fixture if Windows denies creation.
+Recorded passes are 7, 13, 18, 22, 26, 14, 19, 40 and 18 respectively:
+**177 Java passes**, with two separately skipped symlink fixtures when Windows denies creation.
 The skipped fixture is not a pass. Checks use explicit `AssertionError`s, so `-ea`
 is unnecessary. Temporary fixtures are separate from data and cleaned up by the
 harnesses; corpus-specific tests read the existing six- and nine-file collections.
-Run the additional showcase suite separately with
-`& "$projectJdk\bin\java.exe" -cp out\app ShowcaseCorpusTests` (18 checks).
+`AdminHttpTests` is compiled here but must run through its isolated PowerShell
+runner below, rather than against production `data/managed/`.
 
 ### HTTP server
 
-When port 8080 is available, start the server in its own console:
+Check port 8080 before starting one server in its own console:
 
 ```powershell
+$listeners = @([Net.NetworkInformation.IPGlobalProperties]::GetIPGlobalProperties().GetActiveTcpListeners() | Where-Object { $_.Port -eq 8080 })
+if ($listeners.Count) { throw 'Port 8080 occupied; identify its owner. Do not stop an unknown process.' }
 & "$projectJdk\bin\java.exe" -cp out\app SearchServer
 ```
 
@@ -666,6 +688,8 @@ Alternatively, start only the nine-document collection instead of the default:
 
 ```powershell
 & "$projectJdk\bin\java.exe" -cp out\app SearchServer --phrase-demo
+# Or, after stopping your own server, select the optional showcase:
+& "$projectJdk\bin\java.exe" -cp out\app SearchServer --showcase
 ```
 
 Its startup log identifies `data/phrase_samples` and 9 documents. Run one server
@@ -737,6 +761,66 @@ before stopping only the confirmed owned process. If startup reports
 `Address already in use`, do not terminate an unidentified process to free
 the port.
 
+### Managed server and Document Manager
+
+After compilation and the port check above, configure a fresh token in the
+server's PowerShell process. This generates 32 cryptographically random bytes
+as 64 permitted hexadecimal characters without displaying the credential:
+
+```powershell
+$adminTokenBytes = New-Object byte[] 32
+$adminRandom = [Security.Cryptography.RandomNumberGenerator]::Create()
+try { $adminRandom.GetBytes($adminTokenBytes) } finally { $adminRandom.Dispose() }
+$env:IIT_SEARCH_ADMIN_TOKEN = [BitConverter]::ToString($adminTokenBytes).Replace('-', '').ToLowerInvariant()
+[Array]::Clear($adminTokenBytes, 0, $adminTokenBytes.Length)
+# Optional on a trusted local desktop: copy for pasting into the password field.
+Set-Clipboard -Value $env:IIT_SEARCH_ADMIN_TOKEN
+try { & "$projectJdk\bin\java.exe" -cp out\app SearchServer --managed }
+finally { Remove-Item Env:\IIT_SEARCH_ADMIN_TOKEN -ErrorAction SilentlyContinue }
+```
+
+Treat the clipboard as sensitive; clear it after pasting and avoid clipboard
+history/sync. Never save the token in a tracked file, URL, screenshot or console
+output. Startup requires 32–256 letters/digits/underscores/hyphens; format
+validation does not measure entropy. Use random generation, not a memorable word.
+
+Open **http://127.0.0.1:8080/** for public Search and
+**http://127.0.0.1:8080/admin.html** for management. Use this exact origin, not
+`localhost`. Unlock verifies the bearer token against the inventory API. Upload
+one valid UTF-8 `.txt` file of at most **1,048,576 bytes**; Replace changes a selected
+document's bytes while retaining its managed filename, even if the local file has
+a different name. Replacement/deletion require confirmation. Confirmed changes
+are searchable immediately; refresh an already displayed search to see them.
+Refresh inventory reloads the published list, not the disk index. Lock clears
+the page's token reference; reload requires unlocking again. Files persist under
+ignored `data/managed/` and are reindexed on restart. This mode never mutates demos.
+
+| Managed API (all require bearer authorization) | Success |
+| --- | --- |
+| `GET /admin/documents` (no query/body) | 200, `documents` filename array in deterministic order |
+| `POST /admin/documents?name=...` | 201, `status: created` and `filename` |
+| `PUT /admin/documents?name=...` | 200, `status: replaced` and `filename` |
+| `DELETE /admin/documents?name=...` (no body) | 200, `status: deleted` and `filename` |
+
+Writes accept exactly one safely decoded `name`; POST/PUT send bounded raw
+`text/plain; charset=utf-8` bytes, not multipart or JSON. The API requires a
+loopback peer, exact Host `127.0.0.1:8080`, and matching Origin when present.
+No-Origin command-line clients still need the bearer header. There is no CORS.
+Rejections use safe JSON: 400 invalid input, 401 authorization, 403 local-access/
+Origin restriction, 404 missing target, 409 collision, 413 size, 415 media type;
+authenticated unsupported methods return 405 with `Allow: GET, POST, PUT, DELETE`.
+Storage errors use 503; unexpected operation errors use 500. Unknown admin paths
+return JSON 404. Admin assets/API are absent in demo modes; the managed page and
+assets contain no token and are served without API authorization, with no-store,
+nosniff and a restrictive CSP.
+
+A lost/invalid response can follow a completed mutation. The browser never retries
+automatically: refresh inventory, inspect the affected text/search, then acknowledge
+the uncertain change before more writes. A filename alone cannot prove replacement
+content. See the [runbook](docs/PHASE_5B_DEMO_RUNBOOK_2026-11.md) for rehearsal,
+shutdown, restart and recovery; plain HTTP bearer access is suitable only for this
+local prototype, not production LAN security.
+
 ### Complete HTTP and browser-client regressions
 
 After compiling, stop any server you launched before running the managed HTTP
@@ -746,7 +830,9 @@ suite, while retaining every original six/nine-file test:
 ```powershell
 powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\tests\RunHttpIntegrationTests.ps1
 if ($LASTEXITCODE -ne 0) { throw 'HTTP integration tests failed' }
-foreach ($file in @('web/app.js','web/highlight.js','web/reader.js','tests/BrowserClientTests.js','tests/HighlightPresentationTests.js')) {
+powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\tests\RunAdminHttpTests.ps1
+if ($LASTEXITCODE -ne 0) { throw 'Administrative HTTP tests failed' }
+foreach ($file in @('web/app.js','web/highlight.js','web/reader.js','web/admin.js','tests/BrowserClientTests.js','tests/HighlightPresentationTests.js','tests/AdminBrowserTests.js')) {
     node.exe --check $file
     if ($LASTEXITCODE -ne 0) { throw "JavaScript syntax failed: $file" }
 }
@@ -754,6 +840,8 @@ node.exe tests\BrowserClientTests.js
 if ($LASTEXITCODE -ne 0) { throw 'Browser-client tests failed' }
 node.exe tests\HighlightPresentationTests.js
 if ($LASTEXITCODE -ne 0) { throw 'Highlighting/reader tests failed' }
+node.exe tests\AdminBrowserTests.js
+if ($LASTEXITCODE -ne 0) { throw 'Administrator browser-model tests failed' }
 Get-ChildItem -LiteralPath tests -Filter *.ps1 | ForEach-Object {
     $syntaxTokens = $null; $syntaxErrors = $null
     [System.Management.Automation.Language.Parser]::ParseFile($_.FullName, [ref]$syntaxTokens, [ref]$syntaxErrors) | Out-Null
@@ -768,14 +856,13 @@ ownership, and stops only its own verified servers. CIM permissions must be
 available; if denied, stop and request authorization for those safety checks.
 Never remove the ownership checks, elevate automatically or kill an unknown PID.
 
-Original HTTP checks: 16 default-only, phrase 13/22, Boolean 22/22,
-Top-K 32/32, documents 55/61 and reader 21/24 = **320**. Startup-argument and
-collection-log checks are additional supporting checks, excluded from that count.
-The two Node models contribute **107 + 35** named checks. Together with **100**
-Java and **320** original HTTP passes, the original regression is **562**, with
-one separately skipped fixture. Showcase coverage adds **18 Java + 70 HTTP**
-(2 default isolation, 2 demo isolation, 66 showcase), for **650 passes** overall.
-These models do not substitute for a real browser.
+The existing HTTP runner contributes **390** named checks across all three
+collections; the administrative runner adds **38 HTTP + 4 actual startup checks**.
+Its temporary managed directory and disposable credentials are isolated from
+production storage. The Node models contribute **107 + 35 + 39** checks.
+With **177 Java** passes this is the recorded **790-pass** full suite. Existing
+runner startup-argument/log guards are supporting checks, not additional passes.
+Node models do not substitute for real-browser acceptance.
 
 <a id="http-integration-smoke-tests-phase-25a"></a>
 
@@ -804,7 +891,39 @@ These are HTTP integration checks, not browser interaction or accessibility test
 
 ## Testing and verification record
 
-### Current final-audit verification: November 10, 2026
+### Phase 5B checkpoint: recorded execution, not a documentation-task rerun
+
+Approved application: `0532b2b951286c724cce6ecbaf602da2d5370510`.
+The completed Stage 1 full regression recorded:
+
+| Suite | Passed | Failed | Skipped |
+| --- | ---: | ---: | ---: |
+| Original Java / showcase Java | 100 + 18 | 0 | 1 |
+| Runtime rebuild / managed documents | 19 + 40 | 0 | 1 |
+| Existing HTTP: default / phrase-demo / showcase | 161 + 163 + 66 | 0 | 0 |
+| Administrative HTTP / actual startup configuration | 38 + 4 | 0 | 0 |
+| Public browser / highlighting-reader / admin browser models | 107 + 35 + 39 | 0 | 0 |
+| **Full regression** | **790** | **0** | **2** |
+
+The two skips are Windows symlink-creation privilege limitations, not passes.
+Later unchanged-code main integration freshly compiled and repeated the three
+Node models and both HTTP runners: **613 passed, 0 failed, 0 skipped**, plus seven
+JS syntax and nine PowerShell syntax checks. This subset is not added to 790.
+This documentation task does not claim another regression execution.
+
+Prior Codex-controlled **real headless Edge** acceptance on one running Java
+server covered upload/exact bytes, live public search, replacement with a
+differently named local file, cancelled/confirmed deletion, refresh, lock/reload,
+basic Tab/focus and widths 320/390/768/1280. This is distinct from mocked Node
+DOM/fetch models and the older student-reported Edge results below. The disposable
+acceptance driver is local verification tooling, not a committed reusable suite.
+**Headed Edge/native Windows file-picker usability remains unverified**; use the
+[manual acceptance checklist](docs/PHASE_5B_DEMO_RUNBOOK_2026-11.md#5-pending-headed-edge-acceptance).
+No production-security, comprehensive accessibility or performance claim follows.
+
+<a id="current-final-audit-verification-november-10-2026"></a>
+
+### Historical final-audit verification: November 10, 2026
 
 Starting clean local/fetched main: `143ab553095b95b572ae55016de3850180054fef`.
 The complete original suite passed before any changes (562/0/1 skipped), and
@@ -1045,26 +1164,40 @@ Manual #15, covers the integrated pipeline, document access, highlights, tradeof
 and 25 viva questions. It retains its November 9 record; student study/practice is not implied.
 The [showcase learning note](data/showcase/README.md#learning-note-collection-selection-and-adaptive-fields)
 explains collection selection and the later adaptive Premium UI without rewriting older manuals.
+Continue with [Phase 5 live document management](learnings/04-phase5-live-document-management.md),
+Manual #16, for snapshots, storage recovery, authenticated HTTP, async browser
+state and viva examples. Older manuals retain the feature limits of their dates.
 
 ## Current limitations
 
-- Only the six default, nine phrase-demo or optional 25 showcase fictional `.txt` documents are supported
-  for this midterm demonstration; no real IIT private-document access is authorized.
-- Loopback-only `127.0.0.1:8080`; no network deployment, TLS, login or per-document
-  authorization system. Exact snapshot allowlisting is a prototype boundary,
-  not a production security guarantee; the Windows symlink fixture is skipped.
+- Loopback-only `127.0.0.1:8080`, plain HTTP and one administrator bearer token;
+  no production LAN security, TLS, user accounts or per-document authorization.
+  Public searches and original-byte reads remain unauthenticated. Use fictional
+  or authorized public material; admin authentication does not make documents private.
+- One valid UTF-8 `.txt` file per operation; no NUL; inclusive 1 MiB limit in
+  managed mode. No PDF/DOCX extraction or OCR. Safe Unicode filenames do not
+  imply full Bangla search support. Two Windows symlink fixtures remain skipped.
 - ASCII-focused lowercase letter/digit tokenization is not full Bangla/Unicode
   IR. No PDF extraction, OCR, metadata/date filters, fuzzy or semantic search.
 - Boolean grammar supports explicit AND/OR and single searchable operands only.
   No parser parentheses, NOT, multiword/phrase operands, wildcards or nested
   expression tree. UI OR groups are expanded strings, not parser parentheses.
-- No persistence, pagination, uploads, HTTP rebuild, automatic file refresh or
-  concurrent rebuild guarantee. The HTTP server loads index, snapshots and assets
-  once. Source changes/deletions leave the old snapshot until restart/rebuild.
+- Managed updates rebuild the full collection; no posting-level incremental
+  removal/replacement or stable sparse IDs. Candidate construction temporarily
+  needs memory for old and new generations. No pagination or broad load benchmark.
+- Persistent disk files and in-memory publication are not crash-atomic. An
+  unacknowledged update may survive restart. Rollback failure needs explicit
+  recovery; backups/staging are not automatically replayed. Keep the managed
+  root private to its store. Its lock coordinates cooperating stores, not arbitrary
+  external writers. No watcher or HTTP reload route exists; offline changes need
+  deliberate backend reload or controlled restart.
+- HTTP workers/queue and request/response time limits are bounded; overload or
+  disconnection may lose a response after success. Reconcile uncertain outcomes;
+  never blindly retry a mutation. Page reload loses the in-memory recovery warning.
 - JavaScript is required for interactive groups, snippets and highlighted reading.
   Without it the native GET form opens JSON and keyword searches are unrestricted.
-- A preview fetch per result reads the full small text document. There is no
-  cache, application timeout, measured browser speedup or broad load evaluation.
+- A preview fetch per result reads the full small text document. The public client
+  has no application timeout or cache; no measured browser speedup is established.
   Cancellation/request IDs protect presentation, not server-side cancellation.
 - Highlights are a presentation aid, not relevance or retrieval. Length-changing
   Unicode case conversions omit highlights; very long matched tokens can exceed
@@ -1074,11 +1207,11 @@ explains collection selection and the later adaptive Premium UI without rewritin
   doubles or malformed Java UTF-16 strings; see the historical
   [JSON manual](learnings/02-03-json-search-api.md). Current core/model tests cover
   the supported schema and reject malformed client result shapes safely.
-- Student-reported Edge acceptance is recorded separately from automated models.
+- Prior headless and student-reported Edge acceptance are separate from Node models;
+  headed manager/file-picker acceptance is still pending.
   Comprehensive accessibility, browser/device coverage, retrieval quality,
   scalability and production security have not been established.
 
-The application is frozen for midterm. The reviewed optional showcase is integrated
-and has student-reported Edge acceptance; Part 1 documentation is also integrated.
-Slides/speech and November 11 rehearsal/viva preparation remain
-separate work; post-midterm proposals require further agreement.
+Phase 5B is integrated. Consolidated documentation, final student demonstration
+and headed Edge acceptance are the current closure activities. Historical midterm
+preparation records above do not establish later rehearsal or examination outcomes.

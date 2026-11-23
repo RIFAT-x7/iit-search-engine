@@ -54,9 +54,24 @@ assistance and should be read alongside the source code.
 15. [Phase 3.5: Midterm features and complete pipeline](03-08-phase-35-midterm-features.md) —
     One consolidated manual for grouped Advanced Search, ranking/Top-K, phrases,
     indexed original-byte access, source snippets, shared safe highlights and
-    25 viva questions. Reviewed and integrated with Part 1; student practice is pending.
+    25 viva questions. Its dated record leaves student practice pending.
 
-**CURRENT, November 10:** approved showcase application checkpoint
+16. [Phase 5: Live document management](04-phase5-live-document-management.md) —
+    Atomic index generations, serialized rebuilds, managed storage validation and
+    recovery, authenticated HTTP administration, raw-file browser workflows,
+    uncertain responses and viva questions.
+
+**Current Phase 5B application, November 23:** integrated at
+`0532b2b951286c724cce6ecbaf602da2d5370510`. Previously executed full regression:
+790 passes, zero failures, two Windows symlink skips. Later unchanged-code
+integration verification repeated 613 focused checks with no failures/skips;
+these reruns are not added to 790. Prior real headless Edge acceptance is separate
+from Node DOM/fetch models; headed Edge/native file-picker acceptance is pending.
+Use the [current runbook](../docs/PHASE_5B_DEMO_RUNBOOK_2026-11.md) for startup,
+demonstration and the unchecked manual acceptance list. This documentation update
+does not claim a new full regression or manual browser run.
+
+**Historical November 10 record:** approved showcase application checkpoint
 `28a26ab986351b5d99d29aba26e873e30793c931`, independently source-reviewed and
 fast-forward integrated into local main; Premium UI remains the earlier
 `143ab55` checkpoint. Part 1 documentation integrated at
@@ -68,7 +83,8 @@ The student confirmed all six showcase Edge scenarios on November 10, 2026,
 in addition to earlier 3.5A-3.5C/Premium UI acceptance. These are student-reported
 manual checks, not independently performed Codex browser tests. The three fixed
 collections remain isolated, with showcase optional and original datasets unchanged.
-The application is frozen; slides, timed rehearsal and viva practice remain pending.
+At that recorded checkpoint the application was frozen; slides, timed rehearsal
+and viva practice remained pending. No later completion is inferred here.
 See the [project README](../README.md) for current commands and evidence, and the
 [demo runbook](../docs/MIDTERM_DEMO_RUNBOOK_2026-11.md) for a reproducible presentation.
 The earlier seven Java/16 HTTP, 287-check and November 9 547-check records remain historical baselines.
@@ -90,8 +106,9 @@ JavaScript consumes that JSON API within the page, and CSS controls presentation
 and responsive layout. Indexing, TF-IDF-style scoring, and ranking stay in Java.
 Continue with positional and phrase retrieval, Boolean evaluation, then the
 Top-K core and HTTP/browser manuals. Manual #15 connects these algorithms to the
-current usability features. Existing fourteen manuals are preserved without
-rewriting their historical milestone descriptions.
+midterm usability features. Manual #16 continues with the implemented live
+document lifecycle and its consistency/security limits. The earlier fifteen
+manuals are preserved without rewriting their historical milestone descriptions.
 
 The manuals include implementation explanations, worked examples, verification
 records and limitations, viva questions, and self-practice exercises. Read each
@@ -104,9 +121,10 @@ check. Run the relevant checks before changing behavior. Complete reflection
 prompts personally; they contain no invented personal experiences or answers.
 
 Verification records identify Codex-reported automated/static checks separately
-from the user's manual Microsoft Edge confirmations. They do not imply an
-automated end-to-end browser test suite. The current committed Node models use
-simulated DOM/fetch behavior. A source
+from the user's manual Microsoft Edge confirmations. They do not imply
+headed acceptance or a committed automated end-to-end browser suite. The current
+committed Node models use simulated DOM/fetch behavior; Phase 5 also has a
+separately recorded real headless Edge run using disposable local tooling. A source
 walkthrough, a mock, and a real browser interaction provide different evidence.
 
 Return to the [project README](../README.md).
