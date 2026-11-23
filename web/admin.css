@@ -1,0 +1,50 @@
+/* Manager-only additions to the shared Midnight Scholar design. */
+.admin-heading { padding-block: 30px 62px; }
+.admin-main { padding-bottom: 24px; }
+.admin-navigation { display: flex; justify-content: space-between; align-items: center; gap: 16px; min-height: 74px; padding: 12px 20px; background: white; border: 1px solid var(--line); border-radius: 12px; box-shadow: var(--shadow); }
+.admin-navigation a { font-size: 0.85rem; font-weight: 600; }
+.admin-status { min-height: 3rem; margin: 18px 2px; padding: 12px 15px; border: 1px solid var(--line); border-radius: 9px; font-size: 0.85rem; background: #fff; }
+.admin-status[data-state="success"] { color: #125349; background: #ecf8f3; border-color: #abd6c8; }
+.admin-status[data-state="error"], .admin-status[data-state="warning"] { color: #7a263a; background: #fff5f5; border-color: #dfb2bf; }
+.admin-status[data-state="loading"]::before { content: ""; display: inline-block; width: 13px; height: 13px; border: 2px solid #ccd1eb; border-top-color: var(--indigo); border-radius: 50%; margin-right: 10px; animation: spin 800ms linear infinite; }
+.admin-page .button-primary:disabled::before { content: none; }
+.admin-card { min-width: 0; padding: 26px; background: white; border: 1px solid var(--line); border-radius: 15px; box-shadow: var(--shadow); }
+.access-card { max-width: 760px; margin: 25px auto 50px; }
+.admin-help { color: var(--muted); font-size: 0.82rem; margin: 10px 0 18px; }
+.access-controls { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 12px; margin-top: 8px; }
+.admin-page input[type="password"] { min-width: 0; width: 100%; min-height: 50px; border: 1px solid #a5b1c5; border-radius: 9px; padding: 11px 13px; background: white; }
+.manager-grid { display: grid; grid-template-columns: minmax(0, 0.85fr) minmax(0, 1.6fr); align-items: start; gap: 22px; }
+.admin-page fieldset { border: 0; margin: 0; padding: 0; }
+.admin-page input[type="file"] { display: block; max-width: 100%; width: 100%; margin-top: 8px; padding: 10px; border: 1px dashed #aab6cd; border-radius: 9px; font-size: 0.8rem; background: #fafbfe; }
+.admin-page input::file-selector-button { min-height: 36px; margin-right: 12px; padding: 6px 10px; border: 1px solid #c7c6e7; border-radius: 6px; color: var(--indigo-dark); background: white; cursor: pointer; }
+.file-selection { color: var(--muted); min-height: 1.5rem; font-size: 0.8rem; margin: 10px 0 18px; }
+.live-index-note { display: flex; gap: 10px; border-top: 1px solid var(--line); margin-top: 24px; padding-top: 16px; }
+.live-index-note p { margin: 0; color: var(--muted); font-size: 0.78rem; }
+.inventory-card .section-heading { flex-wrap: wrap; }
+.inventory-empty { padding: 28px 18px; margin: 18px 0 0; background: var(--canvas); border: 1px dashed #bdc8dc; border-radius: 10px; color: var(--muted); font-size: 0.85rem; text-align: center; }
+.document-inventory { list-style: none; padding: 0; margin: 0; }
+.document-inventory li { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px 16px; padding: 16px 0; border-top: 1px solid var(--line); }
+.inventory-name { min-width: 0; flex: 1 1 190px; font-size: 0.88rem; overflow-wrap: anywhere; }
+.inventory-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.inventory-actions a { font-size: 0.77rem; padding: 10px 4px; }
+.inventory-actions button { min-height: 40px; padding: 6px 10px; }
+.delete-document { color: #8b2c45; border-color: #e0bbc5; }
+.delete-document:hover:not(:disabled) { background: #fff1f4; border-color: #ba6b80; }
+.replacement-card { margin-top: 22px; border-top: 3px solid var(--indigo); }
+.replacement-card > p { margin: 10px 0; }
+.replacement-actions { display: flex; flex-wrap: wrap; gap: 12px; }
+.recovery-panel { margin-bottom: 22px; padding: 22px; background: #fff7e7; color: #674610; border: 1px solid #e5c988; border-radius: 12px; }
+.recovery-panel h2 { font-size: 1.05rem; }
+.recovery-panel p { font-size: 0.85rem; }
+.visually-hidden { position: absolute; width: 1px; height: 1px; padding: 0; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+#replacement-heading:focus-visible { outline: 3px solid var(--focus); outline-offset: 5px; }
+@media (max-width: 850px) { .manager-grid { grid-template-columns: minmax(0, 1fr); } }
+@media (max-width: 620px) {
+    .admin-heading { padding-block: 25px 55px; }
+    .admin-navigation { padding: 12px 15px; flex-wrap: wrap; }
+    .admin-card { padding: 20px 18px; }
+    .access-controls { grid-template-columns: minmax(0, 1fr); }
+    .inventory-actions { width: 100%; }
+    .inventory-actions button { flex: 1; }
+    .replacement-actions button { width: 100%; }
+}

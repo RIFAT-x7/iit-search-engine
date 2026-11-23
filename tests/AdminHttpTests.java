@@ -52,6 +52,10 @@ public class AdminHttpTests {
                         for (String method : List.of("GET", "POST", "PUT", "DELETE")) {
                             status(request(method, ROUTE + "?name=a.txt", utf8("alpha"), true, "text/plain"), 404);
                         }
+                        for (String path : List.of("/admin.html", "/admin.js", "/admin.css")) {
+                            status(get(path), 404);
+                            status(request("POST", path, null, true, null), 404);
+                        }
                     }
                 }
                 check(!Files.exists(ROOT), "Demo mode opened managed storage");
@@ -89,6 +93,15 @@ public class AdminHttpTests {
                     try (DocumentStore probe = new DocumentStore(ROOT)) { probe.listDocumentNames(); }
                 } finally { Files.move(saved, asset); }
             });
+            run("Missing managed-only assets release the startup storage lock", () -> {
+                Path asset = Path.of("web", "admin.js"), saved = Path.of("web", "admin.js.saved");
+                Files.move(asset, saved);
+                try {
+                    try { SearchServer.start(new String[] {"--managed"}); throw new AssertionError("Missing manager asset accepted"); }
+                    catch (IOException expected) { }
+                    try (DocumentStore probe = new DocumentStore(ROOT)) { probe.listDocumentNames(); }
+                } finally { Files.move(saved, asset); }
+            });
         }
         System.out.println("Administrative HTTP: total passed: " + passed + "; total failed: " + failed);
         if (failed > 0) { System.exit(1); }
@@ -96,6 +109,31 @@ public class AdminHttpTests {
 
     private static void managedTests() throws Exception {
         try (var server = SearchServer.start(new String[] {"--managed"})) {
+            run("Managed mode serves the manager assets without credentials in their contents", () -> {
+                for (String asset : List.of("admin.html", "admin.js", "admin.css")) {
+                    var response = get("/" + asset);
+                    status(response, 200);
+                    check(Arrays.equals(response.body(), Files.readAllBytes(Path.of("web", asset))), "Asset bytes");
+                    check(!text(response).contains(TOKEN), "Credential in an asset");
+                    check(response.headers().firstValue("Cache-Control").orElse("").equals("no-store"), "Asset cache policy");
+                    check(response.headers().firstValue("X-Content-Type-Options").orElse("").equals("nosniff"), "Asset MIME guard");
+                    check(response.headers().firstValue("Content-Security-Policy").orElse("").contains("frame-ancestors 'none'"), "Manager framing policy");
+                }
+                check(get("/admin.html").headers().firstValue("Content-Type").orElse("").contains("text/html"), "HTML type");
+                check(get("/admin.js").headers().firstValue("Content-Type").orElse("").contains("text/javascript"), "JS type");
+                check(get("/admin.css").headers().firstValue("Content-Type").orElse("").contains("text/css"), "CSS type");
+            });
+            run("Managed asset routes remain exact and GET-only", () -> {
+                for (String path : List.of("/admin.html", "/admin.js", "/admin.css")) {
+                    var response = request("POST", path, null, false, null);
+                    status(response, 405);
+                    check(response.headers().firstValue("Allow").orElse("").equals("GET"), "Asset Allow");
+                    status(get(path + "/extra"), 404);
+                }
+                status(get("/admin%2Ehtml"), 404);
+                status(get("/admin.js.map"), 404);
+                status(request("GET", ROUTE, null, false, null), 401);
+            });
             run("Managed startup serves an empty inventory and owns exactly one store", () -> {
                 status(get("/health"), 200);
                 check(text(request("GET", ROUTE, null, true, null)).equals("{\"documents\":[]}"), "Empty inventory");

@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="theme-color" content="#101a33">
+    <title>Document Manager — IIT Search Engine</title>
+    <link rel="stylesheet" href="/styles.css">
+    <link rel="stylesheet" href="/admin.css">
+    <script src="/admin.js" defer></script>
+</head>
+<body class="admin-page">
+    <a class="skip-link" href="#main-content">Skip to document management</a>
+    <div class="masthead">
+        <header class="site-header shell">
+            <a class="brand" href="/" aria-label="IIT Search Engine home"><span class="brand-emblem" aria-hidden="true"><svg viewBox="0 0 32 32" fill="none"><path d="M8 5h11l5 5v10M8 5v22h9M19 5v6h6M12 15h6M12 19h3"/><circle cx="22" cy="23" r="5"/><path d="m26 27 3 3"/></svg></span><span><strong>IIT Search Engine</strong><span class="brand-subtitle">Academic Document Discovery</span></span></a>
+            <span class="prototype-badge">SPL-1 <span aria-hidden="true">/</span> Managed collection</span>
+        </header>
+        <div class="admin-heading shell"><p class="eyebrow">Keep knowledge within reach</p><h1>Document <em>Manager.</em></h1><p class="hero-description">Maintain the collection. Keep search up to date.</p></div>
+    </div>
+    <main id="main-content" class="shell admin-main" tabindex="-1">
+        <nav class="admin-navigation" aria-label="Manager navigation"><a href="/">← Back to Search</a><button id="lock-admin" type="button" hidden>Lock administration</button></nav>
+        <p id="admin-status" class="admin-status" role="status" aria-live="polite" aria-atomic="true" data-state="initial">Unlock to manage this server's document collection.</p>
+        <section id="access-panel" class="admin-card access-card" aria-labelledby="access-heading">
+            <div class="section-heading"><div><p class="eyebrow">01 / Administrator access</p><h2 id="access-heading">A key to your collection</h2></div><span class="collection-badge">Localhost only</span></div>
+            <p class="admin-help">Enter the administrator token configured for this managed server. It stays in this page's memory and is cleared when you lock or leave.</p>
+            <form id="unlock-form" autocomplete="off">
+                <label for="admin-token">Administrator token</label>
+                <div class="access-controls"><input id="admin-token" type="password" autocomplete="off" spellcheck="false" minlength="32" maxlength="256" required disabled aria-describedby="token-help"><button id="unlock-admin" class="button-primary" type="submit" disabled>Unlock manager</button></div>
+                <p id="token-help" class="admin-help">Use the token from your server configuration. Never put it in a link or share it with documents.</p>
+            </form>
+        </section>
+        <div id="manager-workspace" hidden aria-busy="false">
+            <aside id="recovery-panel" class="recovery-panel" hidden aria-labelledby="recovery-heading"><h2 id="recovery-heading">Check the last change</h2><p>The last change may have completed. Refresh the inventory, then inspect the affected document using View text or Search. Filenames alone cannot confirm replacement content.</p><button id="acknowledge-recovery" type="button" disabled>I've checked the collection</button></aside>
+            <div class="manager-grid">
+                <section class="admin-card upload-card" aria-labelledby="upload-heading">
+                    <p class="eyebrow">01 / Add to the collection</p><h2 id="upload-heading">Upload a document</h2>
+                    <p class="admin-help">One UTF-8 .txt file, up to 1 MiB (1,048,576 bytes). Original bytes are preserved.</p>
+                    <form id="upload-form"><fieldset id="upload-controls" disabled><legend class="visually-hidden">New document</legend><label for="upload-file">Choose a .txt file</label><input id="upload-file" type="file" accept=".txt,text/plain" aria-describedby="upload-selection"><p id="upload-selection" class="file-selection">No file selected.</p><button id="upload-document" class="button-primary" type="submit">Upload document</button></fieldset></form>
+                    <div class="live-index-note"><span class="note-dot" aria-hidden="true"></span><p>Confirmed changes become searchable immediately. No server restart.</p></div>
+                </section>
+                <section class="admin-card inventory-card" aria-labelledby="inventory-heading">
+                    <div class="section-heading"><div><p class="eyebrow">02 / Managed documents</p><h2 id="inventory-heading">Your collection</h2></div><button id="refresh-documents" type="button">Refresh inventory</button></div>
+                    <p id="inventory-count" class="admin-help">Inventory has not been loaded.</p>
+                    <p id="inventory-empty" class="inventory-empty" hidden>No documents yet. Upload a text file to start your collection.</p>
+                    <ul id="document-inventory" class="document-inventory" aria-label="Managed documents"></ul>
+                </section>
+            </div>
+            <section id="replacement-panel" class="admin-card replacement-card" hidden aria-labelledby="replacement-heading">
+                <p class="eyebrow">03 / Update a document</p><h2 id="replacement-heading" tabindex="-1">Replace document contents</h2>
+                <p>Target: <strong id="replacement-target"></strong></p><p class="admin-help">The selected managed filename stays the same. Your local file may have a different name; only its contents replace the target.</p>
+                <form id="replace-form"><fieldset id="replace-controls" disabled><legend class="visually-hidden">Replacement content</legend><label for="replacement-file">Choose replacement .txt file</label><input id="replacement-file" type="file" accept=".txt,text/plain" aria-describedby="replacement-selection"><p id="replacement-selection" class="file-selection">No file selected.</p><div class="replacement-actions"><button id="replace-document" class="button-primary" type="submit">Confirm replacement…</button><button id="cancel-replacement" type="button">Cancel replacement</button></div></fieldset></form>
+            </section>
+        </div>
+        <noscript><p class="noscript-note">Document management requires JavaScript. No credentials are submitted without it.</p></noscript>
+    </main>
+    <footer class="site-footer shell"><span>IIT Search Engine <span aria-hidden="true">·</span> Rifat Al Maruf, BSSE1705</span><span>Managed text documents. Localhost only.</span></footer>
+</body>
+</html>

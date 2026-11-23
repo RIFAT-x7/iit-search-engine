@@ -85,7 +85,7 @@ New-Item -ItemType Directory -Path $fixture | Out-Null
 try {
     New-Item -ItemType File -Path (Join-Path $fixture '.admin-http-test-owned') | Out-Null
     New-Item -ItemType Directory -Path (Join-Path $fixture 'web') | Out-Null
-    foreach ($asset in @('index.html', 'app.js', 'styles.css', 'reader.html', 'reader.js', 'highlight.js')) {
+    foreach ($asset in @('index.html', 'app.js', 'styles.css', 'reader.html', 'reader.js', 'highlight.js', 'admin.html', 'admin.js', 'admin.css')) {
         Copy-Item -LiteralPath (Join-Path $repoRoot "web\$asset") -Destination (Join-Path $fixture 'web')
     }
     foreach ($collection in @('data', 'data\phrase_samples', 'data\showcase')) {

@@ -71,6 +71,10 @@ public class SearchServer {
             String readerHtml = Files.readString(Path.of("web", "reader.html"), StandardCharsets.UTF_8);
             String readerJs = Files.readString(Path.of("web", "reader.js"), StandardCharsets.UTF_8);
             String highlightJs = Files.readString(Path.of("web", "highlight.js"), StandardCharsets.UTF_8);
+            // Demo modes neither load nor expose the dedicated management assets.
+            String adminHtml = managed ? Files.readString(Path.of("web", "admin.html"), StandardCharsets.UTF_8) : null;
+            String adminJs = managed ? Files.readString(Path.of("web", "admin.js"), StandardCharsets.UTF_8) : null;
+            String adminCss = managed ? Files.readString(Path.of("web", "admin.css"), StandardCharsets.UTF_8) : null;
 
             server = HttpServer.create(new InetSocketAddress("127.0.0.1", 8080), 0);
             workers = new ThreadPoolExecutor(4, 4, 0, TimeUnit.MILLISECONDS,
@@ -80,14 +84,22 @@ public class SearchServer {
                 try {
                     String path = exchange.getRequestURI().getRawPath();
                     boolean documentRoute = "/document/view".equals(path) || "/document/download".equals(path);
+                    boolean adminAsset = managed && ("/admin.html".equals(path) || "/admin.js".equals(path) || "/admin.css".equals(path));
                     // Context matching uses prefixes, so check each endpoint path exactly.
                     if (!"/".equals(path) && !"/app.js".equals(path) && !"/styles.css".equals(path)
                             && !"/health".equals(path) && !"/search".equals(path) && !documentRoute
-                            && !"/reader.html".equals(path) && !"/reader.js".equals(path) && !"/highlight.js".equals(path)) {
+                            && !"/reader.html".equals(path) && !"/reader.js".equals(path) && !"/highlight.js".equals(path) && !adminAsset) {
                         exchange.sendResponseHeaders(404, -1);
                     } else if (!"GET".equals(exchange.getRequestMethod())) {
                         exchange.getResponseHeaders().set("Allow", "GET");
                         exchange.sendResponseHeaders(405, -1);
+                    } else if (adminAsset) {
+                        exchange.getResponseHeaders().set("Cache-Control", "no-store");
+                        exchange.getResponseHeaders().set("X-Content-Type-Options", "nosniff");
+                        exchange.getResponseHeaders().set("Content-Security-Policy", "default-src 'self'; object-src 'none'; base-uri 'none'; form-action 'none'; frame-ancestors 'none'");
+                        if ("/admin.html".equals(path)) { sendResponse(exchange, 200, adminHtml, "text/html; charset=utf-8"); }
+                        else if ("/admin.js".equals(path)) { sendResponse(exchange, 200, adminJs, "text/javascript; charset=utf-8"); }
+                        else { sendResponse(exchange, 200, adminCss, "text/css; charset=utf-8"); }
                     } else if ("/".equals(path)) {
                         sendResponse(exchange, 200, indexHtml, "text/html; charset=utf-8");
                     } else if ("/app.js".equals(path)) {
