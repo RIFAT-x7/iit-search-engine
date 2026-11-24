@@ -26,11 +26,13 @@ The browser uses plain HTML, JavaScript and CSS for query composition and
 presentation; Java owns indexing, authoritative HTTP query validation, retrieval
 and keyword ranking.
 
-**Current application checkpoint:** Phase 5B integrated at
-`0532b2b951286c724cce6ecbaf602da2d5370510`. Previously executed full regression:
+**Current checkpoint:** Phase 5 implementation complete; consolidated documentation
+integrated at `52c6778340621d9521fb2485144ba10b3e012a73` (application `0532b2b`).
+Final closure documentation is in Stage 1 review. Previously executed full regression:
 **790 passed, 0 failed, 2 skipped** Windows symlink fixtures. Later unchanged-code
-integration verification passed **613 focused checks**. Neither is a fresh run
-performed for this documentation update. See the [verification record](#testing-and-verification-record),
+integration verification passed **613 focused checks**; a later automated acceptance
+session also recorded a fresh **790/0/2** full run. No application tests were rerun
+for this documentation-only closure. See the [final closure record](#phase-5-final-closure),
 [Phase 5 learning guide](learnings/04-phase5-live-document-management.md) and
 [current demonstration runbook](docs/PHASE_5B_DEMO_RUNBOOK_2026-11.md).
 
@@ -499,10 +501,11 @@ Completed milestones:
 | Phase 3.5C | Contextual snippets, shared highlights and reader; `ab6eacc` |
 | Phase 3.5D Part 1 | Reviewed stabilization documentation and Manual #15; `cdc3b50` |
 | Premium UI | Midnight Scholar and adaptive Advanced Search; `143ab55` |
-| Phase 5A | Atomic index generations and safe runtime rebuilds; `88d5ebe` |
-| Phase 5B.1 | Managed document storage, validation, persistence and rollback; `ff8413e` |
-| Phase 5B.2A | Authenticated local HTTP document administration; `862e9e5` |
-| Phase 5B.2B | Browser Document Manager; `0532b2b` |
+| Phase 5A | Atomic index generations and safe runtime rebuilds; `88d5ebe30ab8331abd02ab8d093649d9be1a8806` |
+| Phase 5B.1 | Managed document storage, validation, persistence and rollback; `ff8413e507a0d26dac8cbd8ec21118d530ea69d6` |
+| Phase 5B.2A | Authenticated local HTTP document administration; `862e9e5f30a41828a48d543275d2cbc826ea6de4` |
+| Phase 5B.2B | Browser Document Manager; `0532b2b951286c724cce6ecbaf602da2d5370510` |
+| Phase 5 consolidated documentation | Implementation guide, runbook and status synchronization; `52c6778340621d9521fb2485144ba10b3e012a73` |
 
 The Phase 2 integration used `git merge --ff-only feat/browser-client`; later
 reviewed feature branches were also integrated with fast-forward-only merges
@@ -511,10 +514,13 @@ and Phase 3.4B to `39f8353`, each without a merge commit.
 The [planning document](PLANNED_FEATURES.md) preserves earlier supervisor questions
 and proposed phase numbering; this README records the implemented Phase 5 scope.
 
-Current closure work is consolidated documentation and final headed Edge
-acceptance/rehearsal. Genuine per-document indexing, PDF/DOCX extraction,
-Bangla processing, OCR, metadata filtering, watchers and deployment remain future
-work requiring separate scope. Fuzzy/semantic algorithms are also deferred.
+Phase 5 implementation is complete; see the [closure evidence](#phase-5-final-closure).
+The student's proposed next milestone is **Phase 6 — Multi-format Document Ingestion**:
+continued TXT support, text-based PDF extraction and DOCX extraction. Architecture,
+libraries, build-system decisions and implementation await a separate planning session.
+Posting-level incremental indexing, Bangla/Unicode processing, OCR, metadata
+filtering, permissions, watchers, evaluation and deployment remain future,
+unconfirmed scope. Fuzzy/semantic algorithms are also deferred.
 Managed ingestion does not authorize access to confidential institutional files.
 
 ## Technology and academic scope
@@ -917,9 +923,59 @@ differently named local file, cancelled/confirmed deletion, refresh, lock/reload
 basic Tab/focus and widths 320/390/768/1280. This is distinct from mocked Node
 DOM/fetch models and the older student-reported Edge results below. The disposable
 acceptance driver is local verification tooling, not a committed reusable suite.
-**Headed Edge/native Windows file-picker usability remains unverified**; use the
-[manual acceptance checklist](docs/PHASE_5B_DEMO_RUNBOOK_2026-11.md#5-pending-headed-edge-acceptance).
+That original headless record did not verify the native Windows picker. Subsequent
+automated and student-reported evidence is recorded separately below and in the
+[manual acceptance record](docs/PHASE_5B_DEMO_RUNBOOK_2026-11.md#5-headed-edge-acceptance-record).
 No production-security, comprehensive accessibility or performance claim follows.
+
+<a id="phase-5-final-closure"></a>
+
+### Phase 5 final closure: November 24, 2026
+
+Phase 5 implementation is complete. The approved implementation/documentation
+checkpoints are listed in the [roadmap](#project-roadmap). Stage 1 independently
+verified clean local `main` and fetched `origin/main` at `52c6778`, all five
+checkpoints in their ancestry, and preservation of the original feature branches.
+The closure edits on `docs/phase-5-final-closure` remain subject to review;
+this record does not claim a closure commit, merge, push or supervisor approval.
+
+- **Automated regression:** the historical full record remains **790 passed,
+  0 failed, 2 skipped**; Windows symlink creation privileges caused both skips.
+  The later automated acceptance session separately recorded the same fresh
+  full-run totals. The intervening **613/0/0** focused integration run remains
+  a subset, not additional unique checks. Stage 1 ran documentation checks only.
+- **Automated headless Edge:** authentication, upload, search/reader, replacement
+  retaining the managed filename, obsolete-match removal, cancellation/confirmation
+  of deletion, original-byte preservation and document 404 after deletion passed.
+  Existing-document persistence passed a separate controlled restart with a new
+  token and exact-byte/search verification. Recorded refresh, lock/reload, literal
+  filename rendering, basic Tab/focus, no JavaScript exceptions or unexpected HTTP
+  errors, and widths 320/390/768/1280 remain limited to those observed checks.
+  Automated file-input assignment is not native Windows file-picker evidence.
+- **Student-reported manual Edge:** administrator authentication and real Windows
+  file selection passed; upload of `spl_test.txt` made `amberquartz` immediately
+  searchable and readable. Replacement removed that obsolete keyword and made
+  `cobaltviolet` searchable; document deletion passed. These are the student's
+  reported outcomes, not independently executed manual checks by Codex.
+- **Optional manual persistence repetition:** after ownership verification,
+  PID `35532` stopped normally and PID `21064` restarted with the exact same
+  isolated collection, a fresh token and health `OK`. The student clarifies that
+  the test document had been deleted and not re-uploaded before restart.
+  An absent document remaining absent is consistent with that account, but
+  does not demonstrate an existing document surviving restart. That personal
+  check remains unperformed; the student accepts the automated persistence
+  evidence and elects not to repeat this optional scenario.
+- **Final server cleanup:** Stage 1 matched PID `21064` to the original launch
+  records, Temurin executable/command and `127.0.0.1:8080` listener. It stopped
+  normally after exclusive-console ownership checks; port 8080 was verified free.
+  `out/manual-session-0873852330604e9cb8eaf25292af9bb0/` and its managed collection,
+  uploaded contents and acceptance evidence were preserved. No replacement
+  server, browser test or desktop interaction was started for closure.
+
+This closes implementation acceptance with the optional manual repetition
+explicitly outstanding, not every possible headed scenario. No comprehensive
+accessibility, production security, crash/power-loss durability, large-collection
+performance or supervisor demonstration/rehearsal outcome is established.
 
 <a id="current-final-audit-verification-november-10-2026"></a>
 
@@ -1207,11 +1263,12 @@ state and viva examples. Older manuals retain the feature limits of their dates.
   doubles or malformed Java UTF-16 strings; see the historical
   [JSON manual](learnings/02-03-json-search-api.md). Current core/model tests cover
   the supported schema and reject malformed client result shapes safely.
-- Prior headless and student-reported Edge acceptance are separate from Node models;
-  headed manager/file-picker acceptance is still pending.
+- Headless Edge and student-reported native file-picker acceptance are separate
+  from Node models. Personal existing-document persistence across restart was
+  not repeated; the student accepts the automated persistence evidence.
   Comprehensive accessibility, browser/device coverage, retrieval quality,
   scalability and production security have not been established.
 
-Phase 5B is integrated. Consolidated documentation, final student demonstration
-and headed Edge acceptance are the current closure activities. Historical midterm
-preparation records above do not establish later rehearsal or examination outcomes.
+Phase 5 implementation is complete; the final closure documentation is ready for
+Stage 1 review. Historical midterm preparation records above do not establish
+later rehearsal or examination outcomes.

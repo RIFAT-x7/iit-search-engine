@@ -61,7 +61,7 @@ assistance and should be read alongside the source code.
     recovery, authenticated HTTP administration, raw-file browser workflows,
     uncertain responses and viva questions.
 
-**Current Phase 5B application, November 23:** integrated at
+**Historical Phase 5B record, November 23:** integrated at
 `0532b2b951286c724cce6ecbaf602da2d5370510`. Previously executed full regression:
 790 passes, zero failures, two Windows symlink skips. Later unchanged-code
 integration verification repeated 613 focused checks with no failures/skips;
@@ -70,6 +70,20 @@ from Node DOM/fetch models; headed Edge/native file-picker acceptance is pending
 Use the [current runbook](../docs/PHASE_5B_DEMO_RUNBOOK_2026-11.md) for startup,
 demonstration and the unchecked manual acceptance list. This documentation update
 does not claim a new full regression or manual browser run.
+
+**Current Phase 5 closure, November 24:** implementation complete; consolidated
+documentation integrated at `52c6778340621d9521fb2485144ba10b3e012a73`; final
+closure documentation in Stage 1 review. The later automated session recorded
+another **790 passed, 0 failed, 2 skipped** full run and headless persistence
+acceptance. The student separately reports native Edge file selection and the
+upload/search/read/replace/delete workflow. Personal existing-document persistence
+across restart remains unperformed; the student accepts automated evidence and
+waives that optional repetition. The identified manual server was stopped normally,
+port 8080 is free, and its collection/evidence are preserved. See the
+[central closure record](../README.md#phase-5-final-closure) and
+[current manual acceptance table](../docs/PHASE_5B_DEMO_RUNBOOK_2026-11.md#5-headed-edge-acceptance-record).
+No application tests or browser checks were rerun for this documentation-only closure;
+the sixteen manuals and historical records are retained without adding another manual.
 
 **Historical November 10 record:** approved showcase application checkpoint
 `28a26ab986351b5d99d29aba26e873e30793c931`, independently source-reviewed and
@@ -122,8 +136,8 @@ prompts personally; they contain no invented personal experiences or answers.
 
 Verification records identify Codex-reported automated/static checks separately
 from the user's manual Microsoft Edge confirmations. They do not imply
-headed acceptance or a committed automated end-to-end browser suite. The current
-committed Node models use simulated DOM/fetch behavior; Phase 5 also has a
+comprehensive headed acceptance or a committed automated end-to-end browser suite.
+The current committed Node models use simulated DOM/fetch behavior; Phase 5 also has a
 separately recorded real headless Edge run using disposable local tooling. A source
 walkthrough, a mock, and a real browser interaction provide different evidence.
 

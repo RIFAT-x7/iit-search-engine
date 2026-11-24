@@ -8,7 +8,28 @@ The original November planning checkpoint was `bfb28f676a73443a9cc383cb9ccad52b4
 Phase 3.4B was integrated earlier at `39f835359860866b504a487eef929a273c41c614`.
 Listing a future feature here does not establish approval or implementation.
 
-## CURRENT checkpoint: November 10, 2026
+## Current checkpoint: Phase 5 final closure, November 24, 2026
+
+Phase 5 implementation is complete. Clean local `main` and fetched `origin/main`
+were independently verified at `52c6778340621d9521fb2485144ba10b3e012a73` before
+creating `docs/phase-5-final-closure`. The approved batches, automated evidence,
+student-reported native Edge acceptance, optional unperformed personal persistence
+repetition and safe server shutdown are recorded in the
+[final closure record](README.md#phase-5-final-closure). Historical full regression:
+**790 passed, 0 failed, 2 Windows symlink fixtures skipped**; a later automated
+acceptance session recorded the same fresh full-run totals. No application tests
+were rerun for this documentation-only Stage 1, and publication is not yet authorized.
+
+The student proposes **Phase 6 — Multi-format Document Ingestion**, limited at
+this stage to continued TXT support, text-based PDF extraction and DOCX extraction.
+Architecture, extraction libraries, dependencies, build-system choices, classes
+and APIs await a separate planning session. This direction does not establish
+supervisor approval or implementation. Earlier roadmap proposals remain future,
+unconfirmed scope; the old proposed phase numbering is superseded below.
+
+<a id="current-checkpoint-november-10-2026"></a>
+
+## Historical checkpoint: November 10, 2026
 
 The final audit started from clean local/fetched main at Premium UI
 commit `143ab553095b95b572ae55016de3850180054fef`. The approved showcase application
@@ -82,9 +103,9 @@ historical record; this checkpoint updates the current priorities.
 
 ## Current implementation
 
-Phases 1 and 2 established the midterm baseline. Phases 3.1-3.4 are now also
-complete and integrated; Phases 3.5A-3.5C now add usability without new retrieval
-algorithms. Current capabilities include:
+Phases 1 and 2 established the midterm baseline. Phases 3.1-3.4, the Phase 3.5
+usability work and Phases 5A/5B are complete and integrated. Phase 5 changes the
+document lifecycle while retaining the retrieval algorithms. Current capabilities include:
 
 - A custom Java IR core with in-memory frequency postings and complete zero-based
   positional postings. Positions include stop words, gaps and repeated occurrences;
@@ -99,8 +120,9 @@ algorithms. Current capabilities include:
   full search then truncate or sort every matching document. Candidate scoring
   is still required; core optimization does not establish browser-level speedup.
 - A CLI and a separate Java HTTP server that reuse the same IR core. The CLI
-  supports keyword search and manual rebuilds; the HTTP server builds once at
-  startup and exposes all three retrieval modes.
+  supports keyword search and manual rebuilds. HTTP demo modes build at startup;
+  managed mode publishes a rebuilt collection after each successful mutation.
+  The HTTP server exposes all three retrieval modes.
 - `GET /search?q=...&mode=...` accepts keyword, phrase or boolean, plus the
   separate `GET /health` endpoint. Missing mode
   preserves legacy keyword JSON with numeric scores; phrase/Boolean responses
@@ -124,6 +146,16 @@ algorithms. Current capabilities include:
   `data/phrase_samples/`; the optional `--showcase` loads 25 files only from
   `data/showcase/`. None is an official IIT document collection. There is no
   browser/API collection switch or recursive merging.
+- Opt-in `--managed` opens a separate persistent UTF-8 TXT collection. Atomic
+  engine generations preserve coherent search/statistics/original bytes while
+  serialized full rebuilds run. Valid disk documents are reindexed on restart;
+  this is persistent document storage, not a saved on-disk index or posting-level
+  incremental updates. Failed rebuilds retain the prior published generation.
+- A localhost Document Manager and bearer-authenticated administration API add,
+  replace and delete managed documents without restarting. Validation, staged
+  atomic moves, rollback/recovery and uncertain-response handling are implemented.
+  Demo modes expose no administrative assets or routes. Public search and document
+  reads remain unauthenticated; administration does not make the collection private.
 - Grouped Advanced Search, browser-only hiding of numerical keyword scores,
   exact filename links and separate original downloads. Basic Keyword Search
   still ranks OR-like candidates; Advanced Search remains filename-ordered Boolean
@@ -151,7 +183,7 @@ algorithms. Current capabilities include:
   coverage is inferred. Automated models are not a real-browser suite.
 - A localhost-only server configuration at `127.0.0.1:8080`. Cross-computer
   access and IIT network deployment are not implemented.
-- Fourteen published learning manuals, listed in the [learning journal](learnings/README.md),
+- Sixteen learning manuals, listed in the [learning journal](learnings/README.md),
   covering foundations through [optimized Top-K core retrieval](learnings/03-06-optimized-top-k.md)
   and [Top-K HTTP/browser integration](learnings/03-07-top-k-http-browser.md).
   Earlier manuals retain their historical milestone context. One new
@@ -159,14 +191,18 @@ algorithms. Current capabilities include:
   and a [midterm demo runbook](docs/MIDTERM_DEMO_RUNBOOK_2026-11.md) were reviewed
   and integrated at `cdc3b50`. Their dated records are preserved. Presentation,
   timed rehearsal and viva preparation are separate from documentation acceptance.
+  [Manual #16](learnings/04-phase5-live-document-management.md) explains the
+  implemented Phase 5 lifecycle; no additional manual is created for closure.
 
 Browser results show filename links, downloads and authentic previews without
 numerical scores. Keyword JSON retains its original numeric scores and schema.
-Fixed reader assets do not add a general file-serving route. There is no login,
-per-document authorization, PDF/OCR, partial/fuzzy/semantic retrieval, persistence,
-metadata/date filtering or general Bangla/Unicode IR. Boolean parentheses, NOT,
+Fixed reader assets do not add a general file-serving route. Administrator bearer
+authentication and persistent managed files are implemented. User accounts,
+per-document authorization, PDF/DOCX extraction, OCR, partial/fuzzy/semantic retrieval,
+persisted index structures, metadata/date filtering and general Bangla/Unicode IR
+are not implemented. Boolean parentheses, NOT,
 phrase operands and wildcards remain unsupported. UTF-8 transport alone does
-not establish multilingual search. The skipped symlink fixture limits security
+not establish multilingual search. The two skipped symlink fixtures limit security
 evidence; no production filesystem-security claim is made.
 
 ## Proposed IIT deployment
@@ -209,12 +245,15 @@ Network controls and access restrictions must be in place and checked before
 real IIT documents are exposed. Permissions also need to cover filenames,
 metadata, snippets, and search matches, since these can reveal restricted
 information. Prototype indexed-document endpoints are implemented for fictional
-localhost data; no login or authorization system is implemented.
+localhost data. Managed administration has bearer authentication; user accounts
+and per-user document authorization remain unimplemented.
 
 ## PDF extraction, OCR, and Bengali support
 
-All items in this section are deferred beyond midterm. The revised Phases 5-6
-are proposals requiring further scope/tool decisions, not current requirements.
+These remain future capabilities. Text-based PDF and DOCX extraction are the
+student's proposed Phase 6 direction, with continued TXT support. No architecture,
+tool/library selection or implementation is part of Phase 5 closure. Older proposals
+for OCR and Bangla/Unicode processing remain unconfirmed and separately scoped.
 
 - **Text-based PDF extraction is planned:** extract an existing text layer from
   authorized PDFs, then preprocess and index that text. This is not OCR.
@@ -260,12 +299,16 @@ not blanket supervisor approvals.
 | Premium UI | Completed and integrated (`143ab55`) | Midnight Scholar, adaptive three/two/one-field wrapping, compact accessible controls and reduced motion; student-reported Edge acceptance. |
 | Optional showcase | Reviewed and fast-forward integrated (`28a26ab`); student-reported Edge acceptance November 10 | 25 isolated fictional documents, fixed `--showcase` startup only; original collections preserved. Optional for midterm; no new retrieval/UI features. |
 | 4 | Deferred; proposed after midterm | Document metadata and date filters; metadata model and date meaning need agreement. |
-| 5 | Deferred; proposed after midterm | Authorized document ingestion and text-based PDF extraction; rights and permitted collection need agreement. |
-| 6 | Deferred; proposed after midterm | Bangla/Unicode-aware text processing and multilingual retrieval; image/OCR work separately scoped and evaluated. |
-| 7 | Deferred; proposed after midterm | Document permissions, persistent indexing/rebuild design, performance/evaluation and approved IIT deployment architecture. |
+| 5A | Completed and integrated (`88d5ebe`) | Atomic index generations and safe runtime rebuilds. |
+| 5B.1 | Completed and integrated (`ff8413e`) | Persistent managed TXT files, validation, live synchronization and rollback/recovery. |
+| 5B.2A | Completed and integrated (`862e9e5`) | Authenticated local HTTP document administration. |
+| 5B.2B | Completed and integrated (`0532b2b`) | Browser Document Manager; consolidated documentation integrated at `52c6778`; final closure documentation in Stage 1 review. |
+| 6 — Multi-format Document Ingestion | Student-proposed next milestone; planning separate | Continued TXT support, text-based PDF extraction and DOCX extraction; no tool or architecture decisions made. |
+| Future multilingual/OCR scope (formerly proposed Phase 6) | Unconfirmed; not implemented | Bangla/Unicode-aware processing and multilingual retrieval; images/OCR require separate scope and evaluation. |
+| Future permissions/indexing/deployment scope (formerly proposed Phase 7) | Unconfirmed; not implemented | Per-document permissions, persisted-index and indexing optimization proposals, performance/evaluation and approved IIT deployment; Phase 5 already implements persistent documents and full runtime rebuilds. |
 | Future algorithms | Deferred; not implemented | Partial/fuzzy, semantic or other additions only when explicitly justified and agreed after midterm. |
 
-Access controls cannot wait until Phase 7 if nonpublic files or shared network
+Access controls cannot wait for a later milestone if nonpublic files or shared network
 access are introduced earlier. The necessary identity checks, authorization,
 and network restrictions must be agreed, implemented, and verified before that
 exposure.
@@ -274,8 +317,9 @@ Reported functional Edge acceptance is recorded above. Broader keyboard-only,
 zoom/reflow, screen-reader and device-matrix checks remain unverified; they are
 not a claim that the student must repeat already accepted functional scenarios.
 Part 1 documentation and the reviewed optional showcase are integrated into main.
-The application is frozen for midterm. Final preparation
-acceptance is not inferred from either documentation or automated test success.
+The midterm application freeze was a historical preparation boundary; Phase 5
+has since been implemented. Final preparation acceptance is not inferred from
+either documentation or automated test success.
 
 ## Questions for the supervisor: November 1, 2026
 

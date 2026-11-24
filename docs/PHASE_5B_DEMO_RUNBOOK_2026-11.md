@@ -2,13 +2,16 @@
 
 **Student:** Rifat Al Maruf, BSSE1705; IIT, University of Dhaka; SPL-1
 
-**Record:** November 23, 2026; draft for review
+**Original record:** November 23, 2026; draft for review
+
+**Closure addendum:** November 24, 2026; Stage 1 documentation review
 
 **Integrated application:** `0532b2b951286c724cce6ecbaf602da2d5370510`
 
 Use fictional documents only. This runbook demonstrates implemented functionality;
-it does not claim that the student has rehearsed it or that the manual checklist
-below has passed. The [midterm runbook](MIDTERM_DEMO_RUNBOOK_2026-11.md) preserves
+the original rehearsal plan is not evidence that every checklist item passed.
+Section 5 now distinguishes reported acceptance from optional unperformed checks.
+The [midterm runbook](MIDTERM_DEMO_RUNBOOK_2026-11.md) preserves
 its earlier dated scope. See the [Phase 5 guide](../learnings/04-phase5-live-document-management.md)
 for implementation and viva explanations.
 
@@ -24,9 +27,14 @@ for implementation and viva explanations.
 - Prior Codex-controlled **headless Edge** acceptance verified live upload/search,
   replacement, cancelled/confirmed deletion, refresh, lock/reload and widths
   320/390/768/1280 on one Java server. Basic Tab/focus was checked.
-- **Pending:** headed Edge/native Windows file-picker usability and the student's
-  timed rehearsal. Headless automation and Node DOM/fetch models do not establish
-  those manual outcomes or comprehensive accessibility.
+- Subsequent automated acceptance recorded another **790/0/2** full regression
+  and existing-document persistence across a controlled restart with a fresh
+  token and exact original bytes/search results. These are recorded executions,
+  not tests rerun during this documentation-only closure.
+- The student separately reports successful headed Edge/native Windows file
+  selection and document lifecycle checks; see section 5. Headless automation and
+  Node models do not establish native picker outcomes or comprehensive accessibility.
+  Timed rehearsal and broader manual coverage are not claimed.
 
 ## 2. Safe compilation and managed startup
 
@@ -187,11 +195,47 @@ replacement contents. The browser's unresolved-warning state survives Lock withi
 the page but is lost on full reload/navigation; record an uncertain target yourself
 and reconcile it after unlocking again. No automatic retry or rollback is inferred.
 
-## 5. Pending headed Edge acceptance
+<a id="5-pending-headed-edge-acceptance"></a>
 
-All boxes are deliberately unchecked. Record actual date, browser version, outcome
-and notes during the student's separate manual session; documentation does not
-complete acceptance. Use fictional owned files and a disposable token only.
+## 5. Headed Edge acceptance record
+
+Phase 5 implementation is complete. The following outcomes are **student-reported
+manual Microsoft Edge checks with a real Windows file picker**, not Codex-run
+manual tests. No precise manual-session date/version or additional outcomes are
+invented. See the [final closure record](../README.md#phase-5-final-closure) for
+approved checkpoints, automated evidence, limitations and final cleanup.
+
+| Check | Student-reported outcome |
+| --- | --- |
+| Administrator authentication and native Windows file selection | Successful |
+| Upload and immediate search | `spl_test.txt` uploaded; `amberquartz` became searchable |
+| Document reading | Successful |
+| Replace existing document and search again | Obsolete `amberquartz` match removed; `cobaltviolet` searchable |
+| Document deletion | Successful |
+| Existing document surviving restart | Not personally performed; optional repetition waived in favor of accepted automated persistence evidence |
+
+PID `35532` stopped normally after ownership verification; PID `21064` restarted
+with the exact same isolated collection, fresh token and health `OK`. The student
+clarifies that the test document had been deleted and not re-uploaded before
+restart. Its continued absence is consistent with that clarification, but cannot
+prove persistence of an existing document. Automated acceptance separately proved
+existing-document persistence. No full headed scenario matrix, comprehensive
+accessibility or production-security verification is claimed.
+
+At Stage 1 closure, owned PID `21064` was verified against the launch records,
+Temurin executable/command and listener, then stopped normally. Port 8080 was
+verified free. The entire isolated `out/manual-session-0873852330604e9cb8eaf25292af9bb0/`
+directory, its managed documents and acceptance evidence were preserved; no
+replacement server or browser interaction occurred.
+
+### Historical November 23 checklist (originally all unchecked)
+
+The original checklist below is preserved as the rehearsal plan. Its combined
+items include scenarios not personally reported, so the boxes are not retroactively
+ticked. The table above is the current acceptance record. Remaining examples such
+as picker cancellation, download, cancelled deletion, lock/reload, keyboard/reflow
+coverage and interrupted-request recovery are not promoted to student-run checks.
+Use fictional owned files and a disposable token for any future optional rehearsal.
 
 - [ ] Start the compiled managed server with a random token; confirm one running instance.
 - [ ] Open the manager in headed Microsoft Edge and unlock; wrong token fails safely.

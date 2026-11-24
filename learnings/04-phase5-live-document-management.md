@@ -10,6 +10,10 @@
 
 **Integrated application:** `0532b2b951286c724cce6ecbaf602da2d5370510`
 
+**Current closure addendum, November 24:** Phase 5 implementation is complete;
+consolidated documentation is integrated at `52c6778`. Final closure documentation
+is in Stage 1 review; see [evidence and limits](#k-evidence-and-limits).
+
 This AI-assisted guide explains implemented Phases 5A and 5B. Read it beside
 [SearchEngine](../src/SearchEngine.java), [DocumentStore](../src/DocumentStore.java),
 [SearchServer](../src/SearchServer.java), [AdminDocumentHandler](../src/AdminDocumentHandler.java)
@@ -301,9 +305,27 @@ Reflection used to force internal failure/interleavings is test-only.
 Prior Codex-controlled real **headless Edge** acceptance exercised the lifecycle
 and public Search on one server, lock/reload, basic focus and responsive widths.
 It is stronger evidence than a model for those flows, but did not validate headed
-Edge's native Windows picker. Headed acceptance, comprehensive accessibility,
-production security and large-collection performance remain unverified. This
-documentation closure does not rerun the full suite or establish new browser results.
+Edge's native Windows picker. The later automated acceptance session recorded a
+fresh **790/0/2** full run and separately verified persistence of an existing
+document across a controlled restart with a new token, exact bytes and search.
+These recorded runs are not added together and were not rerun for Stage 1 closure.
+
+The student separately reports successful administrator authentication, native
+Windows file selection, upload/read/search of `spl_test.txt` using `amberquartz`,
+replacement removing that old match and exposing `cobaltviolet`, then deletion.
+Those are student-reported manual Edge outcomes; no wider headed checklist is inferred.
+The student clarifies that the document was deleted and not re-uploaded before
+the manual server restart (`35532` to `21064`, same collection, fresh token, health
+`OK`). Existing-document persistence was therefore not personally repeated.
+The student accepts the automated persistence evidence and waives that optional
+manual repetition. An absent document remaining absent does not prove persistence.
+
+At Stage 1 closure, ownership-verified PID `21064` stopped normally and port 8080
+was verified free; the isolated collection and evidence were preserved. The
+[central closure record](../README.md#phase-5-final-closure) holds the approved
+checkpoints and cleanup details. Comprehensive accessibility, production security,
+crash/power-loss durability and large-collection performance remain unverified.
+This documentation-only closure establishes no new application or browser-test results.
 
 ## L. Viva questions and self-practice
 
